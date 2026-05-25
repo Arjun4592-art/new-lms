@@ -3,11 +3,11 @@ import { COURSES_DATA } from '../page'
 import WhatYouLearn from '@/components/courses/WhatYouLearn'
 import CourseIncludes from '@/components/courses/CourseIncludes'
 import EnrollButton from '@/components/courses/EnrollButton'
-// import Badge from '../../../../components/ui/Badge'
-import { ClockIcon, PlayIcon, UsersIcon, StarIcon } from '@/components/ui/Icons'
+import Badge from '@/components/ui/Badge'
+import { ClockIcon, PlayIcon, UsersIcon } from '@/components/ui/Icons'
 
 interface Props {
-  params: { courseId: string }
+  params: Promise<{ courseId: string }>
 }
 
 export function generateStaticParams() {
@@ -15,7 +15,8 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const course = COURSES_DATA.find((c) => c.id === params.courseId)
+  const { courseId } = await params
+  const course = COURSES_DATA.find((c) => c.id === courseId)
   if (!course) return {}
   return {
     title: `${course.title} | Pain to Power Coaching`,
@@ -23,32 +24,31 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function CourseDetailPage({ params }: Props) {
-  const course = COURSES_DATA.find((c) => c.id === params.courseId)
+export default async function CourseDetailPage({ params }: Props) {
+  const { courseId } = await params
+  const course = COURSES_DATA.find((c) => c.id === courseId)
   if (!course) notFound()
 
   return (
     <>
       {/* Hero */}
-      <section
-        className={`pt-24 pb-14 px-4 bg-linear-to-br ${course.color} relative overflow-hidden`}
-      >
-        <div className='absolute inset-0 bg-black/20' />
+      <section className='pt-28 pb-16 px-4 bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] relative overflow-hidden'>
+        <div className='absolute top-10 right-10 w-64 h-64 bg-[#D4BEFF]/20 rounded-full blur-3xl' />
         <div className='relative max-w-6xl mx-auto'>
           <div className='flex flex-wrap gap-2 mb-5'>
-            {/* {course.badge && (
+            {course.badge && (
               <Badge variant={course.badgeVariant ?? 'purple'}>
                 {course.badge}
               </Badge>
-            )} */}
+            )}
           </div>
-          <h1 className='font-serif text-[36px] sm:text-[48px] font-bold text-white leading-tight mb-4 max-w-3xl'>
+          <h1 className='font-serif text-[36px] sm:text-[48px] font-bold text-[#2D1B5E] leading-tight mb-4 max-w-3xl'>
             {course.title}
           </h1>
-          <p className='text-[17px] text-white/80 leading-relaxed max-w-2xl mb-8'>
+          <p className='text-[17px] text-[#6B5B8B] leading-relaxed max-w-2xl mb-8'>
             {course.description}
           </p>
-          <div className='flex flex-wrap gap-5 text-white/80 text-[14px]'>
+          <div className='flex flex-wrap gap-5 text-[#6B5B8B] text-[14px]'>
             <div className='flex items-center gap-2'>
               <ClockIcon size={15} /> {course.duration}
             </div>

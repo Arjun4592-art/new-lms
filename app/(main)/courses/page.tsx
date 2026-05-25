@@ -100,7 +100,7 @@ export default function CoursesPage() {
   return (
     <>
       {/* Hero */}
-      <section className='pt-28 pb-16 px-4 bg-linear-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] relative overflow-hidden'>
+      <section className='pt-28 pb-16 px-4 bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] relative overflow-hidden'>
         <div className='absolute top-10 right-10 w-64 h-64 bg-[#D4BEFF]/20 rounded-full blur-3xl' />
         <div className='max-w-4xl mx-auto text-center relative'>
           <span className='inline-block text-[12px] font-bold uppercase tracking-[0.15em] text-[#A67DD4] bg-[#F3EEFF] border border-purple-200 px-4 py-1.5 rounded-full mb-6'>
@@ -108,7 +108,7 @@ export default function CoursesPage() {
           </span>
           <h1 className='font-serif text-[44px] sm:text-[54px] font-bold text-[#2D1B5E] leading-tight mb-6'>
             Choose Your Path to{' '}
-            <span className='text-transparent bg-clip-text bg-linear-to-r from-[#7C5CBF] to-[#C084F5]'>
+            <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#7C5CBF] to-[#C084F5]'>
               Healing
             </span>
           </h1>

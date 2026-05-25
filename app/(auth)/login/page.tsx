@@ -79,11 +79,12 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    // ── Temporary: simulate login ─────────────────────────────────────────────
-    // Replace this block with real Firebase auth once keys are set up
     await new Promise((r) => setTimeout(r, 800))
 
     if (email === 'test@test.com' && password === 'password') {
+      // Set session cookie so middleware allows /dashboard
+      document.cookie =
+        'session=demo-session; path=/; max-age=3600; SameSite=Lax'
       router.push('/dashboard')
     } else {
       setError('Invalid email or password. Try test@test.com / password')
