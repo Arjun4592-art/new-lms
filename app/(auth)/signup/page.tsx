@@ -96,7 +96,7 @@ function SignupForm() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] flex items-center justify-center px-4 py-12'>
+    <div className='min-h-screen bg-linear-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] flex items-center justify-center px-4 py-12'>
       <div className='w-full max-w-md'>
         {/* Logo */}
         <div className='text-center mb-8'>
@@ -104,7 +104,7 @@ function SignupForm() {
             href='/'
             className='inline-flex flex-col items-center no-underline'
           >
-            <div className='w-12 h-12 rounded-full bg-gradient-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center mb-3'>
+            <div className='w-12 h-12 rounded-full bg-linear-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center mb-3'>
               <svg
                 width='22'
                 height='22'
@@ -349,7 +349,7 @@ export default function SignupPage() {
   return (
     <Suspense
       fallback={
-        <div className='min-h-screen bg-gradient-to-br from-[#F9F5FF] to-[#FDF4FF] flex items-center justify-center'>
+        <div className='min-h-screen bg-linear-to-br from-[#F9F5FF] to-[#FDF4FF] flex items-center justify-center'>
           <div className='w-8 h-8 border-4 border-[#7C5CBF] border-t-transparent rounded-full animate-spin' />
         </div>
       }
