@@ -10,7 +10,7 @@ export default function DashboardLayout({
     <div className='flex h-screen bg-[#FAF8FF] overflow-hidden'>
       <DashboardSidebar />
       <div className='flex flex-col flex-1 min-w-0 lg:ml-56'>
-        <DashboardTopbar userName='Priya Sharma' />
+        <DashboardTopbar />
         <main className='flex-1 overflow-y-auto p-4 sm:p-6'>{children}</main>
       </div>
     </div>
