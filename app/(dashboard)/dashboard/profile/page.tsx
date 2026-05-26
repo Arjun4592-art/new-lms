@@ -1,45 +1,69 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ShieldIcon,
   MailIcon,
   UserIcon,
   CheckIcon,
 } from '@/components/ui/Icons'
-
-const ENROLLED_COURSES = [
-  {
-    title: 'Pain to Power Masterclass',
-    progress: 65,
-    enrolledDate: 'May 1, 2025',
-  },
-  {
-    title: 'Self-Boundaries & Letting Go',
-    progress: 100,
-    enrolledDate: 'Apr 10, 2025',
-  },
-  {
-    title: 'Recorded Healing Workshops',
-    progress: 33,
-    enrolledDate: 'May 10, 2025',
-  },
-]
+import { useAuth } from '@/context/AuthContext'
+import { updateProfile } from 'firebase/auth'
+import { doc, updateDoc } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase/config'
 
 export default function ProfilePage() {
-  const [name, setName] = useState('Priya Sharma')
-  const [email] = useState('priya@gmail.com')
-  const [phone, setPhone] = useState('+91 98765 43210')
+  const { user, loading, refreshUser } = useAuth()
+
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  // Populate fields when user loads
+  useEffect(() => {
+    if (user) {
+      setName(user.name ?? '')
+      setPhone((user as any).phone ?? '')
+    }
+  }, [user])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    setError('')
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 900))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      // Update Firebase Auth display name
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: name })
+      }
+
+      // Update Firestore user doc
+      await updateDoc(doc(db, 'users', user!.uid), {
+        name,
+        phone,
+      })
+
+      await refreshUser()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      console.error(err)
+      setError('Failed to save changes. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className='space-y-6 max-w-3xl mx-auto animate-pulse'>
+        <div className='h-8 w-48 bg-purple-100 rounded' />
+        <div className='h-36 bg-purple-100 rounded-2xl' />
+        <div className='h-64 bg-purple-100 rounded-2xl' />
+      </div>
+    )
   }
 
   return (
@@ -56,16 +80,24 @@ export default function ProfilePage() {
 
       {/* Avatar + name card */}
       <div className='bg-gradient-to-br from-[#7C5CBF] to-[#A67DD4] rounded-2xl p-7 flex items-center gap-6 text-white'>
-        <div className='w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-white text-[30px] font-bold shrink-0'>
-          {name.charAt(0).toUpperCase()}
-        </div>
+        {user?.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt={user.name}
+            className='w-20 h-20 rounded-full object-cover border-4 border-white/30'
+          />
+        ) : (
+          <div className='w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-white text-[30px] font-bold shrink-0'>
+            {user?.name?.charAt(0).toUpperCase() ?? '?'}
+          </div>
+        )}
         <div>
-          <h2 className='font-serif text-[22px] font-bold'>{name}</h2>
-          <p className='text-purple-200 text-[14px]'>{email}</p>
+          <h2 className='font-serif text-[22px] font-bold'>{user?.name}</h2>
+          <p className='text-purple-200 text-[14px]'>{user?.email}</p>
           <div className='flex items-center gap-1.5 mt-2 bg-white/20 px-3 py-1 rounded-full w-fit'>
             <ShieldIcon size={12} className='text-purple-200' />
-            <span className='text-[12px] text-purple-100 font-medium'>
-              Student · Active
+            <span className='text-[12px] text-purple-100 font-medium capitalize'>
+              {user?.role} · Active
             </span>
           </div>
         </div>
@@ -76,6 +108,13 @@ export default function ProfilePage() {
         <h2 className='font-serif text-[18px] font-bold text-[#2D1B5E] mb-5'>
           Personal Information
         </h2>
+
+        {error && (
+          <div className='mb-4 bg-red-50 border border-red-200 text-red-600 text-[13px] px-4 py-3 rounded-xl'>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSave} className='space-y-5'>
           {/* Name */}
           <div>
@@ -108,7 +147,7 @@ export default function ProfilePage() {
               />
               <input
                 type='email'
-                value={email}
+                value={user?.email ?? ''}
                 disabled
                 className='w-full pl-9 pr-4 py-3 border border-purple-100 rounded-xl text-[14px] text-[#8470A8] bg-[#FAF8FF] cursor-not-allowed'
               />
@@ -203,33 +242,23 @@ export default function ProfilePage() {
         <h2 className='font-serif text-[18px] font-bold text-[#2D1B5E] mb-5'>
           My Enrollments
         </h2>
-        <div className='space-y-4'>
-          {ENROLLED_COURSES.map((course) => (
-            <div key={course.title} className='flex items-center gap-4'>
-              <div className='flex-1 min-w-0'>
-                <p className='text-[13.5px] font-semibold text-[#2D1B5E] truncate'>
-                  {course.title}
-                </p>
-                <p className='text-[12px] text-[#8470A8]'>
-                  Enrolled {course.enrolledDate}
-                </p>
-              </div>
-              <div className='w-24 shrink-0'>
-                <div className='flex items-center justify-between mb-1'>
-                  <span className='text-[11px] text-[#7C5CBF] font-semibold'>
-                    {course.progress}%
-                  </span>
-                </div>
-                <div className='h-1.5 bg-purple-100 rounded-full overflow-hidden'>
-                  <div
-                    className='h-full bg-[#7C5CBF] rounded-full'
-                    style={{ width: `${course.progress}%` }}
-                  />
+        {user?.enrolledCourses && user.enrolledCourses.length > 0 ? (
+          <div className='space-y-4'>
+            {user.enrolledCourses.map((courseId) => (
+              <div key={courseId} className='flex items-center gap-4'>
+                <div className='flex-1 min-w-0'>
+                  <p className='text-[13.5px] font-semibold text-[#2D1B5E] truncate'>
+                    {courseId}
+                  </p>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className='text-[13.5px] text-[#8470A8]'>
+            You haven't enrolled in any courses yet.
+          </p>
+        )}
       </div>
 
       {/* Danger zone */}
