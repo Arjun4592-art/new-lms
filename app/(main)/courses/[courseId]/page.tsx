@@ -1,147 +1,124 @@
-import { notFound } from 'next/navigation'
-import { COURSES_DATA } from '../page'
-import WhatYouLearn from '@/components/courses/WhatYouLearn'
-import CourseIncludes from '@/components/courses/CourseIncludes'
+'use client'
+
+import { useParams, useRouter } from 'next/navigation'
+import { useCourse } from '@/hooks/useCourse'
+import { useEnrollment } from '@/hooks/useEnrollment'
+import { useAuthContext } from '@/context/AuthContext'
 import EnrollButton from '@/components/courses/EnrollButton'
-import Badge from '@/components/ui/Badge'
-import { ClockIcon, PlayIcon, UsersIcon } from '@/components/ui/Icons'
+import {
+  ClockIcon,
+  PlayIcon,
+  UsersIcon,
+  CheckIcon,
+} from '@/components/ui/Icons'
 
-interface Props {
-  params: Promise<{ courseId: string }>
-}
+export default function CourseDetailPage() {
+  const { courseId } = useParams<{ courseId: string }>()
+  const { course, loading, error } = useCourse(courseId)
+  const { user } = useAuthContext()
+  const { enrollment } = useEnrollment(user?.uid, courseId)
 
-export function generateStaticParams() {
-  return COURSES_DATA.map((c) => ({ courseId: c.id }))
-}
-
-export async function generateMetadata({ params }: Props) {
-  const { courseId } = await params
-  const course = COURSES_DATA.find((c) => c.id === courseId)
-  if (!course) return {}
-  return {
-    title: `${course.title} | Pain to Power Coaching`,
-    description: course.description,
+  if (loading) {
+    return (
+      <div className='min-h-screen animate-pulse pt-24'>
+        <div className='max-w-6xl mx-auto px-4 space-y-6'>
+          <div className='h-64 bg-surface rounded-3xl' />
+          <div className='grid lg:grid-cols-3 gap-8'>
+            <div className='lg:col-span-2 space-y-4'>
+              <div className='h-8 w-2/3 bg-surface rounded' />
+              <div className='h-32 bg-surface rounded-xl' />
+            </div>
+            <div className='h-64 bg-surface rounded-2xl' />
+          </div>
+        </div>
+      </div>
+    )
   }
-}
 
-export default async function CourseDetailPage({ params }: Props) {
-  const { courseId } = await params
-  const course = COURSES_DATA.find((c) => c.id === courseId)
-  if (!course) notFound()
+  if (error || !course) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <p className='text-primary-muted'>Course not found.</p>
+      </div>
+    )
+  }
 
   return (
-    <>
+    <div className='min-h-screen'>
       {/* Hero */}
-      <section className='pt-28 pb-16 px-4 bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] relative overflow-hidden'>
-        <div className='absolute top-10 right-10 w-64 h-64 bg-[#D4BEFF]/20 rounded-full blur-3xl' />
-        <div className='relative max-w-6xl mx-auto'>
-          <div className='flex flex-wrap gap-2 mb-5'>
-            {course.badge && (
-              <Badge variant={course.badgeVariant ?? 'purple'}>
-                {course.badge}
-              </Badge>
-            )}
-          </div>
-          <h1 className='font-serif text-[36px] sm:text-[48px] font-bold text-[#2D1B5E] leading-tight mb-4 max-w-3xl'>
+      <div className={`bg-linear-to-br ${course.color} pt-28 pb-16 px-4`}>
+        <div className='max-w-6xl mx-auto'>
+          <span className='text-[60px]'>{course.emoji}</span>
+          <h1 className='font-serif text-[36px] sm:text-[44px] font-bold text-white leading-tight mt-4 mb-4'>
             {course.title}
           </h1>
-          <p className='text-[17px] text-[#6B5B8B] leading-relaxed max-w-2xl mb-8'>
+          <p className='text-white/80 text-[17px] leading-relaxed max-w-2xl mb-6'>
             {course.description}
           </p>
-          <div className='flex flex-wrap gap-5 text-[#6B5B8B] text-[14px]'>
+          <div className='flex flex-wrap gap-5 text-white/80 text-[14px]'>
             <div className='flex items-center gap-2'>
-              <ClockIcon size={15} /> {course.duration}
+              <ClockIcon size={15} /> {course.totalDuration} min total
             </div>
             <div className='flex items-center gap-2'>
-              <PlayIcon size={15} /> {course.format}
+              <PlayIcon size={15} /> {course.totalLessons} lessons
             </div>
-            {course.students && (
-              <div className='flex items-center gap-2'>
-                <UsersIcon size={15} /> {course.students}+ enrolled
-              </div>
-            )}
             <div className='flex items-center gap-2'>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <svg
-                  key={i}
-                  width='13'
-                  height='13'
-                  viewBox='0 0 24 24'
-                  fill='#F5A623'
-                >
-                  <polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' />
-                </svg>
-              ))}
-              <span>5.0</span>
+              <UsersIcon size={15} /> {course.format}
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Body */}
-      <section className='py-14 px-4 bg-white'>
-        <div className='max-w-6xl mx-auto grid lg:grid-cols-3 gap-10'>
-          {/* Left - main content */}
-          <div className='lg:col-span-2 space-y-8'>
-            <WhatYouLearn />
-            <CourseIncludes />
-
-            {/* About this programme */}
-            <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-7'>
-              <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-4'>
-                About This Programme
-              </h3>
-              <div className='space-y-3 text-[14.5px] text-[#6B5B8B] leading-relaxed'>
-                <p>
-                  This programme is designed for women who are ready to stop
-                  surviving and start truly living. Whether you're dealing with
-                  past trauma, emotional overwhelm, or simply feeling lost —
-                  this is your safe space to heal and rise.
-                </p>
-                <p>
-                  Through a combination of {course.format.toLowerCase()}, guided
-                  worksheets, reflection journals, affirmation sheets, and
-                  community support, you will gain the tools, clarity, and
-                  confidence to transform your life from the inside out.
-                </p>
-                <p>
-                  Payment is available as a one-time payment or in instalment
-                  options. Early bird and limited-time pricing may be available
-                  — enquire to find out more.
-                </p>
-              </div>
-            </div>
-
-            {/* For whom */}
-            <div className='bg-white border border-purple-100 rounded-2xl p-7'>
-              <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-4'>
-                This Programme Is For You If…
-              </h3>
-              <ul className='space-y-3'>
-                {[
-                  "You feel emotionally overwhelmed and don't know where to start",
-                  "You've been people-pleasing for so long you've lost yourself",
-                  "You want to set boundaries but don't know how without guilt",
-                  'You carry pain from your past or from generations before you',
-                  "You're ready to invest in yourself and your healing",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className='flex items-start gap-3 text-[14px] text-[#4A3570]'
-                  >
-                    <span className='text-[#7C5CBF] mt-0.5'>✦</span> {item}
-                  </li>
+      {/* Content */}
+      <div className='max-w-6xl mx-auto px-4 py-12 grid lg:grid-cols-3 gap-8'>
+        <div className='lg:col-span-2 space-y-8'>
+          {/* What you'll learn */}
+          {course.whatYouLearn && course.whatYouLearn.length > 0 && (
+            <div className='bg-white border border-surface-border rounded-2xl p-6'>
+              <h2 className='font-serif text-[20px] font-bold text-primary-dark mb-5'>
+                What You Will Learn
+              </h2>
+              <div className='grid sm:grid-cols-2 gap-3'>
+                {course.whatYouLearn.map((item) => (
+                  <div key={item} className='flex items-start gap-3'>
+                    <div className='w-5 h-5 rounded-full bg-surface flex items-center justify-center shrink-0 mt-0.5'>
+                      <CheckIcon size={10} className='text-primary' />
+                    </div>
+                    <p className='text-[14px] text-primary-mid'>{item}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Right - sticky enroll */}
-          <div>
-            <EnrollButton courseTitle={course.title} price={course.price} />
-          </div>
+          {/* Includes */}
+          {course.includes && course.includes.length > 0 && (
+            <div className='bg-white border border-surface-border rounded-2xl p-6'>
+              <h2 className='font-serif text-[20px] font-bold text-primary-dark mb-5'>
+                This Course Includes
+              </h2>
+              <div className='space-y-2'>
+                {course.includes.map((item) => (
+                  <div key={item} className='flex items-center gap-3'>
+                    <CheckIcon size={14} className='text-primary shrink-0' />
+                    <p className='text-[14px] text-primary-mid'>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </section>
-    </>
+
+        {/* Enroll card */}
+        <div>
+          <EnrollButton
+            courseId={courseId}
+            price={course.price}
+            isFree={course.isFree}
+            isEnrolled={!!enrollment}
+          />
+        </div>
+      </div>
+    </div>
   )
 }

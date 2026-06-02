@@ -1,25 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase-admin'
-import { cookies } from 'next/headers'
+
+const SESSION_DURATION = 60 * 60 * 24 * 5 * 1000 // 5 days
 
 export async function POST(req: NextRequest) {
   try {
     const { idToken } = await req.json()
-    const expiresIn = 60 * 60 * 24 * 5 * 1000
-
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
-      expiresIn,
+      expiresIn: SESSION_DURATION,
     })
 
-    const cookieStore = await cookies()
-    cookieStore.set('session', sessionCookie, {
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('session', sessionCookie, {
+      maxAge: SESSION_DURATION / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: expiresIn / 1000,
       path: '/',
+      sameSite: 'lax',
     })
-
-    return NextResponse.json({ status: 'success' })
+    return response
   } catch (err) {
     console.error('Session error:', err)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const cookieStore = await cookies()
-  cookieStore.delete('session')
-  return NextResponse.json({ status: 'cleared' })
+  const response = NextResponse.json({ success: true })
+  response.cookies.delete('session')
+  return response
 }

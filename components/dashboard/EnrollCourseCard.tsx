@@ -1,26 +1,29 @@
 import Link from 'next/link'
 import ProgressBar from './ProgressBar'
 import { PlayIcon, ClockIcon, CheckIcon } from '@/components/ui/Icons'
+import type { Enrollment } from '@/types'
 
 export interface EnrolledCourse {
   id: string
   title: string
   emoji: string
   color: string
-  progress: number
   totalLessons: number
-  completedLessons: number
   nextLesson?: string
   format: string
-  enrolledDate: string
+  // enrolledDate: string
 }
 
 export default function EnrolledCourseCard({
   course,
+  enrollment,
 }: {
   course: EnrolledCourse
+  enrollment?: Enrollment
 }) {
-  const isCompleted = course.progress === 100
+  const progress = enrollment?.progress ?? 0
+  const completedLessons = enrollment?.completedLessons?.length ?? 0
+  const isCompleted = progress === 100
 
   return (
     <div className='bg-white border border-purple-100 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-purple-100/50 transition-all group'>
@@ -48,11 +51,11 @@ export default function EnrolledCourseCard({
           </div>
           <span>·</span>
           <span>
-            {course.completedLessons}/{course.totalLessons} lessons
+            {completedLessons}/{course.totalLessons} lessons
           </span>
         </div>
 
-        <ProgressBar value={course.progress} size='sm' />
+        <ProgressBar value={progress} size='sm' />
 
         {course.nextLesson && !isCompleted && (
           <p className='text-[11.5px] text-[#8470A8] mt-2 truncate'>

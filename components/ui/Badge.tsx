@@ -1,19 +1,25 @@
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'purple' | 'pink' | 'green' | 'gold'
+  variant?: 'purple' | 'green' | 'gold' | 'pink' | 'default'
+  className?: string
 }
 
-const styles = {
-  purple: 'bg-[#F3EEFF] text-[#7C5CBF] border border-[#D4BEFF]',
-  pink: 'bg-[#FFF0F6] text-[#C2557A] border border-[#F5C0D5]',
-  green: 'bg-[#EDFCF2] text-[#2D7A4F] border border-[#A8E6BF]',
-  gold: 'bg-[#FFFBEB] text-[#92620A] border border-[#F5D98B]',
+const variants = {
+  purple: 'bg-surface text-primary border border-primary-light',
+  green: 'bg-green-50 text-green-700 border border-green-200',
+  gold: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  pink: 'bg-pink-50 text-pink-700 border border-pink-200',
+  default: 'bg-surface text-primary-muted border border-surface',
 }
 
-export default function Badge({ children, variant = 'purple' }: BadgeProps) {
+export default function Badge({
+  children,
+  variant = 'default',
+  className = '',
+}: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-semibold ${styles[variant]}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${variants[variant]} ${className}`}
     >
       {children}
     </span>

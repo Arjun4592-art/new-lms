@@ -1,572 +1,226 @@
-import LessonPlayer, { Module } from '@/components/dashboard/LessonPlayer'
-import { notFound } from 'next/navigation'
+'use client'
 
-interface Props {
-  params: { courseId: string }
-}
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
+import { useAuthContext } from '@/context/AuthContext'
+import { useEnrollment } from '@/hooks/useEnrollment'
+import { useCourse } from '@/hooks/useCourse'
+import { markLessonComplete } from '@/hooks/useEnrollment'
+import type { Section, Lesson } from '@/types'
+import { CheckIcon, PlayIcon, LockIcon } from '@/components/ui/Icons'
 
-const COURSE_MODULES: Record<string, { title: string; modules: Module[] }> = {
-  'pain-to-power-masterclass': {
-    title: 'Pain to Power Masterclass',
-    modules: [
-      {
-        id: 'm1',
-        title: 'Module 1: Understanding Your Pain',
-        lessons: [
-          {
-            id: 'l1',
-            title: 'Welcome & What to Expect',
-            duration: '8 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l2',
-            title: 'Understanding Emotional Pain',
-            duration: '14 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l3',
-            title: 'Your Pain Story Worksheet',
-            duration: '10 min',
-            type: 'pdf',
-            isCompleted: true,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm2',
-        title: 'Module 2: Recognising Patterns',
-        lessons: [
-          {
-            id: 'l4',
-            title: 'What Are Emotional Patterns?',
-            duration: '16 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l5',
-            title: 'Identifying Your Triggers',
-            duration: '12 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l6',
-            title: 'Pattern Mapping Exercise',
-            duration: '15 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm3',
-        title: 'Module 3: Releasing the Pain',
-        lessons: [
-          {
-            id: 'l7',
-            title: 'The Art of Letting Go',
-            duration: '18 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l8',
-            title: 'Somatic Release Practices',
-            duration: '20 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l9',
-            title: 'Live Group Session Recording',
-            duration: '60 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm4',
-        title: 'Module 4: Stepping Into Power',
-        lessons: [
-          {
-            id: 'l10',
-            title: 'Building Unshakeable Confidence',
-            duration: '22 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l11',
-            title: 'Daily Power Practices',
-            duration: '12 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l12',
-            title: 'Your Power Affirmations Sheet',
-            duration: '5 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l13',
-            title: 'Closing Ceremony & Next Steps',
-            duration: '10 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-    ],
-  },
-  '5-day-challenge': {
-    title: '5-Day WhatsApp Challenge',
-    modules: [
-      {
-        id: 'm1',
-        title: 'Day 1: Awareness',
-        lessons: [
-          {
-            id: 'l1',
-            title: 'Welcome to the Challenge',
-            duration: '5 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l2',
-            title: 'Day 1 Prompt & Practice',
-            duration: '10 min',
-            type: 'pdf',
-            isCompleted: true,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm2',
-        title: 'Day 2: Emotions',
-        lessons: [
-          {
-            id: 'l3',
-            title: 'Understanding Your Emotions',
-            duration: '8 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l4',
-            title: 'Day 2 Journal Prompts',
-            duration: '10 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm3',
-        title: 'Day 3: Boundaries',
-        lessons: [
-          {
-            id: 'l5',
-            title: 'What Are Boundaries?',
-            duration: '10 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l6',
-            title: 'Day 3 Practice',
-            duration: '8 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm4',
-        title: 'Day 4: Self-Worth',
-        lessons: [
-          {
-            id: 'l7',
-            title: 'Reclaiming Your Worth',
-            duration: '12 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l8',
-            title: 'Day 4 Affirmations',
-            duration: '5 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-      {
-        id: 'm5',
-        title: 'Day 5: Power',
-        lessons: [
-          {
-            id: 'l9',
-            title: 'Stepping Into Your Power',
-            duration: '15 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l10',
-            title: 'Closing Reflection',
-            duration: '8 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-    ],
-  },
-  '4-week-healing': {
-    title: '4-Week Emotional Healing Programme',
-    modules: [
-      {
-        id: 'm1',
-        title: 'Week 1: Foundation',
-        lessons: [
-          {
-            id: 'l1',
-            title: 'Orientation & Welcome',
-            duration: '10 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l2',
-            title: 'Week 1 Live Zoom Session',
-            duration: '60 min',
-            type: 'live',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l3',
-            title: 'Foundation Workbook',
-            duration: '20 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm2',
-        title: 'Week 2: Healing',
-        lessons: [
-          {
-            id: 'l4',
-            title: 'Deep Healing Practices',
-            duration: '25 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l5',
-            title: 'Week 2 Live Zoom Session',
-            duration: '60 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l6',
-            title: 'Healing Journal Prompts',
-            duration: '15 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm3',
-        title: 'Week 3: Boundaries',
-        lessons: [
-          {
-            id: 'l7',
-            title: 'Boundaries from Love',
-            duration: '20 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l8',
-            title: 'Week 3 Live Zoom Session',
-            duration: '60 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-      {
-        id: 'm4',
-        title: 'Week 4: Power',
-        lessons: [
-          {
-            id: 'l9',
-            title: 'Rising Into Your Power',
-            duration: '22 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l10',
-            title: 'Final Live Zoom + Celebration',
-            duration: '90 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l11',
-            title: 'Certificate of Completion',
-            duration: '2 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-    ],
-  },
-  'self-boundaries': {
-    title: 'Self-Boundaries & Letting Go',
-    modules: [
-      {
-        id: 'm1',
-        title: 'Module 1: What Are Boundaries?',
-        lessons: [
-          {
-            id: 'l1',
-            title: 'Introduction to Boundaries',
-            duration: '12 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l2',
-            title: 'Types of Boundaries',
-            duration: '10 min',
-            type: 'video',
-            isCompleted: true,
-            isLocked: false,
-          },
-          {
-            id: 'l3',
-            title: 'Boundary Assessment Worksheet',
-            duration: '15 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm2',
-        title: 'Module 2: Setting Boundaries Without Guilt',
-        lessons: [
-          {
-            id: 'l4',
-            title: 'The Guilt Around Boundaries',
-            duration: '14 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l5',
-            title: 'Scripts for Setting Boundaries',
-            duration: '10 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm3',
-        title: 'Module 3: Letting Go',
-        lessons: [
-          {
-            id: 'l6',
-            title: 'The Art of Letting Go',
-            duration: '18 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l7',
-            title: 'Letting Go Ritual Practice',
-            duration: '12 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm4',
-        title: 'Module 4: Living Free',
-        lessons: [
-          {
-            id: 'l8',
-            title: 'Your New Empowered Life',
-            duration: '15 min',
-            type: 'video',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l9',
-            title: 'Daily Freedom Affirmations',
-            duration: '5 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-    ],
-  },
-  'healing-workshops': {
-    title: 'Recorded Healing Workshops',
-    modules: [
-      {
-        id: 'm1',
-        title: 'Workshop 1: Inner Child Healing',
-        lessons: [
-          {
-            id: 'l1',
-            title: 'Inner Child Healing Workshop',
-            duration: '75 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l2',
-            title: 'Inner Child Letter Worksheet',
-            duration: '20 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm2',
-        title: 'Workshop 2: Emotional Resilience',
-        lessons: [
-          {
-            id: 'l3',
-            title: 'Building Emotional Resilience',
-            duration: '80 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: false,
-          },
-          {
-            id: 'l4',
-            title: 'Resilience Daily Practice Guide',
-            duration: '10 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: false,
-          },
-        ],
-      },
-      {
-        id: 'm3',
-        title: 'Workshop 3: Self-Worth',
-        lessons: [
-          {
-            id: 'l5',
-            title: 'Reclaiming Your Self-Worth',
-            duration: '70 min',
-            type: 'live',
-            isCompleted: false,
-            isLocked: true,
-          },
-          {
-            id: 'l6',
-            title: 'Self-Worth Affirmation Sheet',
-            duration: '5 min',
-            type: 'pdf',
-            isCompleted: false,
-            isLocked: true,
-          },
-        ],
-      },
-    ],
-  },
-}
+export default function LearnPage() {
+  const { courseId } = useParams<{ courseId: string }>()
+  const router = useRouter()
+  const { user } = useAuthContext()
+  const { course, loading: courseLoading } = useCourse(courseId)
+  const { enrollment, loading: enrollLoading } = useEnrollment(
+    user?.uid,
+    courseId,
+  )
 
-export function generateStaticParams() {
-  return Object.keys(COURSE_MODULES).map((courseId) => ({ courseId }))
-}
+  const [sections, setSections] = useState<Section[]>([])
+  const [lessons, setLessons] = useState<Lesson[]>([])
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null)
+  const [marking, setMarking] = useState(false)
 
-export default function LearnPage({ params }: Props) {
-  const data = COURSE_MODULES[params.courseId]
-  if (!data) notFound()
+  useEffect(() => {
+    if (!courseId) return
+    async function fetchContent() {
+      const [secSnap, lesSnap] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, 'sections'),
+            where('courseId', '==', courseId),
+            orderBy('order'),
+          ),
+        ),
+        getDocs(
+          query(
+            collection(db, 'lessons'),
+            where('courseId', '==', courseId),
+            orderBy('order'),
+          ),
+        ),
+      ])
+      const secs = secSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as Section,
+      )
+      const les = lesSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Lesson)
+      setSections(secs)
+      setLessons(les)
+      if (les.length > 0) setActiveLesson(les[0])
+    }
+    fetchContent()
+  }, [courseId])
+
+  useEffect(() => {
+    if (!enrollLoading && !enrollment) {
+      router.push(`/courses/${courseId}`)
+    }
+  }, [enrollment, enrollLoading])
+
+  const completedSet = new Set(enrollment?.completedLessons ?? [])
+
+  async function handleMarkComplete() {
+    if (!user || !activeLesson || !course) return
+    setMarking(true)
+    try {
+      await markLessonComplete(
+        user.uid,
+        courseId,
+        activeLesson.id,
+        lessons.length,
+      )
+      completedSet.add(activeLesson.id)
+      // Auto advance to next lesson
+      const idx = lessons.findIndex((l) => l.id === activeLesson.id)
+      if (idx < lessons.length - 1) setActiveLesson(lessons[idx + 1])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  if (courseLoading || enrollLoading) {
+    return (
+      <div className='animate-pulse max-w-6xl mx-auto space-y-4'>
+        <div className='h-8 w-48 bg-surface rounded' />
+        <div className='aspect-video bg-surface rounded-2xl' />
+      </div>
+    )
+  }
 
   return (
-    <div className='space-y-5 max-w-6xl mx-auto'>
-      {/* Header */}
-      <div>
-        <p className='text-[12px] text-[#A67DD4] font-semibold uppercase tracking-widest mb-1'>
-          Now Learning
-        </p>
-        <h1 className='font-serif text-[24px] sm:text-[28px] font-bold text-[#2D1B5E]'>
-          {data.title}
-        </h1>
-      </div>
+    <div className='max-w-6xl mx-auto'>
+      <h1 className='font-serif text-[22px] font-bold text-primary-dark mb-4'>
+        {course?.title}
+      </h1>
 
-      {/* Player */}
-      <LessonPlayer modules={data.modules} courseTitle={data.title} />
+      <div className='grid lg:grid-cols-3 gap-6'>
+        {/* Video player */}
+        <div className='lg:col-span-2 space-y-4'>
+          <div className='aspect-video bg-black rounded-2xl overflow-hidden'>
+            {activeLesson?.videoUrl ? (
+              activeLesson.videoUrl.includes('youtube') ||
+              activeLesson.videoUrl.includes('youtu.be') ? (
+                <iframe
+                  src={activeLesson.videoUrl.replace('watch?v=', 'embed/')}
+                  className='w-full h-full'
+                  allowFullScreen
+                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                />
+              ) : (
+                <video
+                  src={activeLesson.videoUrl}
+                  controls
+                  className='w-full h-full'
+                />
+              )
+            ) : (
+              <div className='w-full h-full flex items-center justify-center text-primary-muted'>
+                <PlayIcon size={48} />
+              </div>
+            )}
+          </div>
+
+          {activeLesson && (
+            <div className='bg-white border border-surface-border rounded-2xl p-5'>
+              <h2 className='font-serif text-[18px] font-bold text-primary-dark mb-2'>
+                {activeLesson.title}
+              </h2>
+              <p className='text-[13px] text-primary-muted mb-4'>
+                {activeLesson.duration} min
+              </p>
+              {!completedSet.has(activeLesson.id) ? (
+                <button
+                  onClick={handleMarkComplete}
+                  disabled={marking}
+                  className='px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl text-[14px] transition-colors disabled:opacity-60 flex items-center gap-2'
+                >
+                  <CheckIcon size={16} />
+                  {marking ? 'Marking...' : 'Mark as Complete'}
+                </button>
+              ) : (
+                <div className='flex items-center gap-2 text-green-600 text-[14px] font-semibold'>
+                  <CheckIcon size={16} /> Completed
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Course outline */}
+        <div className='bg-white border border-surface-border rounded-2xl overflow-hidden h-fit'>
+          <div className='px-5 py-4 border-b border-surface-border bg-surface'>
+            <p className='font-semibold text-primary-dark text-[14px]'>
+              Course Content
+            </p>
+            <p className='text-[12px] text-primary-muted mt-0.5'>
+              {completedSet.size}/{lessons.length} completed
+            </p>
+          </div>
+          <div className='overflow-y-auto max-h-[600px]'>
+            {sections.map((section) => (
+              <div key={section.id}>
+                <div className='px-5 py-3 bg-surface border-b border-surface-border'>
+                  <p className='text-[12px] font-bold text-primary-mid uppercase tracking-wide'>
+                    {section.title}
+                  </p>
+                </div>
+                {lessons
+                  .filter((l) => l.sectionId === section.id)
+                  .map((lesson) => {
+                    const done = completedSet.has(lesson.id)
+                    const active = activeLesson?.id === lesson.id
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => setActiveLesson(lesson)}
+                        className={`w-full flex items-center gap-3 px-5 py-3 text-left border-b border-surface-border transition-colors ${
+                          active ? 'bg-surface' : 'hover:bg-surface'
+                        }`}
+                      >
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                            done
+                              ? 'bg-green-100'
+                              : active
+                                ? 'bg-primary'
+                                : 'bg-surface'
+                          }`}
+                        >
+                          {done ? (
+                            <CheckIcon size={12} className='text-green-600' />
+                          ) : active ? (
+                            <PlayIcon size={10} className='text-white' />
+                          ) : (
+                            <span className='text-[10px] text-primary-muted'>
+                              {lesson.order}
+                            </span>
+                          )}
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <p
+                            className={`text-[13px] truncate ${active ? 'font-semibold text-primary' : 'text-primary-mid'}`}
+                          >
+                            {lesson.title}
+                          </p>
+                          <p className='text-[11px] text-primary-muted'>
+                            {lesson.duration} min
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

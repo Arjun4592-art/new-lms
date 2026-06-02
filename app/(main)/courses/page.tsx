@@ -1,102 +1,121 @@
-import SectionHeading from '@/components/ui/SectionHeading'
-import CourseCard, { CourseData } from '@/components/courses/CourseCard'
-import WhatYouLearn from '@/components/courses/WhatYouLearn'
-import Button from '@/components/ui/Button'
-import { ArrowRightIcon } from '@/components/ui/Icons'
+'use client'
 
-export const metadata = {
-  title: 'Programs & Courses | Pain to Power Coaching',
-  description:
-    'Explore transformational coaching programs designed to help women heal, grow, and step into their power.',
+import { useEffect, useState } from 'react'
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
+import type { Course } from '@/types'
+import Link from 'next/link'
+import {
+  ClockIcon,
+  PlayIcon,
+  UsersIcon,
+  ArrowRightIcon,
+} from '@/components/ui/Icons'
+import Button from '@/components/ui/Button'
+
+function CourseCardFirestore({ course }: { course: Course }) {
+  return (
+    <Link
+      href={`/courses/${course.id}`}
+      className='group block bg-white border border-purple-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-purple-100/60 hover:-translate-y-1 transition-all duration-300 no-underline'
+    >
+      {/* Header */}
+      <div
+        className={`h-36 bg-gradient-to-br ${course.color} flex items-center justify-center relative`}
+      >
+        <span className='text-[52px]'>{course.emoji}</span>
+        {!course.isFree && (
+          <div className='absolute top-3 left-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[11px] font-bold px-2.5 py-1 rounded-full'>
+            {course.category}
+          </div>
+        )}
+        {course.isFree && (
+          <div className='absolute top-3 right-3 bg-green-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full'>
+            Free
+          </div>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className='p-6'>
+        <h3 className='font-serif text-[17px] font-bold text-[#2D1B5E] mb-2 group-hover:text-[#7C5CBF] transition-colors leading-snug'>
+          {course.title}
+        </h3>
+        <p className='text-[13.5px] text-[#8470A8] leading-relaxed mb-4 line-clamp-3'>
+          {course.description}
+        </p>
+
+        <div className='flex flex-wrap gap-x-4 gap-y-1.5 mb-4'>
+          <div className='flex items-center gap-1.5 text-[12.5px] text-[#8470A8]'>
+            <ClockIcon size={13} className='text-[#A67DD4]' />
+            {course.totalDuration} min
+          </div>
+          <div className='flex items-center gap-1.5 text-[12.5px] text-[#8470A8]'>
+            <PlayIcon size={13} className='text-[#A67DD4]' />
+            {course.format}
+          </div>
+          <div className='flex items-center gap-1.5 text-[12.5px] text-[#8470A8]'>
+            <UsersIcon size={13} className='text-[#A67DD4]' />
+            {course.totalLessons} lessons
+          </div>
+        </div>
+
+        {/* Includes tags */}
+        {course.includes && course.includes.length > 0 && (
+          <div className='flex flex-wrap gap-1.5 mb-5'>
+            {course.includes.slice(0, 3).map((item) => (
+              <span
+                key={item}
+                className='text-[11px] bg-[#F9F5FF] text-[#7C5CBF] border border-purple-100 px-2 py-0.5 rounded-full'
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Price + CTA */}
+        <div className='pt-4 border-t border-purple-50 flex items-center justify-between'>
+          <div>
+            <p className='text-[18px] font-bold text-[#2D1B5E]'>
+              {course.isFree
+                ? 'Free'
+                : `₹${course.price.toLocaleString('en-IN')}`}
+            </p>
+          </div>
+          <div className='flex items-center gap-1 text-[#7C5CBF] font-semibold text-[13px]'>
+            Enroll{' '}
+            <ArrowRightIcon
+              size={15}
+              className='group-hover:translate-x-1 transition-transform'
+            />
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
 }
 
-export const COURSES_DATA: CourseData[] = [
-  {
-    id: 'pain-to-power-masterclass',
-    title: 'Pain to Power Masterclass',
-    description:
-      'A transformational programme designed to help you identify emotional patterns, release suppressed pain, and step into confidence with clarity and strength.',
-    duration: '60–90 min',
-    format: 'Live + Recorded',
-    students: 200,
-    price: '₹2,999',
-    originalPrice: '₹4,999',
-    badge: 'Most Popular',
-    badgeVariant: 'purple',
-    emoji: '🔥',
-    color: 'from-[#7C5CBF] to-[#A67DD4]',
-    modules: 4,
-    includes: ['Live session', 'Recording', 'Worksheets'],
-  },
-  {
-    id: '5-day-challenge',
-    title: '5-Day WhatsApp Challenge',
-    description:
-      'A guided 5-day immersive challenge delivered via WhatsApp to kickstart your healing journey with daily practices, reflections and community support.',
-    duration: '5 Days',
-    format: 'WhatsApp',
-    students: 350,
-    price: 'Free',
-    badge: 'Free Entry',
-    badgeVariant: 'green',
-    emoji: '💬',
-    color: 'from-[#A67DD4] to-[#C084F5]',
-    modules: 5,
-    includes: ['Daily prompts', 'Community', 'Resources'],
-  },
-  {
-    id: '4-week-healing',
-    title: '4-Week Emotional Healing Programme',
-    description:
-      'A deep-dive 4-week coaching programme with live Zoom sessions, recorded modules, optional 1:1 coaching, and a supportive community for lasting transformation.',
-    duration: '4–8 Weeks',
-    format: 'Live Zoom + 1:1',
-    students: 120,
-    price: '₹12,999',
-    originalPrice: '₹18,999',
-    badge: 'Signature',
-    badgeVariant: 'gold',
-    emoji: '✨',
-    color: 'from-[#9B6FC8] to-[#7C5CBF]',
-    modules: 8,
-    includes: ['4 Zoom calls', '1:1 session', 'Full recordings'],
-  },
-  {
-    id: 'self-boundaries',
-    title: 'Self-Boundaries & Letting Go Course',
-    description:
-      'Learn how to set healthy boundaries without guilt or fear, and release what no longer serves you — so you can create space for what truly matters.',
-    duration: 'Self-Paced',
-    format: 'Recorded Modules',
-    students: 180,
-    price: '₹4,999',
-    originalPrice: '₹7,999',
-    badge: 'New',
-    badgeVariant: 'pink',
-    emoji: '🌸',
-    color: 'from-[#C084F5] to-[#A67DD4]',
-    modules: 4,
-    includes: ['Video modules', 'Journal prompts', 'Affirmations'],
-  },
-  {
-    id: 'healing-workshops',
-    title: 'Recorded Healing Workshops',
-    description:
-      'Access a growing library of powerful healing workshops covering emotional resilience, self-worth, inner child healing, and more — all at your own pace.',
-    duration: 'Lifetime Access',
-    format: 'Recorded',
-    students: 450,
-    price: '₹1,499',
-    badge: 'Beginner Friendly',
-    badgeVariant: 'purple',
-    emoji: '🌿',
-    color: 'from-[#8B5CF6] to-[#9B6FC8]',
-    modules: 6,
-    includes: ['6+ workshops', 'PDFs', 'Lifetime access'],
-  },
-]
-
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'courses'), where('published', '==', true)),
+        )
+        setCourses(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Course))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCourses()
+  }, [])
+
   return (
     <>
       {/* Hero */}
@@ -123,24 +142,60 @@ export default function CoursesPage() {
       {/* Courses grid */}
       <section className='py-16 px-4 bg-white'>
         <div className='max-w-6xl mx-auto'>
-          <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {COURSES_DATA.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
+          {loading ? (
+            <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className='h-80 bg-purple-50 rounded-2xl animate-pulse'
+                />
+              ))}
+            </div>
+          ) : courses.length === 0 ? (
+            <div className='text-center py-20'>
+              <p className='text-[48px] mb-4'>🌸</p>
+              <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-2'>
+                No courses available yet
+              </h3>
+              <p className='text-[14px] text-[#8470A8]'>
+                Check back soon — new programmes are being added.
+              </p>
+            </div>
+          ) : (
+            <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {courses.map((course) => (
+                <CourseCardFirestore key={course.id} course={course} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* What you'll learn */}
       <section className='py-16 px-4 bg-[#F9F5FF]'>
-        <div className='max-w-4xl mx-auto'>
-          <SectionHeading
-            eyebrow='Across All Programs'
-            title='What You Will Learn'
-            center
-          />
-          <div className='mt-8'>
-            <WhatYouLearn />
+        <div className='max-w-4xl mx-auto text-center'>
+          <p className='text-[12px] text-[#A67DD4] font-semibold uppercase tracking-widest mb-2'>
+            Across All Programs
+          </p>
+          <h2 className='font-serif text-[32px] font-bold text-[#2D1B5E] mb-10'>
+            What You Will Learn
+          </h2>
+          <div className='grid sm:grid-cols-2 gap-4 text-left max-w-2xl mx-auto'>
+            {[
+              'Break free from emotional pain and patterns',
+              'Set healthy boundaries without guilt',
+              'Rebuild your self-worth from the inside out',
+              'Release what no longer serves you',
+              'Develop confidence and clarity',
+              'Heal your inner child and past wounds',
+              'Create a life rooted in joy and purpose',
+              'Connect with a supportive community of women',
+            ].map((item) => (
+              <div key={item} className='flex items-start gap-3'>
+                <span className='text-[#7C5CBF] mt-0.5 text-[16px]'>✦</span>
+                <p className='text-[14px] text-[#4A3570]'>{item}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

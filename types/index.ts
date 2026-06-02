@@ -8,8 +8,10 @@ export interface LMSUser {
   name: string
   photoURL: string | null
   role: UserRole
-  createdAt: string // ISO string
-  enrolledCourses?: string[] // courseIds
+  createdAt: string
+  enrolledCourses?: string[]
+  phone?: string
+  emailVerified?: boolean // ← add this
 }
 
 // ─── Course ───────────────────────────────────────────────────────────────────
@@ -19,7 +21,10 @@ export interface Course {
   title: string
   description: string
   thumbnail: string
+  emoji: string // ← add
+  color: string // ← add
   price: number
+  isFree: boolean
   instructorId: string
   instructorName: string
   category: string
@@ -27,9 +32,12 @@ export interface Course {
   published: boolean
   createdAt: string
   totalLessons: number
-  totalDuration: number // in minutes
+  totalDuration: number
   rating: number
   reviewCount: number
+  format: 'Live + Recorded' | 'Recorded' | 'Live'
+  whatYouLearn?: string[]
+  includes?: string[]
 }
 
 // ─── Section & Lesson ────────────────────────────────────────────────────────
@@ -58,9 +66,11 @@ export interface Enrollment {
   id: string
   userId: string
   courseId: string
-  purchasedAt: string
+  enrolledAt: string | any // Firestore Timestamp or ISO string
   price: number
-  progress: Record<string, boolean> // { [lessonId]: completed }
+  progress: number
+  completedLessons: string[]
+  nextLesson?: string
 }
 
 // ─── Review ───────────────────────────────────────────────────────────────────

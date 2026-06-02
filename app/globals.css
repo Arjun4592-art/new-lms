@@ -1,25 +1,94 @@
 @import 'tailwindcss';
 
 @theme {
+  /* ── Fonts ── */
   --font-serif: 'Playfair Display', Georgia, serif;
+
+  /* ── Brand Colors ── */
+  --color-primary: #7c5cbf;
+  --color-primary-hover: #6a4dad;
+  --color-primary-dark: #2d1b5e;
+  --color-primary-mid: #4a3570;
+  --color-primary-muted: #8470a8;
+  --color-primary-accent: #a67dd4;
+  --color-primary-light: #c084f5;
+
+  /* ── Surfaces ── */
+  --color-surface: #f3eeff;
+  --color-surface-hover: #e8deff;
+  --color-surface-border: #ede9fe;
+
+  /* ── Base ── */
+  --color-bg: #ffffff;
+  --color-text: #2d1b5e;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
   }
-
   body {
-    color: #2d1b5e;
-    background-color: white;
+    color: var(--color-text);
+    background-color: var(--color-bg);
   }
-
   .font-serif {
     font-family: var(--font-serif);
   }
 }
 
 @layer utilities {
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .text-primary-dark {
+    color: var(--color-primary-dark);
+  }
+  .text-primary-mid {
+    color: var(--color-primary-mid);
+  }
+  .text-primary-muted {
+    color: var(--color-primary-muted);
+  }
+  .text-primary-accent {
+    color: var(--color-primary-accent);
+  }
+  .text-primary-light {
+    color: var(--color-primary-light);
+  }
+
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .bg-primary-dark {
+    background-color: var(--color-primary-dark);
+  }
+  .bg-surface {
+    background-color: var(--color-surface);
+  }
+  .bg-surface-hover {
+    background-color: var(--color-surface-hover);
+  }
+
+  .border-surface {
+    border-color: var(--color-surface-border);
+  }
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+  .border-primary-light {
+    border-color: var(--color-primary-light);
+  }
+
+  .hover\:bg-primary-hover:hover {
+    background-color: var(--color-primary-hover);
+  }
+  .hover\:bg-surface-hover:hover {
+    background-color: var(--color-surface-hover);
+  }
+  .hover\:text-primary:hover {
+    color: var(--color-primary);
+  }
+
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

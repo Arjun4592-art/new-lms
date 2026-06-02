@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { MenuIcon } from '@/components/ui/Icons'
 import { useAuth } from '@/context/AuthContext'
 
@@ -24,9 +25,10 @@ function BellIconSVG() {
 }
 
 export default function DashboardTopbar() {
+  const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const { user, loading, logOut } = useAuth()
+  const { user, loading, signOut } = useAuth()
 
   function openSidebar() {
     const fn = (window as Window & { __openDashSidebar?: () => void })
@@ -37,18 +39,14 @@ export default function DashboardTopbar() {
   async function handleSignOut() {
     setSigningOut(true)
     try {
-      await logOut()
-      window.location.href = '/'
+      await signOut()
+      router.push('/')
     } catch (err) {
       console.error('Sign out error:', err)
       setSigningOut(false)
     }
   }
 
-  // Avatar: photo if available, else initials
-  {
-    console.log('User in topbar:', user)
-  }
   const avatar = user?.photoURL ? (
     <img
       src={user.photoURL}
@@ -56,30 +54,30 @@ export default function DashboardTopbar() {
       className='w-7 h-7 rounded-full object-cover'
     />
   ) : (
-    <div className='w-7 h-7 rounded-full bg-gradient-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center text-white text-[11px] font-bold'>
+    <div className='w-7 h-7 rounded-full bg-linear-to-br from-primary to-primary-light flex items-center justify-center text-white text-[11px] font-bold'>
       {user?.name?.charAt(0).toUpperCase() ?? '?'}
     </div>
   )
 
   return (
-    <header className='h-14 bg-white border-b border-purple-100 flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20'>
+    <header className='h-14 bg-white border-b border-surface-border flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20'>
       {/* Left */}
       <div className='flex items-center gap-3'>
         <button
           onClick={openSidebar}
-          className='lg:hidden w-8 h-8 flex items-center justify-center text-[#8470A8] hover:bg-[#F3EEFF] rounded-lg'
+          className='lg:hidden w-8 h-8 flex items-center justify-center text-primary-muted hover:bg-surface rounded-lg'
         >
           <MenuIcon size={18} />
         </button>
         <div className='hidden sm:block'>
           {loading ? (
-            <div className='h-4 w-32 bg-purple-100 rounded animate-pulse' />
+            <div className='h-4 w-32 bg-surface rounded animate-pulse' />
           ) : (
             <>
-              <p className='text-[14px] font-semibold text-[#2D1B5E]'>
+              <p className='text-[14px] font-semibold text-primary-dark'>
                 Welcome back, {user?.name?.split(' ')[0] ?? 'Student'} 🌸
               </p>
-              <p className='text-[11px] text-[#A67DD4]'>
+              <p className='text-[11px] text-primary-accent'>
                 Continue your healing journey
               </p>
             </>
@@ -89,82 +87,60 @@ export default function DashboardTopbar() {
 
       {/* Right */}
       <div className='flex items-center gap-2'>
-        {/* Notifications */}
-        <button className='relative w-8 h-8 flex items-center justify-center text-[#8470A8] hover:bg-[#F3EEFF] rounded-lg transition-colors'>
+        <button className='relative w-8 h-8 flex items-center justify-center text-primary-muted hover:bg-surface rounded-lg transition-colors'>
           <BellIconSVG />
-          <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-[#C084F5] rounded-full' />
+          <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-primary-light rounded-full' />
         </button>
 
-        {/* Profile */}
         <div className='relative'>
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className='flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-[#F3EEFF] rounded-xl transition-colors'
+            className='flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-surface rounded-xl transition-colors'
           >
             {loading ? (
-              <div className='w-7 h-7 rounded-full bg-purple-100 animate-pulse' />
+              <div className='w-7 h-7 rounded-full bg-surface animate-pulse' />
             ) : (
               avatar
             )}
-            <span className='hidden sm:block text-[13px] font-medium text-[#4A3570]'>
-              {loading ? (
-                <span className='inline-block w-16 h-3 bg-purple-100 rounded animate-pulse' />
-              ) : (
-                (user?.name?.split(' ')[0] ?? 'Student')
-              )}
+            <span className='hidden sm:block text-[13px] font-medium text-primary-mid'>
+              {user?.name?.split(' ')[0] ?? 'Student'}
             </span>
           </button>
 
           {showProfile && (
-            <>
-              <div
-                className='fixed inset-0 z-10'
-                onClick={() => setShowProfile(false)}
-              />
-              <div className='absolute right-0 top-full mt-2 w-48 bg-white border border-purple-100 rounded-2xl shadow-lg overflow-hidden z-20'>
-                {/* User info */}
-                <div className='px-4 py-3 border-b border-purple-50'>
-                  <p className='text-[13px] font-semibold text-[#2D1B5E] truncate'>
-                    {user?.name ?? 'Student'}
-                  </p>
-                  <p className='text-[11px] text-[#A67DD4] truncate'>
-                    {user?.email ?? ''}
-                  </p>
-                  <span className='inline-block mt-1 px-2 py-0.5 bg-[#F3EEFF] text-[#7C5CBF] text-[10px] font-semibold rounded-full capitalize'>
-                    {user?.role ?? 'student'}
-                  </span>
-                </div>
-
-                {/* Links */}
-                <div className='py-1'>
-                  {[
-                    { label: 'My Profile', href: '/dashboard/profile' },
-                    { label: 'My Courses', href: '/dashboard/my-courses' },
-                    { label: 'Settings', href: '/dashboard/settings' },
-                  ].map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setShowProfile(false)}
-                      className='block px-4 py-2 text-[13px] text-[#4A3570] hover:bg-[#F3EEFF] no-underline transition-colors'
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Sign out */}
-                <div className='border-t border-purple-50 py-1'>
-                  <button
-                    onClick={handleSignOut}
-                    disabled={signingOut}
-                    className='w-full text-left px-4 py-2 text-[13px] text-[#C084F5] hover:bg-[#F3EEFF] transition-colors disabled:opacity-50'
-                  >
-                    {signingOut ? 'Signing out…' : 'Sign Out'}
-                  </button>
-                </div>
+            <div className='absolute right-0 top-full mt-2 w-48 bg-white border border-surface-border rounded-2xl shadow-xl shadow-purple-100/60 py-2 z-50'>
+              <div className='px-4 py-2 border-b border-surface-border mb-1'>
+                <p className='text-[13px] font-semibold text-primary-dark truncate'>
+                  {user?.name}
+                </p>
+                <p className='text-[11px] text-primary-muted truncate'>
+                  {user?.email}
+                </p>
               </div>
-            </>
+              <Link
+                href='/dashboard/profile'
+                onClick={() => setShowProfile(false)}
+                className='flex items-center gap-2 px-4 py-2 text-[13px] text-primary-mid hover:bg-surface transition-colors no-underline'
+              >
+                My Profile
+              </Link>
+              <Link
+                href='/dashboard'
+                onClick={() => setShowProfile(false)}
+                className='flex items-center gap-2 px-4 py-2 text-[13px] text-primary-mid hover:bg-surface transition-colors no-underline'
+              >
+                Dashboard
+              </Link>
+              <div className='border-t border-surface-border mt-1 pt-1'>
+                <button
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className='w-full text-left flex items-center gap-2 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60'
+                >
+                  {signingOut ? 'Signing out...' : 'Sign Out'}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

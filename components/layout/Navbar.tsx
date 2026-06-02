@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import { MenuIcon, CloseIcon } from '@/components/ui/Icons'
+import { useAuth } from '@/context/AuthContext'
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -17,6 +18,8 @@ export default function Navbar() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { user, loading, logOut } = useAuth()
+  console.log(user)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -63,7 +66,27 @@ export default function Navbar() {
           {/* Desktop CTA */}
           <div className='hidden md:flex items-center gap-3'>
             <Button href='/login' variant='ghost' size='sm'>
-              Sign In
+              {user ? (
+                user?.photoURL ? (
+                  <>
+                    <img
+                      src={user.photoURL}
+                      alt={user.name}
+                      className='w-7 h-7 rounded-full object-cover'
+                    />{' '}
+                    {user.name}
+                  </>
+                ) : (
+                  <>
+                    <div className='w-7 h-7 rounded-full bg-linear-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center text-white text-[11px] font-bold'>
+                      {user?.name?.charAt(0).toUpperCase() ?? '?'}
+                    </div>
+                    {user.name}
+                  </>
+                )
+              ) : (
+                'Sign In'
+              )}
             </Button>
             <Button href='/courses' size='sm'>
               Book a Call

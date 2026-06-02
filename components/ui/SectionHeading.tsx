@@ -4,6 +4,7 @@ interface SectionHeadingProps {
   subtitle?: string
   center?: boolean
   light?: boolean
+  className?: string
 }
 
 export default function SectionHeading({
@@ -12,22 +13,31 @@ export default function SectionHeading({
   subtitle,
   center = false,
   light = false,
+  className = '',
 }: SectionHeadingProps) {
   return (
-    <div className={center ? 'text-center' : ''}>
+    <div className={`${center ? 'text-center' : ''} ${className}`}>
       {eyebrow && (
-        <span className='inline-block text-[12px] font-bold uppercase tracking-[0.15em] text-[#A67DD4] bg-[#F3EEFF] px-3 py-1 rounded-full mb-3'>
+        <p
+          className={`text-xs font-bold uppercase tracking-widest mb-2 ${
+            light ? 'text-purple-200' : 'text-primary'
+          }`}
+        >
           {eyebrow}
-        </span>
+        </p>
       )}
       <h2
-        className={`font-serif text-[32px] sm:text-[38px] lg:text-[44px] font-bold leading-tight mb-4 ${light ? 'text-white' : 'text-[#2D1B5E]'}`}
+        className={`font-serif text-[28px] sm:text-[34px] font-bold leading-tight mb-3 ${
+          light ? 'text-white' : 'text-primary-dark'
+        }`}
       >
         {title}
       </h2>
       {subtitle && (
         <p
-          className={`text-[16px] sm:text-[17px] leading-relaxed max-w-2xl ${center ? 'mx-auto' : ''} ${light ? 'text-purple-100' : 'text-[#6B5B8B]'}`}
+          className={`text-[15.5px] leading-relaxed max-w-xl ${
+            light ? 'text-purple-100' : 'text-primary-muted'
+          }`}
         >
           {subtitle}
         </p>
