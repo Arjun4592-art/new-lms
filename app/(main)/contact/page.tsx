@@ -50,9 +50,26 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setLoading(false)
-    setSubmitted(true)
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error ?? 'Failed to submit')
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      console.error('Contact form submit error:', err)
+      // Keep the form visible; user can retry.
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
