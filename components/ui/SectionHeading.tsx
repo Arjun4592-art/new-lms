@@ -11,7 +11,7 @@ export default function SectionHeading({
   eyebrow,
   title,
   subtitle,
-  center = false,
+  center,
   light = false,
   className = '',
 }: SectionHeadingProps) {
@@ -33,9 +33,10 @@ export default function SectionHeading({
       >
         {title}
       </h2>
+
       {subtitle && (
         <p
-          className={`text-[15.5px] leading-relaxed max-w-xl ${
+          className={`text-[15.5px] leading-relaxed text-center ${
             light ? 'text-purple-100' : 'text-primary-muted'
           }`}
         >

@@ -25,22 +25,52 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!user?.uid) return
 
-    async function fetch() {
+    async function fetchSessions() {
       try {
-        const snap = await getDocs(collection(db, 'sessions'))
-        const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Session)
-
-        // Filter: show global sessions + sessions for enrolled courses
-        const filtered = all.filter(
-          (s) =>
-            s.visibleTo === 'all' ||
-            user!.enrolledCourses?.includes(s.courseId),
+        // Step 1 — get enrolled courseIds from enrollments collection
+        const enrollSnap = await getDocs(
+          query(
+            collection(db, 'enrollments'),
+            where('userId', '==', user!.uid),
+          ),
+        )
+        const enrolledCourseIds = enrollSnap.docs.map(
+          (d) => d.data().courseId as string,
         )
 
-        // Only upcoming sessions (not recorded yet)
-        const upcoming = filtered
+        // Step 2 — fetch sessions visible to all
+        const allSessionsSnap = await getDocs(
+          query(collection(db, 'sessions'), where('visibleTo', '==', 'all')),
+        )
+        const allSessions = allSessionsSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Session,
+        )
+
+        // Step 3 — fetch sessions for enrolled courses (only if enrolled in any)
+        let enrolledSessions: Session[] = []
+        if (enrolledCourseIds.length > 0) {
+          const enrolledSnap = await getDocs(
+            query(
+              collection(db, 'sessions'),
+              where('courseId', 'in', enrolledCourseIds),
+            ),
+          )
+          enrolledSessions = enrolledSnap.docs.map(
+            (d) => ({ id: d.id, ...d.data() }) as Session,
+          )
+        }
+
+        // Step 4 — merge, deduplicate, filter upcoming, sort
+        const seen = new Set<string>()
+        const merged = [...allSessions, ...enrolledSessions].filter((s) => {
+          if (seen.has(s.id)) return false
+          seen.add(s.id)
+          return true
+        })
+
+        const upcoming = merged
           .filter((s) => !s.isRecorded)
           .sort(
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
@@ -48,13 +78,14 @@ export default function SessionsPage() {
 
         setSessions(upcoming)
       } catch (err) {
-        console.error(err)
+        console.error('Sessions fetch error:', err)
       } finally {
         setLoading(false)
       }
     }
-    fetch()
-  }, [user])
+
+    fetchSessions()
+  }, [user?.uid])
 
   if (loading) {
     return (
@@ -96,7 +127,6 @@ export default function SessionsPage() {
             const isToday =
               new Date(session.date).toDateString() ===
               new Date().toDateString()
-
             return (
               <div
                 key={session.id}
@@ -106,7 +136,7 @@ export default function SessionsPage() {
                   <ClockIcon size={20} />
                 </div>
                 <div className='flex-1 min-w-0'>
-                  <div className='flex items-center gap-2 mb-1'>
+                  <div className='flex items-center gap-2 mb-1 flex-wrap'>
                     <p className='text-[15px] font-bold text-[#2D1B5E]'>
                       {session.title}
                     </p>

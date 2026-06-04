@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useMemo } from 'react'
 import EnrolledCourseCard from '@/components/dashboard/EnrollCourseCard'
 import ProgressBar from '@/components/dashboard/ProgressBar'
 import {
@@ -15,22 +16,24 @@ import { useUserEnrollments } from '@/hooks/useEnrollment'
 
 export default function MyCoursesPage() {
   const { user, loading: authLoading } = useAuth()
-  const courseIds = user?.enrolledCourses ?? []
 
-  const { courses: enrolledCourses, loading: coursesLoading } =
-    useEnrolledCourses(courseIds)
+  // ── Derive courseIds from enrollments, not user.enrolledCourses ──
   const {
     enrollments,
     loading: enrollmentsLoading,
     error: enrollmentsError,
     refetch: refetchEnrollments,
-  } = useUserEnrollments(user?.uid, courseIds)
+  } = useUserEnrollments(user?.uid, [])
+
+  const courseIds = useMemo(() => Object.keys(enrollments), [enrollments])
+
+  const { courses: enrolledCourses, loading: coursesLoading } =
+    useEnrolledCourses(courseIds)
   const { courses: allCourses } = useCourses()
 
-  const loading = authLoading || coursesLoading || enrollmentsLoading
+  const loading = authLoading || enrollmentsLoading || coursesLoading
 
   const availableCourses = allCourses.filter((c) => !courseIds.includes(c.id))
-
   const completed = enrolledCourses.filter(
     (c) => (enrollments[c.id]?.progress ?? 0) === 100,
   )
@@ -47,7 +50,6 @@ export default function MyCoursesPage() {
         )
       : 0
 
-  // ── Loading state ────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className='space-y-6 max-w-5xl mx-auto animate-pulse'>
@@ -58,7 +60,6 @@ export default function MyCoursesPage() {
     )
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────────
   if (enrollmentsError) {
     return (
       <div className='max-w-5xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-10 text-center'>

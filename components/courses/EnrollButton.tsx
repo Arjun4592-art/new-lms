@@ -4,7 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useAuthContext } from '@/context/AuthContext'
 import { ArrowRightIcon, ShieldIcon } from '@/components/ui/Icons'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { initiateRazorpayEnrollment } from '@/lib/razorpay'
 
@@ -31,6 +37,7 @@ export default function EnrollButton({
     setLoading(true)
     setError('')
     try {
+      // Write enrollment doc
       await setDoc(doc(db, 'enrollments', `${user.uid}_${courseId}`), {
         userId: user.uid,
         courseId,
@@ -39,6 +46,15 @@ export default function EnrollButton({
         progress: 0,
         completedLessons: [],
       })
+
+      // Add courseId to user's enrolledCourses array
+      const userRef = doc(db, 'users', user.uid)
+      const userSnap = await getDoc(userRef)
+      const existing: string[] = userSnap.data()?.enrolledCourses ?? []
+      if (!existing.includes(courseId)) {
+        await updateDoc(userRef, { enrolledCourses: [...existing, courseId] })
+      }
+
       router.push(`/dashboard/learn/${courseId}`)
     } catch (err: any) {
       setError(err.message ?? 'Enrollment failed')

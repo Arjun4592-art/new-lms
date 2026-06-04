@@ -1,33 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
-import { getFirestore } from 'firebase-admin/firestore'
-import { getApps, initializeApp, cert } from 'firebase-admin/app'
-import { adminAuth } from '@/lib/firebase-admin'
+import { adminAuth, adminDb } from '@/lib/firebase-admin'
 
-const adminApp = getApps().length
-  ? getApps()[0]
-  : initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    })
-const adminDb = getFirestore(adminApp)
+// ── Web Crypto signature verification (Turbopack safe) ────────────────────
 
-// ── Razorpay signature verification (Node crypto) ───────────────────────
-function verifyRazorpaySignature(
+async function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
   signature: string,
   secret: string,
-): boolean {
+): Promise<boolean> {
   const body = `${orderId}|${paymentId}`
-  const expected = createHmac('sha256', secret).update(body).digest('hex')
-  return expected === signature
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(body))
+  const hashHex = Array.from(new Uint8Array(sigBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  return hashHex === signature
 }
 
 // ── POST /api/enroll — Create Razorpay order ──────────────────────────────
+
 export async function POST(req: NextRequest) {
   try {
     const session = req.cookies.get('session')?.value
@@ -44,7 +43,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify course exists and price matches
     const courseDoc = await adminDb.collection('courses').doc(courseId).get()
     if (!courseDoc.exists) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
@@ -62,7 +60,7 @@ export async function POST(req: NextRequest) {
     })
 
     const order = await razorpay.orders.create({
-      amount: amount * 100, // paise
+      amount: amount * 100,
       currency: 'INR',
       receipt: `receipt_${courseId}_${decoded.uid}_${Date.now()}`,
       notes: { courseId, userId: decoded.uid },
@@ -85,6 +83,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ── PUT /api/enroll — Verify payment + enroll ─────────────────────────────
+
 export async function PUT(req: NextRequest) {
   try {
     const session = req.cookies.get('session')?.value
@@ -113,7 +112,6 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // Verify signature using Web Crypto
     const isValid = await verifyRazorpaySignature(
       razorpay_order_id,
       razorpay_payment_id,
@@ -131,7 +129,6 @@ export async function PUT(req: NextRequest) {
     const uid = decoded.uid
     const enrollmentId = `${uid}_${courseId}`
 
-    // Write enrollment to Firestore
     await adminDb.collection('enrollments').doc(enrollmentId).set({
       userId: uid,
       courseId,
@@ -143,7 +140,6 @@ export async function PUT(req: NextRequest) {
       orderId: razorpay_order_id,
     })
 
-    // Add courseId to user's enrolledCourses array
     const userRef = adminDb.collection('users').doc(uid)
     const userSnap = await userRef.get()
     const existing: string[] = userSnap.data()?.enrolledCourses ?? []

@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { adminAuth } from '@/lib/firebase-admin'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
-
-// ── Firebase Admin Firestore ──────────────────────────────────────────────
-const adminApp = getApps().length
-  ? getApps()[0]
-  : initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    })
-
-const adminDb = getFirestore(adminApp)
+import { adminAuth, adminDb } from '@/lib/firebase-admin'
 
 // ── Nodemailer transporter ────────────────────────────────────────────────
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -27,6 +13,7 @@ const transporter = nodemailer.createTransport({
 })
 
 // ── POST /api/auth/otp — Send OTP ─────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json()
@@ -36,12 +23,10 @@ export async function POST(req: NextRequest) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
 
-    // Store OTP in Firestore
     await adminDb.collection('otps').doc(email).set({ otp, expiresAt })
 
-    // Send email
     await transporter.sendMail({
-      from: `"Your LMS" <${process.env.GMAIL_USER}>`,
+      from: `"Pain to Power" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'Your verification code',
       html: `
@@ -64,6 +49,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ── PUT /api/auth/otp — Verify OTP ────────────────────────────────────────
+
 export async function PUT(req: NextRequest) {
   try {
     const { email, otp } = await req.json()
@@ -89,7 +75,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 })
     }
 
-    // OTP correct — delete it, mark user verified in Firebase Auth + Firestore
+    // OTP correct — delete it and mark user as verified
     await adminDb.collection('otps').doc(email).delete()
 
     const user = await adminAuth.getUserByEmail(email)

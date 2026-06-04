@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/', '/courses', '/contact']
 const AUTH_PATHS = [
   '/login',
   '/signup',
@@ -9,8 +8,6 @@ const AUTH_PATHS = [
   '/verify-email-pending',
 ]
 
-// Decode JWT payload without verification (Edge-safe)
-// Full verification happens in API routes via firebase-admin
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const base64 = token.split('.')[1]
@@ -30,56 +27,55 @@ export async function middleware(req: NextRequest) {
   const isAdmin = pathname.startsWith('/admin')
   const isDashboard = pathname.startsWith('/dashboard')
 
-  // No session
+  // ── No session ────────────────────────────────────────────────────────
   if (!session) {
     if (isDashboard || isAdmin) {
-      return NextResponse.redirect(new URL('/login', req.url))
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('from', pathname)
+      return NextResponse.redirect(loginUrl)
     }
     return NextResponse.next()
   }
 
-  // Decode session cookie (Firebase session cookies are JWTs)
+  // ── Decode session cookie ─────────────────────────────────────────────
   const payload = decodeJwtPayload(session)
 
-  // Invalid or expired token
   if (!payload) {
-    const response = NextResponse.redirect(new URL('/login', req.url))
-    response.cookies.delete('session')
-    return response
+    const res = NextResponse.redirect(new URL('/login', req.url))
+    res.cookies.delete('session')
+    return res
   }
 
-  // Check expiry
+  // ── Check expiry ──────────────────────────────────────────────────────
   const exp = payload.exp as number | undefined
   if (exp && Date.now() / 1000 > exp) {
-    const response = NextResponse.redirect(new URL('/login', req.url))
-    response.cookies.delete('session')
-    return response
+    const res = NextResponse.redirect(new URL('/login', req.url))
+    res.cookies.delete('session')
+    return res
   }
 
+  // role is now a real custom claim set by /api/auth/session
   const role = payload.role as string | undefined
+  const emailVerified = (payload.email_verified ?? payload.emailVerified) as
+    | boolean
+    | undefined
 
-  // Logged-in user trying to access auth pages → redirect away (except verify-email)
+  // ── Auth pages ────────────────────────────────────────────────────────
   if (isAuth) {
-    const isVerifyEmailFlow =
+    const isVerifyFlow =
       pathname.startsWith('/verify-email') ||
       pathname.startsWith('/verify-email-pending')
 
-    // If user is NOT verified yet, allow them to stay on verify-email pages
-    if (isVerifyEmailFlow) {
-      const emailVerified =
-        (payload.emailVerified as boolean | undefined) ??
-        (payload.email_verified as boolean | undefined)
+    // Unverified users stay on verify-email pages
+    if (isVerifyFlow && !emailVerified) return NextResponse.next()
 
-      if (!emailVerified) return NextResponse.next()
-    }
-
-    // Verified users shouldn't see auth pages
+    // Everyone else gets redirected to their home
     return NextResponse.redirect(
       new URL(role === 'admin' ? '/admin' : '/dashboard', req.url),
     )
   }
 
-  // Non-admin trying to access admin
+  // ── Admin protection ──────────────────────────────────────────────────
   if (isAdmin && role !== 'admin') {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }

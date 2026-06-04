@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { useAuth } from '@/context/AuthContext'
 import { PlayIcon, ClockIcon } from '@/components/ui/Icons'
@@ -33,34 +33,70 @@ export default function RecordingsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!user?.uid) return
 
-    async function fetch() {
+    async function fetchRecordings() {
       try {
-        const snap = await getDocs(collection(db, 'sessions'))
-        const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Session)
-
-        const filtered = all.filter(
-          (s) =>
-            s.isRecorded &&
-            s.recordingUrl &&
-            (s.visibleTo === 'all' ||
-              user!.enrolledCourses?.includes(s.courseId)),
-        )
-
-        setRecordings(
-          filtered.sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        // Step 1 — get enrolled courseIds
+        const enrollSnap = await getDocs(
+          query(
+            collection(db, 'enrollments'),
+            where('userId', '==', user!.uid),
           ),
         )
+        const enrolledCourseIds = enrollSnap.docs.map(
+          (d) => d.data().courseId as string,
+        )
+
+        // Step 2 — fetch public recordings
+        const publicSnap = await getDocs(
+          query(
+            collection(db, 'sessions'),
+            where('isRecorded', '==', true),
+            where('visibleTo', '==', 'all'),
+          ),
+        )
+        const publicRecs = publicSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Session,
+        )
+
+        // Step 3 — fetch enrolled-course recordings
+        let enrolledRecs: Session[] = []
+        if (enrolledCourseIds.length > 0) {
+          const enrolledSnap = await getDocs(
+            query(
+              collection(db, 'sessions'),
+              where('isRecorded', '==', true),
+              where('courseId', 'in', enrolledCourseIds),
+            ),
+          )
+          enrolledRecs = enrolledSnap.docs.map(
+            (d) => ({ id: d.id, ...d.data() }) as Session,
+          )
+        }
+
+        // Step 4 — merge, deduplicate, filter missing URL, sort newest first
+        const seen = new Set<string>()
+        const merged = [...publicRecs, ...enrolledRecs]
+          .filter((s) => {
+            if (!s.recordingUrl || seen.has(s.id)) return false
+            seen.add(s.id)
+            return true
+          })
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+          )
+
+        setRecordings(merged)
       } catch (err) {
-        console.error(err)
+        console.error('Recordings fetch error:', err)
       } finally {
         setLoading(false)
       }
     }
-    fetch()
-  }, [user])
+
+    fetchRecordings()
+  }, [user?.uid])
 
   if (loading) {
     return (
@@ -153,7 +189,6 @@ export default function RecordingsPage() {
                     : 'border-purple-100'
                 }`}
               >
-                {/* Thumbnail */}
                 <div className='relative h-40 bg-[#F3EEFF] flex items-center justify-center overflow-hidden'>
                   {thumb ? (
                     <img
@@ -173,8 +208,6 @@ export default function RecordingsPage() {
                     {r.duration} min
                   </span>
                 </div>
-
-                {/* Info */}
                 <div className='p-4'>
                   <p className='text-[13.5px] font-bold text-[#2D1B5E] line-clamp-2 group-hover:text-[#7C5CBF] transition-colors'>
                     {r.title}

@@ -8,6 +8,7 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  sendPasswordResetEmail,
   type UserCredential,
 } from 'firebase/auth'
 import {
@@ -24,7 +25,7 @@ const googleProvider = new GoogleAuthProvider()
 
 // ── Session helpers ───────────────────────────────────────────────────────
 
-async function setSessionCookie(idToken: string) {
+async function setSessionCookie(idToken: string): Promise<void> {
   const res = await fetch('/api/auth/session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -33,20 +34,11 @@ async function setSessionCookie(idToken: string) {
   if (!res.ok) throw new Error('Failed to create session')
 }
 
-export async function clearSessionCookie() {
+export async function clearSessionCookie(): Promise<void> {
   await fetch('/api/auth/session', { method: 'DELETE' })
 }
 
-export async function setSessionAfterVerification(): Promise<void> {
-  const user = auth.currentUser
-  if (!user) throw new Error('No user signed in')
-  const idToken = await user.getIdToken(true)
-  await setSessionCookie(idToken)
-}
-
 // ── Sign Up with Email ────────────────────────────────────────────────────
-// Creates the Firebase user + Firestore doc, then sends OTP via our API.
-// Does NOT set session cookie — that happens after OTP verification.
 
 export async function signUpWithEmail(
   email: string,
@@ -78,13 +70,12 @@ export async function signUpWithEmail(
     createdAt: serverTimestamp(),
   })
 
-  // Send OTP via our API (Nodemailer)
+  // Send OTP
   const res = await fetch('/api/auth/otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   })
-
   if (!res.ok) throw new Error('Failed to send OTP email')
 
   return user
@@ -102,7 +93,6 @@ export async function resendOTP(email: string): Promise<void> {
 }
 
 // ── Verify OTP ────────────────────────────────────────────────────────────
-// Verifies OTP, marks user verified, then sets session cookie.
 
 export async function verifyOTP(email: string, otp: string): Promise<void> {
   const res = await fetch('/api/auth/otp', {
@@ -120,8 +110,12 @@ export async function verifyOTP(email: string, otp: string): Promise<void> {
     throw new Error(data.error ?? 'Verification failed')
   }
 
-  // Now set session cookie
-  await setSessionAfterVerification()
+  // Force token refresh so custom claims (role) are included in session cookie
+  const user = auth.currentUser
+  if (user) {
+    const idToken = await user.getIdToken(true)
+    await setSessionCookie(idToken)
+  }
 }
 
 // ── Sign In with Email ────────────────────────────────────────────────────
@@ -143,8 +137,8 @@ export async function signInWithEmail(
   const user = await getUserFromFirestore(credential.user.uid)
   if (!user) throw new Error('User record not found. Please sign up.')
 
-  if (!firebaseEmailVerified) {
-    // Send a fresh OTP so they can verify
+  if (!firebaseEmailVerified && !user.emailVerified) {
+    // Send fresh OTP
     await fetch('/api/auth/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,6 +147,7 @@ export async function signInWithEmail(
     return { user, emailVerified: false }
   }
 
+  // Force token refresh so role custom claim is included
   const idToken = await credential.user.getIdToken(true)
   await setSessionCookie(idToken)
 
@@ -170,13 +165,13 @@ export async function signInWithGoogle(
   const existing = await getUserFromFirestore(uid)
 
   if (existing) {
+    // Force token refresh so role custom claim is included
     const idToken = await credential.user.getIdToken(true)
     await setSessionCookie(idToken)
     return { user: existing, isNew: false }
   }
 
-  // New Google user — create Firestore doc, set session immediately
-  // (Google accounts are pre-verified)
+  // New Google user
   const user: LMSUser = {
     uid,
     email: email!,
@@ -193,10 +188,17 @@ export async function signInWithGoogle(
     createdAt: serverTimestamp(),
   })
 
+  // Force token refresh so role custom claim is included
   const idToken = await credential.user.getIdToken(true)
   await setSessionCookie(idToken)
 
   return { user, isNew: true }
+}
+
+// ── Forgot Password ───────────────────────────────────────────────────────
+
+export async function forgotPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email)
 }
 
 // ── Change Password ───────────────────────────────────────────────────────
@@ -239,5 +241,17 @@ export async function getUserFromFirestore(
     enrolledCourses: data.enrolledCourses ?? [],
     emailVerified: data.emailVerified ?? false,
     phone: data.phone ?? '',
+  }
+}
+
+// ── Update User Profile ───────────────────────────────────────────────────
+
+export async function updateUserProfile(
+  uid: string,
+  data: { name?: string; phone?: string },
+): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), data)
+  if (data.name && auth.currentUser) {
+    await updateProfile(auth.currentUser, { displayName: data.name })
   }
 }

@@ -1,10 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { useAuth } from '@/context/AuthContext'
-import { DownloadIcon, FileIcon, FileTextIcon, VideoIcon } from '@/components/ui/Icons'
+import {
+  DownloadIcon,
+  FileIcon,
+  FileTextIcon,
+  VideoIcon,
+} from '@/components/ui/Icons'
 
 interface Resource {
   id: string
@@ -18,9 +23,12 @@ interface Resource {
 
 function getIcon(type: string) {
   switch (type) {
-    case 'Video': return <VideoIcon size={16} className='text-[#7C5CBF]' />
-    case 'PDF': return <FileTextIcon size={16} className='text-[#7C5CBF]' />
-    default: return <FileIcon size={16} className='text-[#7C5CBF]' />
+    case 'Video':
+      return <VideoIcon size={16} className='text-[#7C5CBF]' />
+    case 'PDF':
+      return <FileTextIcon size={16} className='text-[#7C5CBF]' />
+    default:
+      return <FileIcon size={16} className='text-[#7C5CBF]' />
   }
 }
 
@@ -30,25 +38,63 @@ export default function ResourcesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
-    async function fetch() {
+    if (!user?.uid) return
+
+    async function fetchResources() {
       try {
-        const snap = await getDocs(collection(db, 'resources'))
-        const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Resource))
-        const filtered = all.filter(
-          (r) =>
-            r.visibleTo === 'all' ||
-            user!.enrolledCourses?.includes(r.courseId),
+        // Step 1 — get enrolled courseIds
+        const enrollSnap = await getDocs(
+          query(
+            collection(db, 'enrollments'),
+            where('userId', '==', user!.uid),
+          ),
         )
-        setResources(filtered)
+        const enrolledCourseIds = enrollSnap.docs.map(
+          (d) => d.data().courseId as string,
+        )
+
+        // Step 2 — fetch public resources
+        const publicSnap = await getDocs(
+          query(collection(db, 'resources'), where('visibleTo', '==', 'all')),
+        )
+        const publicResources = publicSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Resource,
+        )
+
+        // Step 3 — fetch enrolled-course resources
+        let enrolledResources: Resource[] = []
+        if (enrolledCourseIds.length > 0) {
+          const enrolledSnap = await getDocs(
+            query(
+              collection(db, 'resources'),
+              where('courseId', 'in', enrolledCourseIds),
+            ),
+          )
+          enrolledResources = enrolledSnap.docs.map(
+            (d) => ({ id: d.id, ...d.data() }) as Resource,
+          )
+        }
+
+        // Step 4 — merge and deduplicate
+        const seen = new Set<string>()
+        const merged = [...publicResources, ...enrolledResources].filter(
+          (r) => {
+            if (seen.has(r.id)) return false
+            seen.add(r.id)
+            return true
+          },
+        )
+
+        setResources(merged)
       } catch (err) {
-        console.error(err)
+        console.error('Resources fetch error:', err)
       } finally {
         setLoading(false)
       }
     }
-    fetch()
-  }, [user])
+
+    fetchResources()
+  }, [user?.uid])
 
   if (loading) {
     return (
@@ -110,8 +156,7 @@ export default function ResourcesPage() {
                   rel='noopener noreferrer'
                   className='flex items-center gap-2 px-4 py-2 bg-[#F3EEFF] hover:bg-[#7C5CBF] text-[#7C5CBF] hover:text-white rounded-xl text-[13px] font-semibold transition-all no-underline shrink-0'
                 >
-                  <DownloadIcon size={14} />
-                  Download
+                  <DownloadIcon size={14} /> Download
                 </a>
               </div>
             ))}
@@ -121,7 +166,8 @@ export default function ResourcesPage() {
 
       <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-5 text-center'>
         <p className='text-[14px] text-[#6B5B8B] leading-relaxed'>
-          🌸 New resources are added regularly. If you need something specific, reach out to Masuma directly.
+          🌸 New resources are added regularly. If you need something specific,
+          reach out to Masuma directly.
         </p>
       </div>
     </div>
