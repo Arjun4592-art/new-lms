@@ -12,18 +12,15 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
-import { initiateRazorpayEnrollment } from '@/lib/razorpay'
 
 interface EnrollButtonProps {
   courseId: string
-  price: number
   isFree: boolean
   isEnrolled: boolean
 }
 
 export default function EnrollButton({
   courseId,
-  price,
   isFree,
   isEnrolled,
 }: EnrollButtonProps) {
@@ -32,12 +29,11 @@ export default function EnrollButton({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  async function handleFreeEnroll() {
+  async function handleEnroll() {
     if (!user) return router.push(`/login?from=/courses/${courseId}`)
     setLoading(true)
     setError('')
     try {
-      // Write enrollment doc
       await setDoc(doc(db, 'enrollments', `${user.uid}_${courseId}`), {
         userId: user.uid,
         courseId,
@@ -47,7 +43,6 @@ export default function EnrollButton({
         completedLessons: [],
       })
 
-      // Add courseId to user's enrolledCourses array
       const userRef = doc(db, 'users', user.uid)
       const userSnap = await getDoc(userRef)
       const existing: string[] = userSnap.data()?.enrolledCourses ?? []
@@ -59,29 +54,6 @@ export default function EnrollButton({
     } catch (err: any) {
       setError(err.message ?? 'Enrollment failed')
     } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handlePaidEnroll() {
-    if (!user) return router.push(`/login?from=/courses/${courseId}`)
-    setLoading(true)
-    setError('')
-    try {
-      await initiateRazorpayEnrollment({
-        courseId,
-        amount: price,
-        userName: user.name,
-        userEmail: user.email,
-        courseName: 'Course',
-        onSuccess: () => router.push(`/dashboard/learn/${courseId}`),
-        onError: (msg) => {
-          setError(msg)
-          setLoading(false)
-        },
-      })
-    } catch (err: any) {
-      setError(err.message ?? 'Payment failed')
       setLoading(false)
     }
   }
@@ -122,14 +94,7 @@ export default function EnrollButton({
   if (!user) {
     return (
       <div className='bg-white border border-surface-border rounded-2xl p-6 sticky top-24'>
-        <p className='text-[32px] font-bold text-primary-dark mb-1'>
-          {isFree ? 'Free' : `₹${Number(price).toLocaleString('en-IN')}`}
-        </p>
-        {!isFree && (
-          <p className='text-[13px] text-primary-muted mb-4'>
-            One-time payment · Instalment options available
-          </p>
-        )}
+        <p className='text-[32px] font-bold text-primary-dark mb-1'>Free</p>
         <button
           onClick={() => router.push(`/login?from=/courses/${courseId}`)}
           className='w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold text-[16px] rounded-xl transition-all shadow-lg shadow-purple-200 flex items-center justify-center gap-2'
@@ -146,7 +111,7 @@ export default function EnrollButton({
           {[
             'Safe, judgment-free space',
             'Women only programme',
-            'Secure Razorpay payment',
+            'Free to join',
             'Instalment options available',
           ].map((item) => (
             <div
@@ -164,14 +129,7 @@ export default function EnrollButton({
 
   return (
     <div className='bg-white border border-surface-border rounded-2xl p-6 sticky top-24'>
-      <p className='text-[32px] font-bold text-primary-dark mb-1'>
-        {isFree ? 'Free' : `₹${Number(price).toLocaleString('en-IN')}`}
-      </p>
-      {!isFree && (
-        <p className='text-[13px] text-primary-muted mb-4'>
-          One-time payment · Instalment options available
-        </p>
-      )}
+      <p className='text-[32px] font-bold text-primary-dark mb-1'>Free</p>
 
       {error && (
         <div className='mb-4 bg-red-50 border border-red-200 text-red-600 text-[13px] px-4 py-3 rounded-xl'>
@@ -180,7 +138,7 @@ export default function EnrollButton({
       )}
 
       <button
-        onClick={isFree ? handleFreeEnroll : handlePaidEnroll}
+        onClick={handleEnroll}
         disabled={loading}
         className='w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold text-[16px] rounded-xl transition-all shadow-lg shadow-purple-200 disabled:opacity-60 flex items-center justify-center gap-2'
       >
@@ -202,8 +160,7 @@ export default function EnrollButton({
           </svg>
         ) : (
           <>
-            {isFree ? 'Enroll for Free' : 'Enroll Now'}{' '}
-            <ArrowRightIcon size={18} />
+            Enroll for Free <ArrowRightIcon size={18} />
           </>
         )}
       </button>
@@ -219,7 +176,7 @@ export default function EnrollButton({
         {[
           'Safe, judgment-free space',
           'Women only programme',
-          'Secure Razorpay payment',
+          'Free to join',
           'Instalment options available',
         ].map((item) => (
           <div

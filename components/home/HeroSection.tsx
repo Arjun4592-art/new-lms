@@ -3,11 +3,11 @@ import { ArrowRightIcon, SparkleIcon } from '@/components/ui/Icons'
 
 export default function HeroSection() {
   return (
-    <section className='relative min-h-screen flex items-center justify-center overflow-hidden pt-16'>
+    <section className='relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-[#FDFAF5]'>
       {/* Blobs */}
-      {/* <div className='absolute top-20 left-10 w-72 h-72 bg-primary-light/20 rounded-full blur-3xl pointer-events-none' />
+      <div className='absolute top-20 left-10 w-72 h-72 bg-primary-light/20 rounded-full blur-3xl pointer-events-none' />
       <div className='absolute bottom-20 right-10 w-96 h-96 bg-pink-200/20 rounded-full blur-3xl pointer-events-none' />
-      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-surface-hover/20 rounded-full blur-3xl pointer-events-none' /> */}
+      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-surface-hover/20 rounded-full blur-3xl pointer-events-none' />
 
       <div className='relative max-w-6xl mx-auto px-4 sm:px-6 py-20 grid lg:grid-cols-2 gap-14 items-center'>
         <div>
@@ -16,7 +16,7 @@ export default function HeroSection() {
             <SparkleIcon size={14} className='text-primary-accent' />
             <span className='text-[12.5px] font-semibold text-primary tracking-wide'>
               Transformational Life Coaching
-            </span> 
+            </span>
           </div>
 
           {/* Headline */}

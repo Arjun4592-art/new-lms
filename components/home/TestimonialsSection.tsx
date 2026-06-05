@@ -1,5 +1,8 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import SectionHeading from '@/components/ui/SectionHeading'
-import { QuoteIcon, StarIcon } from '@/components/ui/Icons'
+import { QuoteIcon } from '@/components/ui/Icons'
 
 const TESTIMONIALS = [
   {
@@ -58,10 +61,30 @@ const TESTIMONIALS = [
   },
 ]
 
+const CARD_WIDTH = 480
+const GAP = 16
+
 export default function TestimonialsSection() {
+  const [current, setCurrent] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const total = TESTIMONIALS.length
+
+  const next = () => setCurrent((prev) => (prev + 1) % total)
+  const prev = () => setCurrent((prev) => (prev - 1 + total) % total)
+  const goTo = (i: number) => setCurrent(i)
+
+  useEffect(() => {
+    if (paused) return
+    timerRef.current = setInterval(next, 3500)
+    return () => clearInterval(timerRef.current!)
+  }, [paused, current])
+
+  // Sab cards same width — offset se center mein slide karo
+  const offset = -(current * (CARD_WIDTH + GAP)) + CARD_WIDTH + GAP - 140
+
   return (
-    <section className='py-20 px-4 bg-linear-to-br from-[#2D1B5E] to-[#4A2D8A] overflow-hidden'>
-      {/* Decorative blobs */}
+    <section className='py-20 px-4 bg-linear-to-br from-[#2D1B5E] to-[#4A2D8A] overflow-hidden relative'>
       <div className='absolute left-0 top-1/3 w-64 h-64 bg-[#7C5CBF]/20 rounded-full blur-3xl pointer-events-none' />
       <div className='absolute right-0 bottom-1/3 w-64 h-64 bg-[#C084F5]/20 rounded-full blur-3xl pointer-events-none' />
 
@@ -74,53 +97,132 @@ export default function TestimonialsSection() {
           light
         />
 
-        <div className='mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5'>
-          {TESTIMONIALS.map((t) => (
+        <div
+          className='mt-12 relative'
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          {/* Overflow container */}
+          <div className='overflow-hidden'>
+            {/* Sliding track */}
             <div
-              key={t.name}
-              className='bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all'
+              className='flex items-center'
+              style={{
+                gap: GAP,
+                transform: `translateX(${offset}px)`,
+                transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
             >
-              {/* Stars */}
-              <div className='flex gap-0.5 mb-4'>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <svg
-                    key={i}
-                    width='14'
-                    height='14'
-                    viewBox='0 0 24 24'
-                    fill='#F5A623'
-                  >
-                    <polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' />
-                  </svg>
-                ))}
-              </div>
+              {TESTIMONIALS.map((t, idx) => {
+                const isCenter = idx === current
+                const isAdjacent =
+                  idx === (current - 1 + total) % total ||
+                  idx === (current + 1) % total
 
-              <QuoteIcon size={24} className='text-purple-300 mb-3' />
-
-              <p className='text-[14px] text-purple-100 leading-relaxed mb-5 italic'>
-                "{t.quote}"
-              </p>
-
-              <div className='pt-4 border-t border-white/10 flex items-center justify-between'>
-                <div className='flex items-center gap-3'>
+                return (
                   <div
-                    className='w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold shrink-0'
-                    style={{ background: t.color }}
+                    key={idx}
+                    onClick={() => !isCenter && goTo(idx)}
+                    style={{
+                      width: CARD_WIDTH,
+                      flexShrink: 0,
+                      transform: isCenter ? 'scale(1.04)' : 'scale(0.96)',
+                      filter: isCenter ? 'none' : 'blur(1.5px)',
+                      opacity: isCenter ? 1 : isAdjacent ? 0.5 : 0.15,
+                      transition:
+                        'transform 0.5s ease, opacity 0.5s ease, filter 0.5s ease',
+                      cursor: isCenter ? 'default' : 'pointer',
+                      boxShadow: isCenter
+                        ? '0 25px 50px rgba(76,29,149,0.4)'
+                        : 'none',
+                    }}
+                    className={`rounded-2xl p-6 border ${
+                      isCenter
+                        ? 'bg-white/15 border-white/30'
+                        : 'bg-white/6 border-white/10'
+                    }`}
                   >
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className='text-[13px] font-semibold text-white'>
-                      {t.name}
+                    {/* Stars */}
+                    <div className='flex gap-0.5 mb-4'>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <svg
+                          key={i}
+                          width='14'
+                          height='14'
+                          viewBox='0 0 24 24'
+                          fill='#F5A623'
+                        >
+                          <polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' />
+                        </svg>
+                      ))}
+                    </div>
+
+                    <QuoteIcon size={22} className='text-purple-300 mb-3' />
+
+                    <p className='text-[14px] text-purple-100 leading-relaxed mb-5 italic'>
+                      "{t.quote}"
                     </p>
-                    <p className='text-[11px] text-purple-300'>{t.role}</p>
+
+                    <div className='pt-4 border-t border-white/10 flex items-center justify-between'>
+                      <div className='flex items-center gap-3'>
+                        <div
+                          className='w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold shrink-0'
+                          style={{ background: t.color }}
+                        >
+                          {t.avatar}
+                        </div>
+                        <div>
+                          <p className='text-[13px] font-semibold text-white'>
+                            {t.name}
+                          </p>
+                          <p className='text-[11px] text-purple-300'>
+                            {t.role}
+                          </p>
+                        </div>
+                      </div>
+                      <span className='text-[11px] bg-[#7C5CBF]/40 text-purple-200 px-2.5 py-1 rounded-full border border-purple-400/30'>
+                        ✓ {t.result}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <span className='text-[11px] bg-[#7C5CBF]/40 text-purple-200 px-2.5 py-1 rounded-full border border-purple-400/30'>
-                  ✓ {t.result}
-                </span>
-              </div>
+                )
+              })}
             </div>
+          </div>
+
+          {/* Prev / Next buttons */}
+          <button
+            onClick={prev}
+            className='absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2
+                       w-10 h-10 rounded-full bg-white/10 border border-white/20
+                       flex items-center justify-center text-white text-xl
+                       hover:bg-white/20 transition-all z-20'
+          >
+            ‹
+          </button>
+          <button
+            onClick={next}
+            className='absolute right-0 top-1/2 -translate-y-1/2 translate-x-2
+                       w-10 h-10 rounded-full bg-white/10 border border-white/20
+                       flex items-center justify-center text-white text-xl
+                       hover:bg-white/20 transition-all z-20'
+          >
+            ›
+          </button>
+        </div>
+
+        {/* Dots */}
+        <div className='flex justify-center gap-2 mt-8'>
+          {TESTIMONIALS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === current
+                  ? 'w-6 h-2 bg-purple-300'
+                  : 'w-2 h-2 bg-white/30 hover:bg-white/50'
+              }`}
+            />
           ))}
         </div>
       </div>

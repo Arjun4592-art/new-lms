@@ -64,11 +64,11 @@ export default function MasumaLandingPage() {
     },
     {
       q: 'Will this actually work for me?',
-      a: 'If you show up and do the work — yes. Every woman who has committed to these 4 weeks has walked away transformed.',
+      a: 'If you show up and do the work — yes. Every person who has committed to these 4 weeks has walked away transformed.',
     },
     {
       q: 'How much time do I need each week?',
-      a: '1 live session per week (60 min) + optional journaling. Designed for busy women.',
+      a: '1 live session per week (60 min) + optional journaling. Designed for busy person.',
     },
   ]
 
@@ -385,7 +385,7 @@ export default function MasumaLandingPage() {
               }}
             >
               I went through the exact process I'm about to share with you. And
-              now I help women do the same — in just 4 weeks.
+              now I help people do the same — in just 4 weeks.
             </p>
             <p style={{ color: '#ff6699', fontWeight: 600, fontSize: '14px' }}>
               — Masuma, Transformational Coach
@@ -523,7 +523,7 @@ export default function MasumaLandingPage() {
             className='tag'
             style={{ marginBottom: '20px', display: 'inline-block' }}
           >
-            Real Women. Real Results.
+            Real People. Real Results.
           </span>
           <h2
             style={{

@@ -46,7 +46,12 @@ export default function CourseDetailPage() {
   return (
     <div className='min-h-screen'>
       {/* Hero */}
-      <div className={`bg-linear-to-br ${course.color} pt-28 pb-16 px-4`}>
+      <div
+        style={{
+          background: `linear-gradient(to bottom right, ${course.color}, ${course.color}dd)`,
+        }}
+        className='pt-28 pb-16 px-4'
+      >
         <div className='max-w-6xl mx-auto'>
           <span className='text-[60px]'>{course.emoji}</span>
           <h1 className='font-serif text-[36px] sm:text-[44px] font-bold text-white leading-tight mt-4 mb-4'>
@@ -113,7 +118,6 @@ export default function CourseDetailPage() {
         <div>
           <EnrollButton
             courseId={courseId}
-            price={course.price}
             isFree={course.isFree}
             isEnrolled={!!enrollment}
           />
