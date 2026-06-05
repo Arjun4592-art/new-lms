@@ -8,9 +8,12 @@ function getFirebaseCredential() {
   const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
   if (rawServiceAccount) {
     try {
-      const fixed = rawServiceAccount.replace(/\\n/g, '\n').replace(/\\"/g, '"')
+      const fixed = rawServiceAccount
+        .replace(/^"|"$/g, '') // surrounding quotes remove
+        .replace(/\\"/g, '"') // \" → "
+        .replace(/\\n/g, '\n') // \n → newline
+        .replace(/\\\\/g, '\\') // \\ → \
       const serviceAccount = JSON.parse(fixed)
-      // Fix private key newlines
       if (serviceAccount.private_key) {
         serviceAccount.private_key = serviceAccount.private_key
           .replace(/\\n/g, '\n')
@@ -23,6 +26,7 @@ function getFirebaseCredential() {
     }
   }
 
+  // Fallback: individual env vars
   const projectId = process.env.FIREBASE_PROJECT_ID
   const clientEmail =
     process.env.FIREBASE_ADMIN_CLIENT_EMAIL ?? process.env.FIREBASE_CLIENT_EMAIL
