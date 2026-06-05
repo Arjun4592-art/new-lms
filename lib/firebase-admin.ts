@@ -13,18 +13,21 @@ function getFirebaseCredential() {
       const serviceAccount = JSON.parse(fixed)
       return cert(serviceAccount)
     } catch (e) {
-      // Fall through to private key based initialization
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT:', e)
     }
   }
 
-  // Fallback: individual env vars
+  // Fallback: individual env vars — support both naming conventions
   const projectId = process.env.FIREBASE_PROJECT_ID
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  const clientEmail =
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ?? process.env.FIREBASE_CLIENT_EMAIL
+  const privateKey = (
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? process.env.FIREBASE_PRIVATE_KEY
+  )?.replace(/\\n/g, '\n')
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      'Missing Firebase Admin credentials. Set FIREBASE_SERVICE_ACCOUNT JSON or (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY).',
+      'Missing Firebase Admin credentials. Set FIREBASE_SERVICE_ACCOUNT JSON or (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL/FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY/FIREBASE_ADMIN_PRIVATE_KEY).',
     )
   }
 
