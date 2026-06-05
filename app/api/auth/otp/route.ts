@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
-
+export const dynamic = 'force-dynamic'
 // ── Nodemailer transporter ────────────────────────────────────────────────
 
 const transporter = nodemailer.createTransport({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-
+export const dynamic = 'force-dynamic'
 // Firebase Admin (Firestore) for saving contact messages
 function getAdminDb() {
   const adminApp = getApps().length

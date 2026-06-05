@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
-
+export const dynamic = 'force-dynamic'
 const SESSION_DURATION = 60 * 60 * 24 * 5 * 1000 // 5 days
 
 export async function POST(req: NextRequest) {
