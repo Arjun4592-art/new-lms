@@ -24,21 +24,6 @@ import type { LMSUser, UserRole } from '@/types'
 
 const googleProvider = new GoogleAuthProvider()
 
-// ── Session helpers ───────────────────────────────────────────────────────
-
-async function setSessionCookie(idToken: string): Promise<void> {
-  const res = await fetch('/api/auth/session', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken }),
-  })
-  if (!res.ok) throw new Error('Failed to create session')
-}
-
-export async function clearSessionCookie(): Promise<void> {
-  await fetch('/api/auth/session', { method: 'DELETE' })
-}
-
 // ── Sign Up with Email ────────────────────────────────────────────────────
 
 export async function signUpWithEmail(
@@ -110,10 +95,10 @@ export async function verifyOTP(email: string, otp: string): Promise<void> {
     throw new Error(data.error ?? 'Verification failed')
   }
 
+  // Firestore mein emailVerified update karo
   const user = auth.currentUser
   if (user) {
-    const idToken = await user.getIdToken(true)
-    await setSessionCookie(idToken)
+    await updateDoc(doc(db, 'users', user.uid), { emailVerified: true })
   }
 }
 
@@ -145,9 +130,6 @@ export async function signInWithEmail(
     return { user, emailVerified: false }
   }
 
-  const idToken = await credential.user.getIdToken(true)
-  await setSessionCookie(idToken)
-
   return { user, emailVerified: true }
 }
 
@@ -158,7 +140,6 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 // ── Handle Google Redirect Result ─────────────────────────────────────────
-// Call this on app load / auth page load
 
 export async function handleGoogleRedirectResult(
   role: UserRole = 'student',
@@ -171,8 +152,6 @@ export async function handleGoogleRedirectResult(
   const existing = await getUserFromFirestore(uid)
 
   if (existing) {
-    const idToken = await credential.user.getIdToken(true)
-    await setSessionCookie(idToken)
     return { user: existing, isNew: false }
   }
 
@@ -191,9 +170,6 @@ export async function handleGoogleRedirectResult(
     ...user,
     createdAt: serverTimestamp(),
   })
-
-  const idToken = await credential.user.getIdToken(true)
-  await setSessionCookie(idToken)
 
   return { user, isNew: true }
 }
@@ -221,7 +197,6 @@ export async function changePassword(
 
 export async function logOut(): Promise<void> {
   await signOut(auth)
-  await clearSessionCookie()
 }
 
 // ── Get User from Firestore ───────────────────────────────────────────────

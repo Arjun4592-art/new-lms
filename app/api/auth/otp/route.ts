@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import { db } from '@/lib/firebase/config'
+import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
 export const dynamic = 'force-dynamic'
-// ── Nodemailer transporter ────────────────────────────────────────────────
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -12,8 +12,6 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-// ── POST /api/auth/otp — Send OTP ─────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json()
@@ -21,9 +19,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
+    const expiresAt = Date.now() + 10 * 60 * 1000
 
-    await adminDb.collection('otps').doc(email).set({ otp, expiresAt })
+    await setDoc(doc(db, 'otps', email), { otp, expiresAt })
 
     await transporter.sendMail({
       from: `"Pain to Power" <${process.env.GMAIL_USER}>`,
@@ -48,8 +46,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── PUT /api/auth/otp — Verify OTP ────────────────────────────────────────
-
 export async function PUT(req: NextRequest) {
   try {
     const { email, otp } = await req.json()
@@ -59,33 +55,22 @@ export async function PUT(req: NextRequest) {
         { status: 400 },
       )
 
-    const docSnap = await adminDb.collection('otps').doc(email).get()
-
-    if (!docSnap.exists)
+    const docSnap = await getDoc(doc(db, 'otps', email))
+    if (!docSnap.exists())
       return NextResponse.json({ error: 'OTP not found' }, { status: 404 })
 
-    const { otp: storedOtp, expiresAt } = docSnap.data()!
+    const { otp: storedOtp, expiresAt } = docSnap.data()
 
     if (Date.now() > expiresAt) {
-      await adminDb.collection('otps').doc(email).delete()
+      await deleteDoc(doc(db, 'otps', email))
       return NextResponse.json({ error: 'OTP expired' }, { status: 410 })
     }
 
-    if (otp !== storedOtp) {
+    if (otp !== storedOtp)
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 })
-    }
 
-    // OTP correct — delete it and mark user as verified
-    await adminDb.collection('otps').doc(email).delete()
-
-    const user = await adminAuth.getUserByEmail(email)
-    await adminAuth.updateUser(user.uid, { emailVerified: true })
-    await adminDb
-      .collection('users')
-      .doc(user.uid)
-      .update({ emailVerified: true })
-
-    return NextResponse.json({ success: true, uid: user.uid })
+    await deleteDoc(doc(db, 'otps', email))
+    return NextResponse.json({ success: true })
   } catch (err) {
     console.error('OTP verify error:', err)
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })

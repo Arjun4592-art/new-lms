@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
+import { db } from '@/lib/firebase/config'
+import { collection, addDoc } from 'firebase/firestore'
 export const dynamic = 'force-dynamic'
-// Firebase Admin (Firestore) for saving contact messages
-function getAdminDb() {
-  const adminApp = getApps().length
-    ? getApps()[0]
-    : initializeApp({
-        credential: cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
-      })
-
-  return getFirestore(adminApp)
-}
-
-const adminDb = getAdminDb()
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -32,15 +16,13 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, message, interest } = await req.json()
 
-    if (!name || !email || !message) {
+    if (!name || !email || !message)
       return NextResponse.json(
-        { error: 'Missing required fields: name, email, message' },
+        { error: 'Missing required fields' },
         { status: 400 },
       )
-    }
 
-    // 1) Save to Firebase/Firestore
-    await adminDb.collection('contact_messages').add({
+    await addDoc(collection(db, 'contact_messages'), {
       name,
       email,
       interest: interest ?? '',
@@ -48,22 +30,19 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     })
 
-    // 2) Send email notification
     await transporter.sendMail({
       from: `"Contact Form" <${process.env.GMAIL_USER}>`,
       to: 'masuma26coach@gmail.com',
       subject: 'New Contact Form Submission',
       html: `
         <div style="font-family:sans-serif;max-width:720px;margin:auto;padding:20px;">
-          <h2 style="color:#2D1B5E;margin-bottom:8px;">New contact form submission</h2>
-          <p style="color:#4A3570;margin-bottom:16px;">A new message has been submitted from your website.</p>
-
+          <h2 style="color:#2D1B5E;">New contact form submission</h2>
           <div style="background:#F9F5FF;border:1px solid #EDE9FE;border-radius:12px;padding:16px;">
-            <p style="margin:6px 0;"><b>Name:</b> ${name}</p>
-            <p style="margin:6px 0;"><b>Email:</b> ${email}</p>
-            <p style="margin:6px 0;"><b>Interest:</b> ${interest ?? ''}</p>
-            <p style="margin:6px 0;"><b>Message:</b></p>
-            <p style="margin:6px 0;color:#6B5B8B;white-space:pre-wrap;">${message}</p>
+            <p><b>Name:</b> ${name}</p>
+            <p><b>Email:</b> ${email}</p>
+            <p><b>Interest:</b> ${interest ?? ''}</p>
+            <p><b>Message:</b></p>
+            <p style="color:#6B5B8B;white-space:pre-wrap;">${message}</p>
           </div>
         </div>
       `,
