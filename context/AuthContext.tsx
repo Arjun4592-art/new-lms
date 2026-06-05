@@ -9,9 +9,13 @@ import {
   type ReactNode,
 } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
+import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase/config'
-import { getUserFromFirestore } from '@/lib/firebase/auth'
-import { logOut } from '@/lib/firebase/auth'
+import {
+  getUserFromFirestore,
+  logOut,
+  handleGoogleRedirectResult,
+} from '@/lib/firebase/auth'
 import type { LMSUser } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -44,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LMSUser | null>(null)
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   const loadUser = useCallback(async (fbUser: User) => {
     try {
@@ -66,6 +71,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setFirebaseUser(null)
   }, [])
 
+  // ── Handle Google Redirect Result on mount ────────────────────────────
+  useEffect(() => {
+    handleGoogleRedirectResult()
+      .then((result) => {
+        if (result?.user) {
+          setUser(result.user)
+          router.push(result.user.role === 'admin' ? '/admin' : '/dashboard')
+        }
+      })
+      .catch((err) => console.error('Google redirect error:', err))
+  }, [])
+
+  // ── Auth state listener ───────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
@@ -111,7 +129,7 @@ export function useAuthContext() {
   return context
 }
 
-// Legacy hook alias — keeps existing imports working
+// Legacy hook alias
 export function useAuth() {
   const ctx = useAuthContext()
   return { ...ctx, logOut: ctx.signOut }

@@ -1,7 +1,9 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithRedirect,
   signInWithPopup,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -70,7 +72,6 @@ export async function signUpWithEmail(
     createdAt: serverTimestamp(),
   })
 
-  // Send OTP
   const res = await fetch('/api/auth/otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -110,7 +111,6 @@ export async function verifyOTP(email: string, otp: string): Promise<void> {
     throw new Error(data.error ?? 'Verification failed')
   }
 
-  // Force token refresh so custom claims (role) are included in session cookie
   const user = auth.currentUser
   if (user) {
     const idToken = await user.getIdToken(true)
@@ -138,7 +138,6 @@ export async function signInWithEmail(
   if (!user) throw new Error('User record not found. Please sign up.')
 
   if (!firebaseEmailVerified && !user.emailVerified) {
-    // Send fresh OTP
     await fetch('/api/auth/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -147,31 +146,37 @@ export async function signInWithEmail(
     return { user, emailVerified: false }
   }
 
-  // Force token refresh so role custom claim is included
   const idToken = await credential.user.getIdToken(true)
   await setSessionCookie(idToken)
 
   return { user, emailVerified: true }
 }
 
-// ── Sign In with Google ───────────────────────────────────────────────────
+// ── Sign In with Google (Redirect) ────────────────────────────────────────
 
-export async function signInWithGoogle(
+export async function signInWithGoogle(): Promise<void> {
+  await signInWithRedirect(auth, googleProvider)
+}
+
+// ── Handle Google Redirect Result ─────────────────────────────────────────
+// Call this on app load / auth page load
+
+export async function handleGoogleRedirectResult(
   role: UserRole = 'student',
-): Promise<{ user: LMSUser; isNew: boolean }> {
-  const credential = await signInWithPopup(auth, googleProvider)
+): Promise<{ user: LMSUser; isNew: boolean } | null> {
+  const credential = await getRedirectResult(auth)
+  if (!credential) return null
+
   const { uid, email, displayName, photoURL } = credential.user
 
   const existing = await getUserFromFirestore(uid)
 
   if (existing) {
-    // Force token refresh so role custom claim is included
     const idToken = await credential.user.getIdToken(true)
     await setSessionCookie(idToken)
     return { user: existing, isNew: false }
   }
 
-  // New Google user
   const user: LMSUser = {
     uid,
     email: email!,
@@ -188,7 +193,6 @@ export async function signInWithGoogle(
     createdAt: serverTimestamp(),
   })
 
-  // Force token refresh so role custom claim is included
   const idToken = await credential.user.getIdToken(true)
   await setSessionCookie(idToken)
 
