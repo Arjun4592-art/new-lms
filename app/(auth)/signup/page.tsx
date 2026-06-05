@@ -32,7 +32,6 @@ export default function SignupPage() {
     setLoading(true)
     try {
       await signUpWithEmail(email, password, name)
-      // Redirect to OTP verification page
       router.push(`/verify-email?email=${encodeURIComponent(email)}`)
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
@@ -51,11 +50,9 @@ export default function SignupPage() {
     setError('')
     setGoogleLoading(true)
     try {
-      const { user } = await signInWithGoogle()
-      router.push(user.role === 'admin' ? '/admin' : '/dashboard')
+      await signInWithGoogle() // redirect hoga, AuthContext handle karega
     } catch (err: any) {
       setError(err.message ?? 'Google sign in failed')
-    } finally {
       setGoogleLoading(false)
     }
   }
@@ -63,7 +60,6 @@ export default function SignupPage() {
   return (
     <div className='min-h-screen bg-surface flex items-center justify-center px-4 py-12'>
       <div className='w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-surface'>
-        {/* Header */}
         <div className='text-center mb-8'>
           <h1 className='text-3xl font-bold text-primary-dark font-serif mb-2'>
             Create Account
@@ -73,14 +69,18 @@ export default function SignupPage() {
           </p>
         </div>
 
-        {/* Error */}
         {error && (
           <div className='mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm'>
             {error}
           </div>
         )}
 
-        {/* Form */}
+        {googleLoading && (
+          <div className='mb-4 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-sm text-center'>
+            Redirecting to Google... Please wait.
+          </div>
+        )}
+
         <form onSubmit={handleSignup} className='space-y-4'>
           <div>
             <label className='block text-sm font-medium text-primary-mid mb-1'>
@@ -140,24 +140,22 @@ export default function SignupPage() {
 
           <button
             type='submit'
-            disabled={loading}
+            disabled={loading || googleLoading}
             className='w-full py-3 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2'
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
-        {/* Divider */}
         <div className='flex items-center gap-3 my-6'>
           <div className='flex-1 h-px bg-surface-border' />
           <span className='text-primary-muted text-xs'>or continue with</span>
           <div className='flex-1 h-px bg-surface-border' />
         </div>
 
-        {/* Google */}
         <button
           onClick={handleGoogle}
-          disabled={googleLoading}
+          disabled={googleLoading || loading}
           className='w-full py-3 rounded-lg border border-surface text-primary-dark font-medium text-sm hover:bg-surface transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3'
         >
           <svg className='w-5 h-5' viewBox='0 0 24 24'>
@@ -178,10 +176,9 @@ export default function SignupPage() {
               d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'
             />
           </svg>
-          {googleLoading ? 'Signing in...' : 'Continue with Google'}
+          {googleLoading ? 'Redirecting...' : 'Continue with Google'}
         </button>
 
-        {/* Login link */}
         <p className='text-center text-sm text-primary-muted mt-6'>
           Already have an account?{' '}
           <Link
