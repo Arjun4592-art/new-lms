@@ -1,15 +1,35 @@
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'purple' | 'green' | 'gold' | 'pink' | 'default'
+  variant?: 'warm' | 'sage' | 'gold' | 'rose' | 'default'
   className?: string
 }
 
-const variants = {
-  purple: 'bg-surface text-primary border border-primary-light',
-  green: 'bg-green-50 text-green-700 border border-green-200',
-  gold: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-  pink: 'bg-pink-50 text-pink-700 border border-pink-200',
-  default: 'bg-surface text-primary-muted border border-surface',
+const variants: Record<string, React.CSSProperties> = {
+  warm: {
+    backgroundColor: 'var(--color-surface)',
+    color: 'var(--color-primary-mid)',
+    border: '1px solid var(--color-surface-border)',
+  },
+  sage: {
+    backgroundColor: '#EAF0E6',
+    color: '#4A6741',
+    border: '1px solid #C8D8C4',
+  },
+  gold: {
+    backgroundColor: '#F5EDDA',
+    color: '#7A5C20',
+    border: '1px solid #E8D5B0',
+  },
+  rose: {
+    backgroundColor: '#F5EAE8',
+    color: '#7A4040',
+    border: '1px solid #E8CECC',
+  },
+  default: {
+    backgroundColor: 'var(--color-primary-light)',
+    color: 'var(--color-primary)',
+    border: '1px solid var(--color-surface)',
+  },
 }
 
 export default function Badge({
@@ -19,7 +39,8 @@ export default function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${variants[variant]} ${className}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-[11px] font-semibold tracking-wide uppercase ${className}`}
+      style={variants[variant]}
     >
       {children}
     </span>

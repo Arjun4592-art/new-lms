@@ -1,29 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
 
 @import 'tailwindcss';
 
 @theme {
   /* ── Fonts ── */
   --font-serif: 'Playfair Display', Georgia, serif;
-  --font-space: 'Space Grotesk', sans-serif;
+  --font-sans: 'Raleway', sans-serif;
+
   /* ── Brand Colors ── */
-  --color-primary: #7c5cbf;
-  /* --color-primary: #f7f5f2; */
-  --color-primary-hover: #6a4dad;
-  --color-primary-dark: #2d1b5e;
-  --color-primary-mid: #4a3570;
-  --color-primary-muted: #8470a8;
-  --color-primary-accent: #a67dd4;
-  --color-primary-light: #c084f5;
+  --color-primary: #7a6a58;
+  --color-primary-hover: #5c4a38;
+  --color-primary-dark: #2c2218;
+  --color-primary-mid: #5c4a38;
+  --color-primary-muted: #b8a898;
+  --color-primary-accent: #d8cebc;
+  --color-primary-light: #e8dfd0;
 
   /* ── Surfaces ── */
-  --color-surface: #f3eeff;
-  --color-surface-hover: #e8deff;
-  --color-surface-border: #ede9fe;
+  --color-surface: #e8dfd0;
+  --color-surface-hover: #d8cebc;
+  --color-surface-border: #d8cebc;
 
   /* ── Base ── */
-  --color-bg: #ffffff;
-  --color-text: #2d1b5e;
+  --color-bg: #f5f0e8;
+  --color-text: #2c2218;
 }
 
 @layer base {
@@ -31,11 +31,24 @@
     scroll-behavior: smooth;
   }
   body {
+    font-family: var(--font-sans);
     color: var(--color-text);
     background-color: var(--color-bg);
   }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    color: var(--color-text);
+  }
   .font-serif {
     font-family: var(--font-serif);
+  }
+  .font-sans {
+    font-family: var(--font-sans);
   }
 }
 

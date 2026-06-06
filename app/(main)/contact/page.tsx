@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import SectionHeading from '@/components/ui/SectionHeading'
+import { useEffect, useRef, useState } from 'react'
 import {
   MailIcon,
   InstagramIcon,
@@ -10,27 +9,29 @@ import {
   ArrowRightIcon,
 } from '@/components/ui/Icons'
 
+const iconStyle = (color: string): React.CSSProperties => ({ color })
+
 const CONTACT_ITEMS = [
   {
-    icon: <MailIcon size={20} className='text-[#7C5CBF]' />,
+    icon: <MailIcon size={20} style={iconStyle('var(--color-primary)')} />,
     label: 'Email',
     value: 'masuma26coach@gmail.com',
     href: 'mailto:masuma26coach@gmail.com',
   },
   {
-    icon: <InstagramIcon size={20} className='text-pink-500' />,
+    icon: <InstagramIcon size={20} style={iconStyle('#E1306C')} />,
     label: 'Instagram',
     value: '@masuma_life_coach',
     href: 'https://instagram.com/masuma_life_coach',
   },
   {
-    icon: <YoutubeIcon size={20} className='text-red-500' />,
+    icon: <YoutubeIcon size={20} style={iconStyle('#FF0000')} />,
     label: 'YouTube',
     value: 'MasumaLifeCoach',
     href: 'https://www.youtube.com/@MasumaLifeCoach',
   },
   {
-    icon: <WhatsAppIcon size={20} className='text-green-500' />,
+    icon: <WhatsAppIcon size={20} style={iconStyle('#25D366')} />,
     label: 'WhatsApp',
     value: 'Message on WhatsApp',
     href: 'https://wa.me/',
@@ -47,26 +48,52 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const heroRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+  const infoRef = useRef<HTMLDivElement>(null)
+
+  function animateEls(ref: React.RefObject<HTMLDivElement | null>) {
+    const els = ref.current?.querySelectorAll('[data-anim]')
+    if (!els?.length) return
+    const observer = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('anim-in')
+            observer.unobserve(e.target)
+          }
+        }),
+      { threshold: 0.08 },
+    )
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }
+
+  useEffect(() => {
+    const cleanups = [
+      animateEls(heroRef),
+      animateEls(formRef),
+      animateEls(infoRef),
+    ]
+    return () => cleanups.forEach((fn) => fn?.())
+  }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data?.error ?? 'Failed to submit')
       }
-
       setSubmitted(true)
     } catch (err) {
       console.error('Contact form submit error:', err)
-      // Keep the form visible; user can retry.
     } finally {
       setLoading(false)
     }
@@ -74,100 +101,254 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className='pt-28 pb-16 px-4 bg-linear-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF]'>
-        <div className='max-w-3xl mx-auto text-center'>
-          <span className='inline-block text-[12px] font-bold uppercase tracking-[0.15em] text-[#A67DD4] bg-[#F3EEFF] border border-purple-200 px-4 py-1.5 rounded-full mb-6'>
+      <style>{`
+        /* ── Animations ── */
+        [data-anim] {
+          opacity: 0; transform: translateY(20px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        [data-anim].anim-in { opacity: 1; transform: translateY(0); }
+        [data-anim][data-delay="1"] { transition-delay: 0.1s; }
+        [data-anim][data-delay="2"] { transition-delay: 0.2s; }
+        [data-anim][data-delay="3"] { transition-delay: 0.3s; }
+        [data-anim][data-delay="4"] { transition-delay: 0.4s; }
+        [data-anim][data-delay="5"] { transition-delay: 0.5s; }
+
+        /* ── Hero ── */
+        .contact-hero {
+          background-color: var(--color-surface);
+          border-bottom: 1px solid var(--color-surface-border);
+        }
+        .contact-eyebrow {
+          display: inline-block;
+          font-size: 11px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 0.13em;
+          color: var(--color-primary);
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          padding: 5px 14px; border-radius: 9999px; margin-bottom: 20px;
+        }
+
+        /* ── Sections ── */
+        .contact-main { background-color: var(--color-bg); }
+
+        /* ── Form fields ── */
+        .contact-label {
+          display: block; font-size: 13px; font-weight: 600;
+          color: var(--color-primary-mid); margin-bottom: 6px;
+        }
+        .contact-input {
+          width: 100%; padding: 12px 16px;
+          border: 1px solid var(--color-surface-border);
+          border-radius: 10px; font-size: 14px;
+          color: var(--color-text);
+          background-color: var(--color-bg);
+          outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .contact-input::placeholder { color: var(--color-primary-muted); }
+        .contact-input:focus {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(122,106,88,0.12);
+        }
+
+        /* ── Submit btn ── */
+        .contact-submit {
+          width: 100%; padding: 14px;
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          font-size: 14px; font-weight: 600; font-family: var(--font-sans);
+          border: none; border-radius: 10px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          transition: background-color 0.2s, box-shadow 0.2s;
+          box-shadow: 0 6px 20px rgba(122,106,88,0.22);
+          letter-spacing: 0.04em; text-transform: uppercase;
+        }
+        .contact-submit:hover { background-color: var(--color-primary-hover); }
+        .contact-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ── Contact link items ── */
+        .contact-link-item {
+          display: flex; align-items: center; gap: 16px;
+          padding: 14px 16px;
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; text-decoration: none;
+          transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .contact-link-item:hover {
+          border-color: var(--color-primary);
+          box-shadow: 0 4px 16px rgba(122,106,88,0.12);
+          transform: translateY(-2px);
+        }
+        .contact-link-icon {
+          width: 44px; height: 44px;
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 10px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .contact-link-label {
+          font-size: 10.5px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 0.1em;
+          color: var(--color-primary-muted);
+        }
+        .contact-link-value {
+          font-size: 14px; font-weight: 500;
+          color: var(--color-text);
+          transition: color 0.2s;
+        }
+        .contact-link-item:hover .contact-link-value { color: var(--color-primary); }
+
+        /* ── Free call card ── */
+        .free-call-card {
+          background-color: var(--color-primary-dark);
+          border-radius: 12px; padding: 28px;
+          color: var(--color-primary-light);
+        }
+        .free-call-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          background-color: var(--color-bg);
+          color: var(--color-primary-dark);
+          font-weight: 600; font-size: 13.5px;
+          padding: 10px 20px; border-radius: 8px;
+          text-decoration: none; transition: background-color 0.2s;
+        }
+        .free-call-btn:hover { background-color: var(--color-surface); }
+
+        /* ── Success card ── */
+        .success-card {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 40px 28px; text-align: center;
+        }
+      `}</style>
+
+      {/* ── Hero ── */}
+      <section className='contact-hero pt-28 pb-16 px-4 sm:px-6 relative overflow-hidden'>
+        <div
+          className='absolute top-0 right-0 w-72 h-72 rounded-full blur-3xl pointer-events-none'
+          style={{
+            backgroundColor: 'var(--color-primary-light)',
+            opacity: 0.4,
+          }}
+        />
+        <div ref={heroRef} className='max-w-3xl mx-auto text-center relative'>
+          <span data-anim data-delay='1' className='contact-eyebrow'>
             Get In Touch
           </span>
-          <h1 className='font-serif text-[44px] sm:text-[54px] font-bold text-[#2D1B5E] leading-tight mb-5'>
-            Let's Start a{' '}
-            <span className='text-transparent bg-clip-text bg-linear-to-r from-[#7C5CBF] to-[#C084F5]'>
+          <h1
+            data-anim
+            data-delay='2'
+            className='font-serif text-[40px] sm:text-[52px] font-medium leading-tight mb-5'
+            style={{ color: 'var(--color-text)' }}
+          >
+            Let&apos;s Start a{' '}
+            <span
+              style={{ color: 'var(--color-primary)', fontStyle: 'italic' }}
+            >
               Conversation
             </span>
           </h1>
-          <p className='text-[17px] text-[#6B5B8B] leading-relaxed'>
+          <p
+            data-anim
+            data-delay='3'
+            className='text-[17px] leading-relaxed font-light'
+            style={{ color: 'var(--color-primary)' }}
+          >
             Whether you have questions about a programme or just want to reach
-            out — I'd love to hear from you.
+            out — I&apos;d love to hear from you.
           </p>
         </div>
       </section>
 
-      {/* Main */}
-      <section className='py-16 px-4 bg-white'>
+      {/* ── Main ── */}
+      <section className='contact-main py-16 px-4 sm:px-6'>
         <div className='max-w-5xl mx-auto grid lg:grid-cols-2 gap-12'>
           {/* Form */}
-          <div>
-            <h2 className='font-serif text-[26px] font-bold text-[#2D1B5E] mb-6'>
+          <div ref={formRef}>
+            <h2
+              data-anim
+              data-delay='1'
+              className='font-serif text-[24px] font-medium mb-6'
+              style={{ color: 'var(--color-text)' }}
+            >
               Send a Message
             </h2>
 
             {submitted ? (
-              <div className='bg-[#F9F5FF] border border-purple-200 rounded-2xl p-10 text-center'>
-                <div className='text-[48px] mb-4'>🌸</div>
-                <h3 className='font-serif text-[22px] font-bold text-[#2D1B5E] mb-2'>
+              <div data-anim data-delay='1' className='success-card'>
+                <div className='text-[48px] mb-4'>🌿</div>
+                <h3
+                  className='font-serif text-[22px] font-medium mb-2'
+                  style={{ color: 'var(--color-text)' }}
+                >
                   Message Received!
                 </h3>
-                <p className='text-[15px] text-[#6B5B8B] leading-relaxed'>
+                <p
+                  className='text-[15px] font-light'
+                  style={{ color: 'var(--color-primary)' }}
+                >
                   Thank you for reaching out. Masuma will get back to you within
                   24 hours.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className='space-y-4'>
-                <div>
-                  <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-                    Your Name *
-                  </label>
-                  <input
-                    type='text'
-                    required
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder='e.g. Priya Sharma'
-                    className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] placeholder-[#B0A0CC] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-                  />
-                </div>
-                <div>
-                  <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-                    Email Address *
-                  </label>
-                  <input
-                    type='email'
-                    required
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
-                    placeholder='you@example.com'
-                    className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] placeholder-[#B0A0CC] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-                  />
-                </div>
-                <div>
-                  <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-                    I'm interested in
+                {[
+                  {
+                    label: 'Your Name *',
+                    type: 'text',
+                    key: 'name',
+                    placeholder: 'e.g. Priya Sharma',
+                    required: true,
+                  },
+                  {
+                    label: 'Email Address *',
+                    type: 'email',
+                    key: 'email',
+                    placeholder: 'you@example.com',
+                    required: true,
+                  },
+                ].map(({ label, type, key, placeholder, required }, i) => (
+                  <div key={key} data-anim data-delay={`${i + 2}`}>
+                    <label className='contact-label'>{label}</label>
+                    <input
+                      type={type}
+                      required={required}
+                      value={form[key as keyof typeof form]}
+                      onChange={(e) =>
+                        setForm({ ...form, [key]: e.target.value })
+                      }
+                      placeholder={placeholder}
+                      className='contact-input'
+                    />
+                  </div>
+                ))}
+
+                <div data-anim data-delay='4'>
+                  <label className='contact-label'>
+                    I&apos;m interested in
                   </label>
                   <select
                     value={form.interest}
                     onChange={(e) =>
                       setForm({ ...form, interest: e.target.value })
                     }
-                    className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all bg-white cursor-pointer'
+                    className='contact-input cursor-pointer'
                   >
                     <option value=''>Select a programme…</option>
                     <option>Pain to Power Masterclass</option>
                     <option>5-Day WhatsApp Challenge</option>
                     <option>4-Week Emotional Healing Programme</option>
-                    <option>Self-Boundaries & Letting Go Course</option>
+                    <option>Self-Boundaries &amp; Letting Go Course</option>
                     <option>Recorded Healing Workshops</option>
                     <option>Free Exploration Call</option>
                     <option>General Enquiry</option>
                   </select>
                 </div>
-                <div>
-                  <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-                    Your Message *
-                  </label>
+
+                <div data-anim data-delay='5'>
+                  <label className='contact-label'>Your Message *</label>
                   <textarea
                     required
                     rows={5}
@@ -176,88 +357,96 @@ export default function ContactPage() {
                       setForm({ ...form, message: e.target.value })
                     }
                     placeholder="Tell me a little about where you are and what you're looking for…"
-                    className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] placeholder-[#B0A0CC] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all resize-none'
+                    className='contact-input resize-none'
                   />
                 </div>
-                <button
-                  type='submit'
-                  disabled={loading}
-                  className='w-full py-4 bg-[#7C5CBF] hover:bg-[#6A4DAD] text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-200 disabled:opacity-60 flex items-center justify-center gap-2 text-[15px]'
-                >
-                  {loading ? (
-                    <svg
-                      className='animate-spin w-5 h-5'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                    >
-                      <circle
-                        className='opacity-25'
-                        cx='12'
-                        cy='12'
-                        r='10'
-                        stroke='currentColor'
-                        strokeWidth='4'
-                      />
-                      <path
-                        className='opacity-75'
-                        fill='currentColor'
-                        d='M4 12a8 8 0 018-8v8H4z'
-                      />
-                    </svg>
-                  ) : (
-                    <>
-                      Send Message <ArrowRightIcon size={18} />
-                    </>
-                  )}
-                </button>
+
+                <div data-anim data-delay='5'>
+                  <button
+                    type='submit'
+                    disabled={loading}
+                    className='contact-submit'
+                  >
+                    {loading ? (
+                      <svg
+                        className='animate-spin w-5 h-5'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                      >
+                        <circle
+                          cx='12'
+                          cy='12'
+                          r='10'
+                          stroke='currentColor'
+                          strokeWidth='4'
+                          className='opacity-25'
+                        />
+                        <path
+                          fill='currentColor'
+                          d='M4 12a8 8 0 018-8v8H4z'
+                          className='opacity-75'
+                        />
+                      </svg>
+                    ) : (
+                      <>
+                        Send Message <ArrowRightIcon size={17} />
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             )}
           </div>
 
           {/* Contact info */}
-          <div>
-            <h2 className='font-serif text-[26px] font-bold text-[#2D1B5E] mb-6'>
+          <div ref={infoRef}>
+            <h2
+              data-anim
+              data-delay='1'
+              className='font-serif text-[24px] font-medium mb-6'
+              style={{ color: 'var(--color-text)' }}
+            >
               Other Ways to Connect
             </h2>
-            <div className='space-y-4 mb-8'>
-              {CONTACT_ITEMS.map((item) => (
+
+            <div className='space-y-3 mb-8'>
+              {CONTACT_ITEMS.map((item, i) => (
                 <a
                   key={item.label}
+                  data-anim
+                  data-delay={`${i + 2}`}
                   href={item.href}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex items-center gap-4 p-4 bg-[#F9F5FF] border border-purple-100 rounded-2xl hover:border-[#7C5CBF]/40 hover:shadow-md transition-all no-underline group'
+                  className='contact-link-item'
                 >
-                  <div className='w-11 h-11 bg-white border border-purple-100 rounded-xl flex items-center justify-center shrink-0 shadow-sm'>
-                    {item.icon}
-                  </div>
+                  <div className='contact-link-icon'>{item.icon}</div>
                   <div>
-                    <p className='text-[12px] font-bold uppercase tracking-widest text-[#A67DD4]'>
-                      {item.label}
-                    </p>
-                    <p className='text-[14px] font-semibold text-[#2D1B5E] group-hover:text-[#7C5CBF] transition-colors'>
-                      {item.value}
-                    </p>
+                    <p className='contact-link-label'>{item.label}</p>
+                    <p className='contact-link-value'>{item.value}</p>
                   </div>
                 </a>
               ))}
             </div>
 
             {/* Free call card */}
-            <div className='bg-linear-to-br from-[#7C5CBF] to-[#A67DD4] rounded-2xl p-7 text-white'>
+            <div data-anim data-delay='5' className='free-call-card'>
               <div className='text-[32px] mb-3'>☎️</div>
-              <h3 className='font-serif text-[20px] font-bold mb-2'>
+              <h3
+                className='font-serif text-[20px] font-medium mb-2'
+                style={{ color: 'var(--color-primary-light)' }}
+              >
                 Book a Free Exploration Call
               </h3>
-              <p className='text-purple-100 text-[14px] leading-relaxed mb-5'>
-                Not sure where to start? Let's talk for 30 minutes — no
+              <p
+                className='text-[14px] leading-relaxed mb-5 font-light'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
+                Not sure where to start? Let&apos;s talk for 30 minutes — no
                 pressure, just a conversation about your journey.
               </p>
-              <a
-                href='/courses'
-                className='inline-flex items-center gap-2 bg-white text-[#7C5CBF] font-bold px-5 py-2.5 rounded-xl text-[14px] no-underline hover:bg-purple-50 transition-colors'
-              >
-                Book Now <ArrowRightIcon size={15} />
+              <a href='/courses' className='free-call-btn'>
+                Book Now <ArrowRightIcon size={14} />
               </a>
             </div>
           </div>

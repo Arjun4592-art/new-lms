@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { db } from '@/lib/firebase/config'
 import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
+import crypto from 'crypto'
+
 export const dynamic = 'force-dynamic'
 
 const transporter = nodemailer.createTransport({
@@ -12,6 +14,11 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+// OTP ko hash karo
+function hashOtp(otp: string): string {
+  return crypto.createHash('sha256').update(otp).digest('hex')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json()
@@ -21,7 +28,9 @@ export async function POST(req: NextRequest) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = Date.now() + 10 * 60 * 1000
 
-    await setDoc(doc(db, 'otps', email), { otp, expiresAt })
+    // Plain OTP nahi, hashed OTP save karo
+    const hashedOtp = hashOtp(otp)
+    await setDoc(doc(db, 'otps', email), { otp: hashedOtp, expiresAt })
 
     await transporter.sendMail({
       from: `"Pain to Power" <${process.env.GMAIL_USER}>`,
@@ -59,14 +68,16 @@ export async function PUT(req: NextRequest) {
     if (!docSnap.exists())
       return NextResponse.json({ error: 'OTP not found' }, { status: 404 })
 
-    const { otp: storedOtp, expiresAt } = docSnap.data()
+    const { otp: storedHashedOtp, expiresAt } = docSnap.data()
 
     if (Date.now() > expiresAt) {
       await deleteDoc(doc(db, 'otps', email))
       return NextResponse.json({ error: 'OTP expired' }, { status: 410 })
     }
 
-    if (otp !== storedOtp)
+    // User ke OTP ko bhi hash karke compare karo
+    const hashedInput = hashOtp(otp)
+    if (hashedInput !== storedHashedOtp)
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 })
 
     await deleteDoc(doc(db, 'otps', email))

@@ -2,6 +2,16 @@ import type { NextConfig } from 'next'
 import type { Configuration } from 'webpack'
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   serverExternalPackages: ['firebase-admin', 'nodemailer', 'razorpay'],
 
   webpack: (config: Configuration, { isServer }: { isServer: boolean }) => {

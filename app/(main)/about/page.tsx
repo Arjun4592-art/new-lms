@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Button from '@/components/ui/Button'
 import {
@@ -5,14 +8,7 @@ import {
   HeartIcon,
   SparkleIcon,
   ArrowRightIcon,
-  CheckIcon,
 } from '@/components/ui/Icons'
-
-export const metadata = {
-  title: 'About Masuma | Pain to Power Coaching',
-  description:
-    'Meet Masuma, a Life Transformational Coach helping women heal their past, reclaim their worth, and rise into their power.',
-}
 
 const CERTIFICATIONS = [
   'Puja Punnet Life by Design',
@@ -22,17 +18,21 @@ const CERTIFICATIONS = [
 
 const VALUES = [
   {
-    icon: <HeartIcon size={22} className='text-pink-400' />,
+    icon: (
+      <HeartIcon size={22} style={{ color: 'var(--color-primary-muted)' }} />
+    ),
     title: 'Compassion',
     desc: 'A deeply safe and non-judgmental space where you are fully seen and heard.',
   },
   {
-    icon: <ShieldIcon size={22} className='text-[#7C5CBF]' />,
+    icon: <ShieldIcon size={22} style={{ color: 'var(--color-primary)' }} />,
     title: 'Empowerment',
     desc: 'Equipping you with real tools and practices to reclaim your worth.',
   },
   {
-    icon: <SparkleIcon size={22} className='text-[#A67DD4]' />,
+    icon: (
+      <SparkleIcon size={22} style={{ color: 'var(--color-primary-mid)' }} />
+    ),
     title: 'Transformation',
     desc: 'Going beyond surface-level — creating deep, lasting change from within.',
   },
@@ -42,7 +42,7 @@ const JOURNEY_STEPS = [
   {
     year: 'The Beginning',
     title: 'My Own Pain',
-    desc: 'Like many of the women I work with, I experienced emotional overwhelm, people-pleasing, and the silent pressure to hold everything together.',
+    desc: 'Like many of the people I work with, I experienced emotional overwhelm, people-pleasing, and the silent pressure to hold everything together.',
   },
   {
     year: 'The Turning Point',
@@ -52,59 +52,270 @@ const JOURNEY_STEPS = [
   {
     year: 'The Learning',
     title: 'Becoming a Coach',
-    desc: 'I invested in my growth, earned multiple coaching certifications, and discovered my true calling — helping women do the same inner work I had done.',
+    desc: 'I invested in my growth, earned multiple coaching certifications, and discovered my true calling — helping individuals do the same inner work I had done.',
   },
   {
     year: 'Today',
     title: 'Your Guide',
-    desc: 'Now I walk alongside women on their own journeys — from pain to power, from self-doubt to unshakeable confidence, from silence to voice.',
+    desc: 'Now I walk alongside people on their own journeys — from pain to power, from self-doubt to unshakeable confidence, from silence to voice.',
   },
 ]
 
+// Certificate placeholder images — replace src with your actual certificate images
+const CERTIFICATES = [
+  { id: 1, title: 'Puja Punnet Life by Design', src: '' },
+  { id: 2, title: 'Coaching Mastery Certification', src: '' },
+  { id: 3, title: 'Coaching Certification', src: '' },
+]
+
+function useScrollAnim(selector: string, dep?: any) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const els = ref.current?.querySelectorAll(selector)
+    if (!els?.length) return
+    const observer = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('anim-in')
+            observer.unobserve(e.target)
+          }
+        }),
+      { threshold: 0.08 },
+    )
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dep])
+  return ref
+}
+
 export default function AboutPage() {
+  const heroRef = useScrollAnim('[data-anim]')
+  const storyRef = useScrollAnim('[data-anim]')
+  const timeRef = useScrollAnim('[data-anim]')
+  const valRef = useScrollAnim('[data-anim]')
+  const certRef = useScrollAnim('[data-anim]')
+  const ctaRef = useScrollAnim('[data-anim]')
+
   return (
     <>
-      {/* Hero */}
-      <section className='pt-28 pb-20 px-4 bg-linear-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] relative overflow-hidden'>
-        <div className='absolute top-20 right-10 w-72 h-72 bg-[#D4BEFF]/20 rounded-full blur-3xl' />
-        <div className='max-w-4xl mx-auto text-center relative'>
-          <span className='inline-block text-[12px] font-bold uppercase tracking-[0.15em] text-[#A67DD4] bg-[#F3EEFF] border border-purple-200 px-4 py-1.5 rounded-full mb-6'>
+      <style>{`
+        /* ── Base animation ── */
+        [data-anim] {
+          opacity: 0; transform: translateY(22px);
+          transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+        [data-anim].anim-in { opacity: 1; transform: translateY(0); }
+        [data-delay="1"] { transition-delay: 0.1s; }
+        [data-delay="2"] { transition-delay: 0.2s; }
+        [data-delay="3"] { transition-delay: 0.3s; }
+        [data-delay="4"] { transition-delay: 0.4s; }
+        [data-delay="5"] { transition-delay: 0.5s; }
+        [data-delay="6"] { transition-delay: 0.6s; }
+
+        /* ── Slide from left ── */
+        [data-anim-left] {
+          opacity: 0; transform: translateX(-18px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        [data-anim-left].anim-in { opacity: 1; transform: translateX(0); }
+
+        /* ── Hero ── */
+        .about-hero {
+          background-color: var(--color-surface);
+          border-bottom: 1px solid var(--color-surface-border);
+        }
+        .about-eyebrow {
+          display: inline-block;
+          font-size: 11px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 0.13em;
+          color: var(--color-primary);
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          padding: 5px 14px; border-radius: 9999px; margin-bottom: 20px;
+        }
+
+        /* ── Sections ── */
+        .about-white  { background-color: var(--color-bg); }
+        .about-tinted { background-color: var(--color-surface); }
+
+        /* ── Story visual ── */
+        @keyframes float-about { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes spin-slow { to{transform:rotate(360deg)} }
+        .about-circle-float { animation: float-about 6s ease-in-out infinite; }
+        .about-spin { animation: spin-slow 22s linear infinite; }
+
+        /* ── Timeline ── */
+        .timeline-step { display:flex; gap:20px; align-items:flex-start; }
+        .timeline-dot {
+          width:40px; height:40px; border-radius:50%; flex-shrink:0;
+          background-color:var(--color-primary);
+          color:var(--color-bg);
+          display:flex; align-items:center; justify-content:center;
+          font-size:13px; font-weight:600;
+        }
+        .timeline-line {
+          width:2px; min-height:32px; flex:1;
+          background-color:var(--color-surface-border); margin-top:8px; margin-left:19px;
+        }
+        .timeline-card {
+          background-color:var(--color-bg);
+          border:1px solid var(--color-surface-border);
+          border-radius:12px; padding:20px 22px; flex:1; margin-bottom:8px;
+        }
+
+        /* ── Values ── */
+        .value-card {
+          background-color:var(--color-surface);
+          border:1px solid var(--color-surface-border);
+          border-radius:12px; padding:28px; text-align:center;
+          transition:transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .value-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(44,34,24,0.10); }
+        .value-icon-wrap {
+          width:48px; height:48px; border-radius:10px;
+          background-color:var(--color-bg);
+          border:1px solid var(--color-surface-border);
+          display:flex; align-items:center; justify-content:center;
+          margin:0 auto 16px;
+        }
+
+        /* ── Certificate section ── */
+        .cert-photo-card {
+          background-color:var(--color-bg);
+          border:1px solid var(--color-surface-border);
+          border-radius:12px; overflow:hidden;
+          transition:transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .cert-photo-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(44,34,24,0.10); }
+        .cert-photo-placeholder {
+          width:100%; aspect-ratio:4/3;
+          background-color:var(--color-surface);
+          display:flex; flex-direction:column;
+          align-items:center; justify-content:center;
+          gap:8px; border-bottom:1px solid var(--color-surface-border);
+        }
+        .cert-photo-img {
+          width:100%; aspect-ratio:4/3; object-fit:cover;
+          border-bottom:1px solid var(--color-surface-border);
+        }
+
+        /* ── CTA ── */
+        .about-cta {
+          background-color:var(--color-primary-dark);
+        }
+      `}</style>
+
+      {/* ── Hero ── */}
+      <section className='about-hero pt-28 pb-20 px-4 sm:px-6 relative overflow-hidden'>
+        <div
+          className='absolute top-20 right-10 w-72 h-72 rounded-full blur-3xl pointer-events-none'
+          style={{
+            backgroundColor: 'var(--color-primary-light)',
+            opacity: 0.5,
+          }}
+        />
+        <div ref={heroRef} className='max-w-4xl mx-auto text-center relative'>
+          <span data-anim data-delay='1' className='about-eyebrow'>
             Meet Your Coach
           </span>
-          <h1 className='font-serif text-[44px] sm:text-[56px] font-bold text-[#2D1B5E] leading-tight mb-6'>
+          <h1
+            data-anim
+            data-delay='2'
+            className='font-serif text-[44px] sm:text-[56px] font-medium leading-tight mb-6'
+            style={{ color: 'var(--color-text)' }}
+          >
             Hi, I am{' '}
-            <span className='text-transparent bg-clip-text bg-linear-to-r from-[#7C5CBF] to-[#C084F5]'>
+            <span
+              style={{ color: 'var(--color-primary)', fontStyle: 'italic' }}
+            >
               Masuma
             </span>
           </h1>
-          <p className='text-[17px] sm:text-[19px] text-[#6B5B8B] leading-relaxed max-w-2xl mx-auto'>
-            Life Transformational Coach · Helping women heal their past, reclaim
-            their worth, and rise into their power.
+          <p
+            data-anim
+            data-delay='3'
+            className='text-[17px] sm:text-[19px] leading-relaxed max-w-2xl mx-auto font-light'
+            style={{ color: 'var(--color-primary)' }}
+          >
+            Life Transformational Coach · Helping individuals heal their past,
+            reclaim their worth, and rise into their power.
           </p>
         </div>
       </section>
 
-      {/* Story */}
-      <section className='py-20 px-4 bg-white'>
-        <div className='max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center'>
+      {/* ── Story ── */}
+      <section className='about-white py-20 px-4 sm:px-6'>
+        <div
+          ref={storyRef}
+          className='max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center'
+        >
           {/* Visual */}
-          <div className='flex justify-center'>
-            <div className='relative'>
-              <div className='w-72 h-72 sm:w-80 sm:h-80 rounded-3xl bg-linear-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center shadow-2xl shadow-purple-300/40'>
-                <div className='text-center text-white px-8'>
+          <div
+            data-anim
+            data-delay='1'
+            className='flex justify-center order-2 lg:order-1'
+          >
+            <div className='relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center'>
+              <div
+                className='about-spin absolute inset-0 rounded-full pointer-events-none'
+                style={{
+                  border: '1.5px dashed var(--color-primary-accent)',
+                  transform: 'scale(1.13)',
+                }}
+              />
+              <div
+                className='about-circle-float relative w-full h-full rounded-3xl flex flex-col items-center justify-center gap-2 z-10'
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1.5px solid var(--color-surface-border)',
+                }}
+              >
+                <div
+                  className='w-12 h-12 rounded-full flex items-center justify-center mb-1'
+                  style={{
+                    backgroundColor: 'var(--color-primary-light)',
+                    border: '1px solid var(--color-surface-border)',
+                  }}
+                >
                   <SparkleIcon
-                    size={48}
-                    className='mx-auto mb-4 text-purple-200'
+                    size={24}
+                    style={{ color: 'var(--color-primary)' }}
                   />
-                  <p className='font-serif text-[22px] font-bold'>Masuma</p>
-                  <p className='text-purple-200 text-[14px] mt-1'>
-                    Life Transformational Coach
-                  </p>
                 </div>
+                <p
+                  className='font-serif text-[22px] font-medium'
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Masuma
+                </p>
+                <p
+                  className='text-[12px] font-light tracking-wide'
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  Life Transformational Coach
+                </p>
               </div>
-              <div className='absolute -bottom-5 -right-5 bg-white rounded-2xl shadow-lg border border-purple-100 p-4'>
-                <p className='text-[12px] text-[#8470A8]'>Certified &</p>
-                <p className='text-[15px] font-bold text-[#2D1B5E]'>
+              {/* Badge */}
+              <div
+                className='absolute -bottom-4 -right-4 rounded-xl p-3.5 z-20'
+                style={{
+                  backgroundColor: 'var(--color-bg)',
+                  border: '1px solid var(--color-surface-border)',
+                  boxShadow: '0 4px 16px rgba(184,168,152,0.18)',
+                }}
+              >
+                <p
+                  className='text-[11px]'
+                  style={{ color: 'var(--color-primary-muted)' }}
+                >
+                  Certified &amp;
+                </p>
+                <p
+                  className='text-[14px] font-semibold'
+                  style={{ color: 'var(--color-text)' }}
+                >
                   Experienced
                 </p>
               </div>
@@ -112,43 +323,67 @@ export default function AboutPage() {
           </div>
 
           {/* Content */}
-          <div>
-            <SectionHeading
-              eyebrow='My Story'
-              title='From Overwhelm to Purpose'
-            />
-            <div className='space-y-4 mt-4 text-[15.5px] text-[#6B5B8B] leading-relaxed'>
-              <p>
+          <div className='order-1 lg:order-2'>
+            <div data-anim data-delay='1'>
+              <SectionHeading
+                eyebrow='My Story'
+                title='From Overwhelm to Purpose'
+              />
+            </div>
+            <div
+              className='space-y-4 mt-4 font-light'
+              style={{
+                color: 'var(--color-primary-mid)',
+                fontSize: '15.5px',
+                lineHeight: '1.8',
+              }}
+            >
+              <p data-anim data-delay='2'>
                 My journey began with my own experiences of emotional overwhelm,
-                people-pleasing, and the silent pressure to "hold everything
-                together." I know what it feels like to lose yourself, to shrink
-                to make others comfortable, to carry pain you were never meant
-                to carry.
+                people-pleasing, and the silent pressure to &ldquo;hold
+                everything together.&rdquo; I know what it feels like to lose
+                yourself, to shrink to make others comfortable, to carry pain
+                you were never meant to carry.
               </p>
-              <p>
+              <p data-anim data-delay='3'>
                 Through deep inner work, healing, and learning, I transformed my
                 pain into purpose. I discovered that healing is not just
-                possible — it's your birthright.
+                possible — it&apos;s your birthright.
               </p>
-              <p>
-                Now I help women do the same. This isn't just coaching. It's a
-                journey of emotional freedom, self-respect, and generational
-                healing.
+              <p data-anim data-delay='4'>
+                Now I help people do the same. This isn&apos;t just coaching.
+                It&apos;s a journey of emotional freedom, self-respect, and
+                generational healing.
               </p>
             </div>
 
             {/* Certs */}
-            <div className='mt-8 bg-[#F9F5FF] border border-purple-100 rounded-2xl p-5'>
-              <p className='text-[12px] font-bold uppercase tracking-widest text-[#A67DD4] mb-3'>
+            <div
+              data-anim
+              data-delay='5'
+              className='mt-8 rounded-xl p-5'
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                border: '1px solid var(--color-surface-border)',
+              }}
+            >
+              <p
+                className='text-[10.5px] font-semibold uppercase tracking-widest mb-3'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
                 Certifications
               </p>
-              <ul className='space-y-2'>
+              <ul className='space-y-2.5'>
                 {CERTIFICATIONS.map((c) => (
                   <li
                     key={c}
-                    className='flex items-center gap-2.5 text-[14px] text-[#4A3570]'
+                    className='flex items-center gap-2.5 text-[14px] font-light'
+                    style={{ color: 'var(--color-primary-mid)' }}
                   >
-                    <ShieldIcon size={14} className='text-[#7C5CBF] shrink-0' />{' '}
+                    <ShieldIcon
+                      size={13}
+                      style={{ color: 'var(--color-primary)', flexShrink: 0 }}
+                    />{' '}
                     {c}
                   </li>
                 ))}
@@ -158,31 +393,46 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Journey timeline */}
-      <section className='py-20 px-4 bg-linear-to-br from-[#F9F5FF] to-[#FDF4FF]'>
-        <div className='max-w-4xl mx-auto'>
-          <SectionHeading eyebrow='The Journey' title='How I Got Here' center />
-          <div className='mt-12 space-y-6'>
+      {/* ── Timeline ── */}
+      <section className='about-tinted py-20 px-4 sm:px-6'>
+        <div ref={timeRef} className='max-w-4xl mx-auto'>
+          <div data-anim data-delay='1'>
+            <SectionHeading
+              eyebrow='The Journey'
+              title='How I Got Here'
+              center
+            />
+          </div>
+          <div className='mt-12'>
             {JOURNEY_STEPS.map((step, i) => (
-              <div key={i} className='flex gap-5 items-start'>
-                <div className='flex flex-col items-center'>
-                  <div className='w-10 h-10 rounded-full bg-[#7C5CBF] flex items-center justify-center text-white text-[13px] font-bold shrink-0'>
-                    {i + 1}
+              <div key={i} data-anim data-delay={`${Math.min(i + 2, 6)}`}>
+                <div className='timeline-step'>
+                  <div className='flex flex-col items-center'>
+                    <div className='timeline-dot'>{i + 1}</div>
+                    {i < JOURNEY_STEPS.length - 1 && (
+                      <div className='timeline-line' />
+                    )}
                   </div>
-                  {i < JOURNEY_STEPS.length - 1 && (
-                    <div className='w-0.5 h-full bg-purple-200 mt-2 min-h-10' />
-                  )}
-                </div>
-                <div className='bg-white border border-purple-100 rounded-2xl p-6 flex-1 mb-2'>
-                  <p className='text-[11px] font-bold uppercase tracking-widest text-[#A67DD4] mb-1'>
-                    {step.year}
-                  </p>
-                  <h3 className='font-serif text-[18px] font-bold text-[#2D1B5E] mb-2'>
-                    {step.title}
-                  </h3>
-                  <p className='text-[14.5px] text-[#6B5B8B] leading-relaxed'>
-                    {step.desc}
-                  </p>
+                  <div className='timeline-card'>
+                    <p
+                      className='text-[10.5px] font-semibold uppercase tracking-widest mb-1'
+                      style={{ color: 'var(--color-primary-muted)' }}
+                    >
+                      {step.year}
+                    </p>
+                    <h3
+                      className='font-serif text-[18px] font-medium mb-2'
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p
+                      className='text-[14.5px] font-light leading-relaxed'
+                      style={{ color: 'var(--color-primary-mid)' }}
+                    >
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -190,27 +440,35 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Values */}
-      <section className='py-20 px-4 bg-white'>
-        <div className='max-w-5xl mx-auto'>
-          <SectionHeading
-            eyebrow='What I Stand For'
-            title='My Coaching Values'
-            center
-          />
+      {/* ── Values ── */}
+      <section className='about-white py-20 px-4 sm:px-6'>
+        <div ref={valRef} className='max-w-5xl mx-auto'>
+          <div data-anim data-delay='1'>
+            <SectionHeading
+              eyebrow='What I Stand For'
+              title='My Coaching Values'
+              center
+            />
+          </div>
           <div className='mt-10 grid sm:grid-cols-3 gap-6'>
-            {VALUES.map((v) => (
+            {VALUES.map((v, i) => (
               <div
                 key={v.title}
-                className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-7 text-center'
+                data-anim
+                data-delay={`${i + 2}`}
+                className='value-card'
               >
-                <div className='w-12 h-12 rounded-2xl bg-white border border-purple-100 flex items-center justify-center mx-auto mb-4 shadow-sm'>
-                  {v.icon}
-                </div>
-                <h3 className='font-serif text-[18px] font-bold text-[#2D1B5E] mb-2'>
+                <div className='value-icon-wrap'>{v.icon}</div>
+                <h3
+                  className='font-serif text-[18px] font-medium mb-2'
+                  style={{ color: 'var(--color-text)' }}
+                >
                   {v.title}
                 </h3>
-                <p className='text-[13.5px] text-[#6B5B8B] leading-relaxed'>
+                <p
+                  className='text-[13.5px] font-light leading-relaxed'
+                  style={{ color: 'var(--color-primary)' }}
+                >
                   {v.desc}
                 </p>
               </div>
@@ -219,19 +477,105 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className='py-16 px-4 bg-linear-to-br from-[#7C5CBF] to-[#A67DD4]'>
-        <div className='max-w-3xl mx-auto text-center'>
-          <h2 className='font-serif text-[32px] sm:text-[38px] font-bold text-white mb-4'>
+      {/* ── Certificates ── */}
+      <section className='about-tinted py-20 px-4 sm:px-6'>
+        <div ref={certRef} className='max-w-5xl mx-auto'>
+          <div data-anim data-delay='1' className='text-center mb-12'>
+            <span
+              className='about-eyebrow'
+              style={{ marginBottom: '16px', display: 'inline-block' }}
+            >
+              Credentials
+            </span>
+            <h2
+              className='font-serif text-[30px] sm:text-[36px] font-medium'
+              style={{ color: 'var(--color-text)' }}
+            >
+              My Certifications
+            </h2>
+            <p
+              className='text-[15px] font-light mt-3 max-w-xl mx-auto'
+              style={{ color: 'var(--color-primary)' }}
+            >
+              Each certification represents a commitment to excellence and
+              continuous growth in transformational coaching.
+            </p>
+          </div>
+
+          <div className='grid sm:grid-cols-3 gap-6'>
+            {CERTIFICATES.map((cert, i) => (
+              <div
+                key={cert.id}
+                data-anim
+                data-delay={`${i + 2}`}
+                className='cert-photo-card'
+              >
+                {cert.src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cert.src}
+                    alt={cert.title}
+                    className='cert-photo-img'
+                  />
+                ) : (
+                  <div className='cert-photo-placeholder'>
+                    <ShieldIcon
+                      size={32}
+                      style={{ color: 'var(--color-primary-muted)' }}
+                    />
+                    <p
+                      className='text-[12px] font-light'
+                      style={{ color: 'var(--color-primary-muted)' }}
+                    >
+                      Add photo here
+                    </p>
+                  </div>
+                )}
+                <div className='p-4'>
+                  <p
+                    className='text-[10px] font-semibold uppercase tracking-widest mb-1'
+                    style={{ color: 'var(--color-primary-muted)' }}
+                  >
+                    Certificate {cert.id}
+                  </p>
+                  <p
+                    className='text-[14px] font-medium'
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    {cert.title}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className='about-cta py-16 px-4 sm:px-6'>
+        <div ref={ctaRef} className='max-w-3xl mx-auto text-center'>
+          <h2
+            data-anim
+            data-delay='1'
+            className='font-serif text-[32px] sm:text-[38px] font-medium mb-4'
+            style={{ color: 'var(--color-primary-light)' }}
+          >
             Ready to Work Together?
           </h2>
-          <p className='text-purple-100 text-[16px] mb-8 leading-relaxed'>
-            Let's start with a free exploration call where we'll talk about
-            where you are and where you want to go.
+          <p
+            data-anim
+            data-delay='2'
+            className='text-[16px] mb-8 leading-relaxed font-light'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            Let&apos;s start with a free exploration call where we&apos;ll talk
+            about where you are and where you want to go.
           </p>
-          <Button href='/courses' size='lg' variant='secondary'>
-            Book a Free Exploration Call <ArrowRightIcon size={18} />
-          </Button>
+          <div data-anim data-delay='3'>
+            <Button href='/courses' size='lg' variant='secondary'>
+              Book a Free Exploration Call <ArrowRightIcon size={18} />
+            </Button>
+          </div>
         </div>
       </section>
     </>

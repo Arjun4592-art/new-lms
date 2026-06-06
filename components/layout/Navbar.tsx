@@ -32,19 +32,25 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm shadow-purple-100' : 'bg-transparent'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-[#FAF8F4]/95 backdrop-blur-md shadow-sm shadow-[#E8DFD0]'
+            : 'bg-transparent'
+        }`}
       >
         <div className='max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between'>
           {/* Logo */}
           <Link href='/' className='flex items-center gap-2 no-underline'>
-            <div className='w-9 h-9 rounded-full bg-linear-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center'>
-              <span className='text-white text-[13px] font-bold'>P2P</span>
+            <div className='w-9 h-9 rounded-full bg-[#5C4A38] border border-[#7A6A58] flex items-center justify-center'>
+              <span className='text-[#FAF8F4] text-[12px] font-semibold tracking-wide'>
+                P2P
+              </span>
             </div>
             <div className='leading-none'>
-              <p className='font-serif text-[15px] font-bold text-[#2D1B5E]'>
+              <p className='font-serif text-[15px] font-medium text-[#2C2218]'>
                 Pain to Power
               </p>
-              <p className='text-[10px] text-[#9B7EC8] tracking-wide'>
+              <p className='text-[10px] text-[#B8A898] tracking-widest uppercase'>
                 Coaching
               </p>
             </div>
@@ -56,7 +62,11 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all no-underline ${pathname === link.href ? 'text-[#7C5CBF] bg-[#F3EEFF]' : 'text-[#4A3570] hover:text-[#7C5CBF] hover:bg-[#F9F5FF]'}`}
+                className={`px-4 py-2 rounded-sm text-[14px] font-medium transition-all no-underline tracking-wide ${
+                  pathname === link.href
+                    ? 'text-[#5C4A38] bg-[#E8DFD0]'
+                    : 'text-[#7A6A58] hover:text-[#2C2218] hover:bg-[#F0EBE3]'
+                }`}
               >
                 {link.label}
               </Link>
@@ -72,13 +82,13 @@ export default function Navbar() {
                     <img
                       src={user.photoURL}
                       alt={user.name}
-                      className='w-7 h-7 rounded-full object-cover'
+                      className='w-7 h-7 rounded-full object-cover border border-[#D8CEBC]'
                     />{' '}
                     {user.name}
                   </>
                 ) : (
                   <>
-                    <div className='w-7 h-7 rounded-full bg-linear-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center text-white text-[11px] font-bold'>
+                    <div className='w-7 h-7 rounded-full bg-[#E8DFD0] border border-[#D8CEBC] flex items-center justify-center text-[#5C4A38] text-[11px] font-semibold'>
                       {user?.name?.charAt(0).toUpperCase() ?? '?'}
                     </div>
                     {user.name}
@@ -96,7 +106,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className='md:hidden w-9 h-9 flex items-center justify-center text-[#4A3570] hover:bg-[#F3EEFF] rounded-lg transition-colors'
+            className='md:hidden w-9 h-9 flex items-center justify-center text-[#7A6A58] hover:bg-[#E8DFD0] rounded-sm transition-colors'
           >
             {menuOpen ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
           </button>
@@ -107,15 +117,19 @@ export default function Navbar() {
       {menuOpen && (
         <div className='fixed inset-0 z-40 md:hidden'>
           <div
-            className='absolute inset-0 bg-black/20 backdrop-blur-sm'
+            className='absolute inset-0 bg-[#2C2218]/20 backdrop-blur-sm'
             onClick={() => setMenuOpen(false)}
           />
-          <div className='absolute top-16 left-0 right-0 bg-white border-b border-purple-100 shadow-xl px-4 py-4 space-y-1'>
+          <div className='absolute top-16 left-0 right-0 bg-[#FAF8F4] border-b border-[#E8DFD0] shadow-lg px-4 py-4 space-y-1'>
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-4 py-3 rounded-xl text-[15px] font-medium no-underline transition-colors ${pathname === link.href ? 'text-[#7C5CBF] bg-[#F3EEFF]' : 'text-[#4A3570] hover:bg-[#F9F5FF]'}`}
+                className={`block px-4 py-3 rounded-sm text-[15px] font-medium no-underline transition-colors tracking-wide ${
+                  pathname === link.href
+                    ? 'text-[#5C4A38] bg-[#E8DFD0]'
+                    : 'text-[#7A6A58] hover:bg-[#F0EBE3] hover:text-[#2C2218]'
+                }`}
               >
                 {link.label}
               </Link>

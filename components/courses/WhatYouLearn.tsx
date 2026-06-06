@@ -11,17 +11,32 @@ const LEARNINGS = [
 
 export default function WhatYouLearn() {
   return (
-    <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-7'>
-      <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-5'>
+    <div
+      className='rounded-xl p-7'
+      style={{
+        backgroundColor: 'var(--color-surface)',
+        border: '1px solid var(--color-surface-border)',
+      }}
+    >
+      <h3
+        className='font-serif text-[20px] font-medium mb-5'
+        style={{ color: 'var(--color-text)' }}
+      >
         What You Will Learn
       </h3>
       <div className='grid sm:grid-cols-2 gap-3'>
         {LEARNINGS.map((item) => (
           <div key={item} className='flex items-start gap-3'>
-            <div className='w-5 h-5 rounded-full bg-[#7C5CBF] flex items-center justify-center shrink-0 mt-0.5'>
-              <CheckIcon size={10} className='text-white' />
+            <div
+              className='w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5'
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            >
+              <CheckIcon size={10} style={{ color: 'var(--color-bg)' }} />
             </div>
-            <span className='text-[14px] text-[#4A3570] leading-snug'>
+            <span
+              className='text-[14px] leading-snug font-light'
+              style={{ color: 'var(--color-primary-mid)' }}
+            >
               {item}
             </span>
           </div>

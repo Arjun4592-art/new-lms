@@ -15,11 +15,17 @@ export default function CourseGrid({ courses, columns = 3 }: CourseGridProps) {
   if (courses.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center py-20 text-center'>
-        <div className='text-[48px] mb-4'>🌸</div>
-        <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-2'>
+        <div className='text-[48px] mb-4'>🌿</div>
+        <h3
+          className='font-serif text-[20px] font-medium mb-2'
+          style={{ color: 'var(--color-text)' }}
+        >
           No courses found
         </h3>
-        <p className='text-[14px] text-[#8470A8]'>
+        <p
+          className='text-[14px] font-light'
+          style={{ color: 'var(--color-primary-muted)' }}
+        >
           Check back soon — new programmes are being added.
         </p>
       </div>
