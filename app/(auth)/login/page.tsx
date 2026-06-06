@@ -48,10 +48,17 @@ export default function LoginPage() {
     setError('')
     setGoogleLoading(true)
     try {
-      // Redirect ho jaayega — page reload hoga, AuthContext handle karega
-      await signInWithGoogle()
+      const { user } = await signInWithGoogle()
+      router.push(user.role === 'admin' ? '/admin' : '/dashboard')
     } catch (err: any) {
-      setError(err.message ?? 'Google sign in failed')
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google sign in was cancelled. Please try again.')
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups and try again.')
+      } else {
+        setError(err.message ?? 'Google sign in failed')
+      }
+    } finally {
       setGoogleLoading(false)
     }
   }
@@ -73,13 +80,6 @@ export default function LoginPage() {
         {error && (
           <div className='mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm'>
             {error}
-          </div>
-        )}
-
-        {/* Google redirect loading state */}
-        {googleLoading && (
-          <div className='mb-4 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-sm text-center'>
-            Redirecting to Google... Please wait.
           </div>
         )}
 
@@ -162,7 +162,7 @@ export default function LoginPage() {
               d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'
             />
           </svg>
-          {googleLoading ? 'Redirecting...' : 'Continue with Google'}
+          {googleLoading ? 'Signing in...' : 'Continue with Google'}
         </button>
 
         {/* Signup link */}

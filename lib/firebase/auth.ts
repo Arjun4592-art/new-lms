@@ -1,8 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -153,11 +152,23 @@ export async function signInWithEmail(
 
     if (!firebaseEmailVerified && !user.emailVerified) {
       console.log('🔵 [7] Email not verified, sending OTP...')
-      await fetch('/api/auth/otp', {
+
+      const otpRes = await fetch('/api/auth/otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
+      console.log('🔵 [7a] OTP response status:', otpRes.status)
+
+      const otpData = await otpRes.json()
+      console.log('🔵 [7b] OTP response data:', otpData)
+
+      if (!otpRes.ok) {
+        console.error('❌ OTP send failed:', otpData)
+        throw new Error(otpData.error ?? 'Failed to send OTP')
+      }
+
+      console.log('✅ [7c] OTP sent successfully')
       return { user, emailVerified: false }
     }
 
@@ -172,45 +183,51 @@ export async function signInWithEmail(
   }
 }
 
-// ── Sign In with Google (Redirect) ────────────────────────────────────────
+// ── Sign In with Google (Popup) ───────────────────────────────────────────
 
-export async function signInWithGoogle(): Promise<void> {
-  await signInWithRedirect(auth, googleProvider)
-}
-
-// ── Handle Google Redirect Result ─────────────────────────────────────────
-
-export async function handleGoogleRedirectResult(
+export async function signInWithGoogle(
   role: UserRole = 'student',
-): Promise<{ user: LMSUser; isNew: boolean } | null> {
-  const credential = await getRedirectResult(auth)
-  if (!credential) return null
+): Promise<{ user: LMSUser; isNew: boolean }> {
+  try {
+    console.log('🔵 [G1] Starting Google login...')
 
-  const { uid, email, displayName, photoURL } = credential.user
+    const credential = await signInWithPopup(auth, googleProvider)
+    console.log('✅ [G2] Google login success:', credential.user.uid)
 
-  const existing = await getUserFromFirestore(uid)
+    const { uid, email, displayName, photoURL } = credential.user
 
-  if (existing) {
-    return { user: existing, isNew: false }
+    const existing = await getUserFromFirestore(uid)
+
+    if (existing) {
+      console.log('✅ [G3] Existing user found')
+      return { user: existing, isNew: false }
+    }
+
+    console.log('🔵 [G3] New user — saving to Firestore...')
+    const user: LMSUser = {
+      uid,
+      email: email!,
+      name: displayName ?? 'User',
+      photoURL,
+      role,
+      createdAt: new Date().toISOString(),
+      enrolledCourses: [],
+      emailVerified: true,
+    }
+
+    await setDoc(doc(db, 'users', uid), {
+      ...user,
+      createdAt: serverTimestamp(),
+    })
+    console.log('✅ [G4] Firestore user saved')
+
+    return { user, isNew: true }
+  } catch (err: any) {
+    console.error('❌ signInWithGoogle FAILED')
+    console.error('Error code:', err?.code)
+    console.error('Error message:', err?.message)
+    throw err
   }
-
-  const user: LMSUser = {
-    uid,
-    email: email!,
-    name: displayName ?? 'Student',
-    photoURL,
-    role,
-    createdAt: new Date().toISOString(),
-    enrolledCourses: [],
-    emailVerified: true,
-  }
-
-  await setDoc(doc(db, 'users', uid), {
-    ...user,
-    createdAt: serverTimestamp(),
-  })
-
-  return { user, isNew: true }
 }
 
 // ── Forgot Password ───────────────────────────────────────────────────────
