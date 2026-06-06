@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { db } from '@/lib/firebase/config'
-import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
+import { adminDb } from '@/lib/firebase-admin' // ← admin SDK
 import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +13,6 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-// OTP ko hash karo
 function hashOtp(otp: string): string {
   return crypto.createHash('sha256').update(otp).digest('hex')
 }
@@ -27,10 +25,13 @@ export async function POST(req: NextRequest) {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = Date.now() + 10 * 60 * 1000
-
-    // Plain OTP nahi, hashed OTP save karo
     const hashedOtp = hashOtp(otp)
-    await setDoc(doc(db, 'otps', email), { otp: hashedOtp, expiresAt })
+
+    // ← adminDb use karo
+    await adminDb
+      .collection('otps')
+      .doc(email)
+      .set({ otp: hashedOtp, expiresAt })
 
     await transporter.sendMail({
       from: `"Pain to Power" <${process.env.GMAIL_USER}>`,
@@ -64,23 +65,23 @@ export async function PUT(req: NextRequest) {
         { status: 400 },
       )
 
-    const docSnap = await getDoc(doc(db, 'otps', email))
-    if (!docSnap.exists())
+    // ← adminDb use karo
+    const docSnap = await adminDb.collection('otps').doc(email).get()
+    if (!docSnap.exists)
       return NextResponse.json({ error: 'OTP not found' }, { status: 404 })
 
-    const { otp: storedHashedOtp, expiresAt } = docSnap.data()
+    const { otp: storedHashedOtp, expiresAt } = docSnap.data()!
 
     if (Date.now() > expiresAt) {
-      await deleteDoc(doc(db, 'otps', email))
+      await adminDb.collection('otps').doc(email).delete()
       return NextResponse.json({ error: 'OTP expired' }, { status: 410 })
     }
 
-    // User ke OTP ko bhi hash karke compare karo
     const hashedInput = hashOtp(otp)
     if (hashedInput !== storedHashedOtp)
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 })
 
-    await deleteDoc(doc(db, 'otps', email))
+    await adminDb.collection('otps').doc(email).delete()
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('OTP verify error:', err)
