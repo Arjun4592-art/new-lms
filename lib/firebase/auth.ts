@@ -32,38 +32,60 @@ export async function signUpWithEmail(
   name: string,
   role: UserRole = 'student',
 ): Promise<LMSUser> {
-  const credential: UserCredential = await createUserWithEmailAndPassword(
-    auth,
-    email,
-    password,
-  )
+  try {
+    console.log('🔵 [1] Starting signup for:', email)
 
-  await updateProfile(credential.user, { displayName: name })
+    const credential: UserCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    )
+    console.log('✅ [2] Firebase Auth user created:', credential.user.uid)
 
-  const user: LMSUser = {
-    uid: credential.user.uid,
-    email,
-    name,
-    photoURL: null,
-    role,
-    createdAt: new Date().toISOString(),
-    enrolledCourses: [],
-    emailVerified: false,
+    await updateProfile(credential.user, { displayName: name })
+    console.log('✅ [3] Profile updated')
+
+    const user: LMSUser = {
+      uid: credential.user.uid,
+      email,
+      name,
+      photoURL: null,
+      role,
+      createdAt: new Date().toISOString(),
+      enrolledCourses: [],
+      emailVerified: false,
+    }
+
+    console.log('🔵 [4] Saving to Firestore...')
+    await setDoc(doc(db, 'users', credential.user.uid), {
+      ...user,
+      createdAt: serverTimestamp(),
+    })
+    console.log('✅ [5] Firestore user saved')
+
+    console.log('🔵 [6] Sending OTP...')
+    const res = await fetch('/api/auth/otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    console.log('✅ [7] OTP API response status:', res.status)
+
+    if (!res.ok) {
+      const errBody = await res.json()
+      console.error('❌ OTP API error body:', errBody)
+      throw new Error('Failed to send OTP email')
+    }
+
+    console.log('✅ [8] Signup complete')
+    return user
+  } catch (err: any) {
+    console.error('❌ signUpWithEmail FAILED at some step')
+    console.error('Error code:', err?.code)
+    console.error('Error message:', err?.message)
+    console.error('Full error:', err)
+    throw err
   }
-
-  await setDoc(doc(db, 'users', credential.user.uid), {
-    ...user,
-    createdAt: serverTimestamp(),
-  })
-
-  const res = await fetch('/api/auth/otp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  })
-  if (!res.ok) throw new Error('Failed to send OTP email')
-
-  return user
 }
 
 // ── Resend OTP ────────────────────────────────────────────────────────────
@@ -95,7 +117,6 @@ export async function verifyOTP(email: string, otp: string): Promise<void> {
     throw new Error(data.error ?? 'Verification failed')
   }
 
-  // Firestore mein emailVerified update karo
   const user = auth.currentUser
   if (user) {
     await updateDoc(doc(db, 'users', user.uid), { emailVerified: true })
@@ -108,29 +129,47 @@ export async function signInWithEmail(
   email: string,
   password: string,
 ): Promise<{ user: LMSUser; emailVerified: boolean }> {
-  const credential = await signInWithEmailAndPassword(auth, email, password)
+  try {
+    console.log('🔵 [1] Starting login for:', email)
 
-  const firebaseEmailVerified = credential.user.emailVerified
+    const credential = await signInWithEmailAndPassword(auth, email, password)
+    console.log('✅ [2] Firebase Auth login success:', credential.user.uid)
 
-  if (firebaseEmailVerified) {
-    await updateDoc(doc(db, 'users', credential.user.uid), {
-      emailVerified: true,
-    })
+    const firebaseEmailVerified = credential.user.emailVerified
+    console.log('🔵 [3] emailVerified:', firebaseEmailVerified)
+
+    if (firebaseEmailVerified) {
+      await updateDoc(doc(db, 'users', credential.user.uid), {
+        emailVerified: true,
+      })
+      console.log('✅ [4] Firestore emailVerified updated')
+    }
+
+    console.log('🔵 [5] Fetching user from Firestore...')
+    const user = await getUserFromFirestore(credential.user.uid)
+    console.log('✅ [6] Firestore user:', user)
+
+    if (!user) throw new Error('User record not found. Please sign up.')
+
+    if (!firebaseEmailVerified && !user.emailVerified) {
+      console.log('🔵 [7] Email not verified, sending OTP...')
+      await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      return { user, emailVerified: false }
+    }
+
+    console.log('✅ [8] Login complete')
+    return { user, emailVerified: true }
+  } catch (err: any) {
+    console.error('❌ signInWithEmail FAILED')
+    console.error('Error code:', err?.code)
+    console.error('Error message:', err?.message)
+    console.error('Full error:', err)
+    throw err
   }
-
-  const user = await getUserFromFirestore(credential.user.uid)
-  if (!user) throw new Error('User record not found. Please sign up.')
-
-  if (!firebaseEmailVerified && !user.emailVerified) {
-    await fetch('/api/auth/otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    })
-    return { user, emailVerified: false }
-  }
-
-  return { user, emailVerified: true }
 }
 
 // ── Sign In with Google (Redirect) ────────────────────────────────────────
