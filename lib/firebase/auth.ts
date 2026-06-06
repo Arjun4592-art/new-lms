@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -226,6 +227,43 @@ export async function signInWithGoogle(
     console.error('❌ signInWithGoogle FAILED')
     console.error('Error code:', err?.code)
     console.error('Error message:', err?.message)
+    throw err
+  }
+}
+
+// ── Handle Google Redirect Result ────────────────────────────────────────
+
+export async function handleGoogleRedirectResult(): Promise<{
+  user: LMSUser
+} | null> {
+  try {
+    const result = await getRedirectResult(auth)
+    if (!result) return null
+
+    const { uid, email, displayName, photoURL } = result.user
+
+    const existing = await getUserFromFirestore(uid)
+    if (existing) return { user: existing }
+
+    const user: LMSUser = {
+      uid,
+      email: email!,
+      name: displayName ?? 'User',
+      photoURL,
+      role: 'student',
+      createdAt: new Date().toISOString(),
+      enrolledCourses: [],
+      emailVerified: true,
+    }
+
+    await setDoc(doc(db, 'users', uid), {
+      ...user,
+      createdAt: serverTimestamp(),
+    })
+
+    return { user }
+  } catch (err: any) {
+    console.error('❌ handleGoogleRedirectResult FAILED:', err?.message)
     throw err
   }
 }
