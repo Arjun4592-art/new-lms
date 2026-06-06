@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { adminDb } from '@/lib/firebase-admin' // ← admin SDK
+import { adminDb } from '@/lib/firebase-admin'
 import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
     const expiresAt = Date.now() + 10 * 60 * 1000
     const hashedOtp = hashOtp(otp)
 
-    // ← adminDb use karo
     await adminDb
       .collection('otps')
       .doc(email)
@@ -38,13 +37,28 @@ export async function POST(req: NextRequest) {
       to: email,
       subject: 'Your verification code',
       html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border-radius:12px;border:1px solid #EDE9FE;">
-          <h2 style="color:#2D1B5E;margin-bottom:8px;">Verify your email</h2>
-          <p style="color:#4A3570;margin-bottom:24px;">Use the code below to verify your account. It expires in 10 minutes.</p>
-          <div style="background:#F3EEFF;border-radius:8px;padding:24px;text-align:center;">
-            <span style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#7C5CBF;">${otp}</span>
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border-radius:12px;border:1px solid #D8CEBC;background:#F5F0E8;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <span style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#7A6A58;background:#E8DFD0;padding:5px 14px;border-radius:99px;border:1px solid #D8CEBC;">
+              Pain to Power Coaching
+            </span>
           </div>
-          <p style="color:#8470A8;font-size:13px;margin-top:24px;">If you didn't request this, ignore this email.</p>
+          <h2 style="color:#2C2218;margin-bottom:8px;font-family:Georgia,serif;font-weight:500;font-size:22px;">
+            Verify your email
+          </h2>
+          <p style="color:#5C4A38;margin-bottom:24px;font-size:14px;line-height:1.7;font-weight:300;">
+            Use the code below to verify your account. It expires in 10 minutes.
+          </p>
+          <div style="background:#E8DFD0;border-radius:10px;padding:28px;text-align:center;border:1px solid #D8CEBC;">
+            <span style="font-size:38px;font-weight:700;letter-spacing:10px;color:#2C2218;">${otp}</span>
+          </div>
+          <p style="color:#B8A898;font-size:12px;margin-top:24px;line-height:1.6;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+          <hr style="border:none;border-top:1px solid #D8CEBC;margin:20px 0;" />
+          <p style="color:#B8A898;font-size:11px;text-align:center;">
+            © Pain to Power Coaching
+          </p>
         </div>
       `,
     })
@@ -65,7 +79,6 @@ export async function PUT(req: NextRequest) {
         { status: 400 },
       )
 
-    // ← adminDb use karo
     const docSnap = await adminDb.collection('otps').doc(email).get()
     if (!docSnap.exists)
       return NextResponse.json({ error: 'OTP not found' }, { status: 404 })
