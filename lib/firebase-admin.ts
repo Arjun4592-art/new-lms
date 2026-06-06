@@ -5,10 +5,17 @@ import { getAuth } from 'firebase-admin/auth'
 function initAdminApp() {
   if (getApps().length > 0) return getApp()
 
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
-    /\\n/g,
-    '\n',
-  )
+  // Support both base64-encoded key and raw key with \n
+  let privateKey: string
+  if (process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64) {
+    privateKey = Buffer.from(
+      process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64,
+      'base64',
+    ).toString('utf8')
+  } else {
+    const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? ''
+    privateKey = rawKey.replace(/\\n/g, '\n')
+  }
 
   if (!process.env.FIREBASE_PROJECT_ID)
     throw new Error('Missing FIREBASE_PROJECT_ID')
