@@ -9,7 +9,10 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-firebase-servie-account.json
+
+# Firebase service account — NEVER commit this
+firebase-service-account.json
+firebase_service_account.json
 
 # testing
 /coverage
