@@ -11,11 +11,7 @@ import {
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase/config'
-import {
-  getUserFromFirestore,
-  logOut,
-  handleGoogleRedirectResult,
-} from '@/lib/firebase/auth'
+import { getUserFromFirestore, logOut } from '@/lib/firebase/auth'
 import type { LMSUser } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -54,9 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const lmsUser = await getUserFromFirestore(fbUser.uid)
       setUser(lmsUser)
+      return lmsUser
     } catch (err) {
       console.error('Failed to load user from Firestore:', err)
       setUser(null)
+      return null
     }
   }, [])
 
@@ -69,26 +67,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logOut()
     setUser(null)
     setFirebaseUser(null)
-  }, [])
-
-  // ── Handle Google Redirect Result on mount ────────────────────────────
-  useEffect(() => {
-    handleGoogleRedirectResult()
-      .then((result) => {
-        if (result?.user) {
-          setUser(result.user)
-          router.push(result.user.role === 'admin' ? '/admin' : '/dashboard')
-        }
-      })
-      .catch((err) => console.error('Google redirect error:', err))
-  }, [])
+    router.push('/login')
+  }, [router])
 
   // ── Auth state listener ───────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser)
-        await loadUser(fbUser)
+        const lmsUser = await loadUser(fbUser)
+
+        // ── Auto redirect after login ────────────────────────────────
+        const publicPaths = [
+          '/login',
+          '/signup',
+          '/verify-email',
+          '/forgot-password',
+        ]
+        const currentPath = window.location.pathname
+        const isOnPublicPage = publicPaths.some((p) =>
+          currentPath.startsWith(p),
+        )
+
+        if (isOnPublicPage && lmsUser) {
+          // Email verified check
+          if (!fbUser.emailVerified && !lmsUser.emailVerified) {
+            // OTP verify page pe rehne do
+            if (!currentPath.startsWith('/verify-email')) {
+              router.push(
+                `/verify-email?email=${encodeURIComponent(lmsUser.email)}`,
+              )
+            }
+          } else {
+            // Verified — dashboard pe bhejo
+            router.push(lmsUser.role === 'admin' ? '/admin' : '/dashboard')
+          }
+        }
       } else {
         setFirebaseUser(null)
         setUser(null)
@@ -97,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => unsubscribe()
-  }, [loadUser])
+  }, [loadUser, router])
 
   const isAdmin = user?.role === 'admin'
   const isStudent = user?.role === 'student'
@@ -129,7 +143,6 @@ export function useAuthContext() {
   return context
 }
 
-// Legacy hook alias
 export function useAuth() {
   const ctx = useAuthContext()
   return { ...ctx, logOut: ctx.signOut }

@@ -2,7 +2,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
-  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -83,7 +82,6 @@ export async function signUpWithEmail(
     console.error('❌ signUpWithEmail FAILED at some step')
     console.error('Error code:', err?.code)
     console.error('Error message:', err?.message)
-    console.error('Full error:', err)
     throw err
   }
 }
@@ -179,7 +177,6 @@ export async function signInWithEmail(
     console.error('❌ signInWithEmail FAILED')
     console.error('Error code:', err?.code)
     console.error('Error message:', err?.message)
-    console.error('Full error:', err)
     throw err
   }
 }
@@ -198,7 +195,6 @@ export async function signInWithGoogle(
     const { uid, email, displayName, photoURL } = credential.user
 
     const existing = await getUserFromFirestore(uid)
-
     if (existing) {
       console.log('✅ [G3] Existing user found')
       return { user: existing, isNew: false }
@@ -213,7 +209,7 @@ export async function signInWithGoogle(
       role,
       createdAt: new Date().toISOString(),
       enrolledCourses: [],
-      emailVerified: true,
+      emailVerified: true, // ← Google users always verified
     }
 
     await setDoc(doc(db, 'users', uid), {
@@ -231,41 +227,12 @@ export async function signInWithGoogle(
   }
 }
 
-// ── Handle Google Redirect Result ────────────────────────────────────────
+// ── Handle Google Redirect Result — deprecated, returns null ──────────────
 
 export async function handleGoogleRedirectResult(): Promise<{
   user: LMSUser
 } | null> {
-  try {
-    const result = await getRedirectResult(auth)
-    if (!result) return null
-
-    const { uid, email, displayName, photoURL } = result.user
-
-    const existing = await getUserFromFirestore(uid)
-    if (existing) return { user: existing }
-
-    const user: LMSUser = {
-      uid,
-      email: email!,
-      name: displayName ?? 'User',
-      photoURL,
-      role: 'student',
-      createdAt: new Date().toISOString(),
-      enrolledCourses: [],
-      emailVerified: true,
-    }
-
-    await setDoc(doc(db, 'users', uid), {
-      ...user,
-      createdAt: serverTimestamp(),
-    })
-
-    return { user }
-  } catch (err: any) {
-    console.error('❌ handleGoogleRedirectResult FAILED:', err?.message)
-    throw err
-  }
+  return null // Popup use kar rahe hain ab — redirect nahi
 }
 
 // ── Forgot Password ───────────────────────────────────────────────────────
