@@ -15,14 +15,18 @@ export async function middleware(req: NextRequest) {
   const isDashboard = pathname.startsWith('/dashboard')
   const isAdmin = pathname.startsWith('/admin')
 
-  // Dashboard aur Admin ke liye — client side AuthContext handle karega
-  // Middleware sirf basic redirect karega
   const session = req.cookies.get('session')?.value
 
+  // Dashboard/Admin — session nahi hai toh login pe bhejo
   if (!session && (isDashboard || isAdmin)) {
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
+  }
+
+  // Login/Signup — session hai toh dashboard pe bhejo
+  if (session && isAuthPath) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
   return NextResponse.next()

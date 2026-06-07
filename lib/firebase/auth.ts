@@ -172,6 +172,7 @@ export async function signInWithEmail(
     }
 
     console.log('✅ [8] Login complete')
+    await setSessionCookie() // ← add karo
     return { user, emailVerified: true }
   } catch (err: any) {
     console.error('❌ signInWithEmail FAILED')
@@ -197,6 +198,7 @@ export async function signInWithGoogle(
     const existing = await getUserFromFirestore(uid)
     if (existing) {
       console.log('✅ [G3] Existing user found')
+      await setSessionCookie() // ← add karo
       return { user: existing, isNew: false }
     }
 
@@ -218,6 +220,7 @@ export async function signInWithGoogle(
     })
     console.log('✅ [G4] Firestore user saved')
 
+    await setSessionCookie() // ← add karo
     return { user, isNew: true }
   } catch (err: any) {
     console.error('❌ signInWithGoogle FAILED')
@@ -258,6 +261,8 @@ export async function changePassword(
 
 export async function logOut(): Promise<void> {
   await signOut(auth)
+  // Session cookie delete karo
+  await fetch('/api/auth/session', { method: 'DELETE' })
 }
 
 // ── Get User from Firestore ───────────────────────────────────────────────
@@ -292,5 +297,20 @@ export async function updateUserProfile(
   await updateDoc(doc(db, 'users', uid), data)
   if (data.name && auth.currentUser) {
     await updateProfile(auth.currentUser, { displayName: data.name })
+  }
+}
+
+// ── Helper — session cookie set karo ─────────────────────────────────────
+async function setSessionCookie() {
+  try {
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) return
+    await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    })
+  } catch (err) {
+    console.error('Failed to set session cookie:', err)
   }
 }
