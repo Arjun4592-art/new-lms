@@ -4,22 +4,8 @@ import { getAuth } from 'firebase-admin/auth'
 
 function initAdminApp() {
   if (getApps().length > 0) {
-    console.log('✅ Firebase Admin already initialized')
     return getApp()
   }
-
-  console.log('🔵 Initializing Firebase Admin...')
-  console.log('🔵 PROJECT_ID:', process.env.FIREBASE_PROJECT_ID)
-  console.log('🔵 CLIENT_EMAIL:', process.env.FIREBASE_ADMIN_CLIENT_EMAIL)
-  console.log(
-    '🔵 BASE64 KEY exists:',
-    !!process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64,
-  )
-  console.log(
-    '🔵 BASE64 KEY length:',
-    process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64?.length,
-  )
-  console.log('🔵 RAW KEY exists:', !!process.env.FIREBASE_ADMIN_PRIVATE_KEY)
 
   // ── Private key resolve karo ──────────────────────────────────────────
   let privateKey: string | undefined
@@ -30,11 +16,9 @@ function initAdminApp() {
       process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64,
       'base64',
     ).toString('utf8')
-    console.log('✅ Using BASE64 private key')
   } else if (process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
     // Raw key with \n
     privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n')
-    console.log('✅ Using RAW private key')
   }
 
   // ── Validation ────────────────────────────────────────────────────────
@@ -54,9 +38,6 @@ function initAdminApp() {
       '❌ Private key format invalid — does not contain BEGIN PRIVATE KEY',
     )
   }
-
-  console.log('✅ Private key format looks valid')
-  console.log('✅ Private key first 40 chars:', privateKey.substring(0, 40))
 
   return initializeApp({
     credential: cert({

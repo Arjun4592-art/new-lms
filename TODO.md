@@ -1,0 +1,5 @@
+- [x] Search for all `console.log(` occurrences across the repo
+- [x] Read and review each file that contains `console.log(`
+- [x] Remove `console.log()` statements (keep `console.error()` intact)
+- [x] Re-run search to ensure no `console.log(` remains
+- [ ] Run lint/build (optional) to confirm no TS/ESLint issues

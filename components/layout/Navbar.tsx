@@ -19,7 +19,6 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, loading, logOut } = useAuth()
-  console.log(user)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)

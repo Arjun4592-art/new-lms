@@ -17,7 +17,6 @@ const auth = getAuth()
 
 async function makeAdmin(uid: string) {
   await auth.setCustomUserClaims(uid, { role: 'admin' })
-  console.log(`✅ User ${uid} is now admin`)
   process.exit(0)
 }
 

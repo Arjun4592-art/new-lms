@@ -216,27 +216,22 @@ const sections8Week = [
 ]
 
 async function seed() {
-  console.log('🌱 Seeding courses...')
-
   // Add courses
+
   for (const course of courses) {
     await db.collection('courses').doc(course.id).set(course)
-    console.log(`✅ Course added: ${course.title}`)
   }
 
   // Add 4-week sections
   for (const section of sections4Week) {
     await db.collection('sections').doc(section.id).set(section)
-    console.log(`✅ Section added: ${section.title}`)
   }
 
   // Add 8-week sections
   for (const section of sections8Week) {
     await db.collection('sections').doc(section.id).set(section)
-    console.log(`✅ Section added: ${section.title}`)
   }
 
-  console.log('🎉 All done!')
   process.exit(0)
 }
 

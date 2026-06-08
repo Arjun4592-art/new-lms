@@ -14,7 +14,6 @@ initializeApp({
 
 async function check(uid: string) {
   const user = await getAuth().getUser(uid)
-  console.log('Custom claims:', user.customClaims)
   process.exit(0)
 }
 

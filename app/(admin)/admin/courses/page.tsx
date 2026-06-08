@@ -24,7 +24,6 @@ export default function AdminCoursesPage() {
       const snap = await getDocs(
         query(collection(db, 'courses'), orderBy('createdAt', 'desc')),
       )
-      console.log(snap)
       setCourses(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Course))
     } catch (err) {
       console.error(err)
