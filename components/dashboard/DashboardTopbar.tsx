@@ -54,96 +54,197 @@ export default function DashboardTopbar() {
       className='w-7 h-7 rounded-full object-cover'
     />
   ) : (
-    <div className='w-7 h-7 rounded-full bg-linear-to-br from-primary to-primary-light flex items-center justify-center text-white text-[11px] font-bold'>
+    <div
+      className='w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold'
+      style={{
+        backgroundColor: 'var(--color-primary)',
+        color: 'var(--color-bg)',
+      }}
+    >
       {user?.name?.charAt(0).toUpperCase() ?? '?'}
     </div>
   )
 
   return (
-    <header className='h-14 bg-white border-b border-surface-border flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20'>
-      {/* Left */}
-      <div className='flex items-center gap-3'>
-        <button
-          onClick={openSidebar}
-          className='lg:hidden w-8 h-8 flex items-center justify-center text-primary-muted hover:bg-surface rounded-lg'
-        >
-          <MenuIcon size={18} />
-        </button>
-        <div className='hidden sm:block'>
-          {loading ? (
-            <div className='h-4 w-32 bg-surface rounded animate-pulse' />
-          ) : (
-            <>
-              <p className='text-[14px] font-semibold text-primary-dark'>
-                Welcome back, {user?.name?.split(' ')[0] ?? 'Student'} 🌸
-              </p>
-              <p className='text-[11px] text-primary-accent'>
-                Continue your healing journey
-              </p>
-            </>
-          )}
-        </div>
-      </div>
+    <>
+      <style>{`
+        .topbar-icon-btn {
+          width: 32px; height: 32px;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 8px; border: none; background: transparent; cursor: pointer;
+          color: var(--color-primary-muted);
+          transition: background-color 0.2s, color 0.2s;
+        }
+        .topbar-icon-btn:hover {
+          background-color: var(--color-surface);
+          color: var(--color-primary);
+        }
+        .topbar-profile-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 6px 10px 6px 8px;
+          border-radius: 10px; border: none; background: transparent; cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        .topbar-profile-btn:hover { background-color: var(--color-surface); }
 
-      {/* Right */}
-      <div className='flex items-center gap-2'>
-        <button className='relative w-8 h-8 flex items-center justify-center text-primary-muted hover:bg-surface rounded-lg transition-colors'>
-          <BellIconSVG />
-          <span className='absolute top-1.5 right-1.5 w-2 h-2 bg-primary-light rounded-full' />
-        </button>
+        .topbar-dropdown {
+          position: absolute; right: 0; top: calc(100% + 8px);
+          width: 192px;
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(44,34,24,0.12);
+          padding: 6px 0; z-index: 50;
+          animation: dropIn 0.15s ease forwards;
+        }
+        @keyframes dropIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .topbar-dropdown-link {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 16px; font-size: 13px; text-decoration: none;
+          color: var(--color-primary-mid);
+          transition: background-color 0.15s;
+        }
+        .topbar-dropdown-link:hover { background-color: var(--color-surface); }
+        .topbar-signout-btn {
+          width: 100%; text-align: left;
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 16px; font-size: 13px;
+          background: transparent; border: none; cursor: pointer;
+          color: #DC2626;
+          transition: background-color 0.15s;
+        }
+        .topbar-signout-btn:hover { background-color: #FEF2F2; }
+        .topbar-signout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      `}</style>
 
-        <div className='relative'>
-          <button
-            onClick={() => setShowProfile(!showProfile)}
-            className='flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-surface rounded-xl transition-colors'
-          >
+      <header
+        className='h-14 flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20'
+        style={{
+          backgroundColor: 'var(--color-bg)',
+          borderBottom: '1px solid var(--color-surface-border)',
+        }}
+      >
+        {/* Left */}
+        <div className='flex items-center gap-3'>
+          <button onClick={openSidebar} className='topbar-icon-btn lg:hidden'>
+            <MenuIcon size={18} />
+          </button>
+          <div className='hidden sm:block'>
             {loading ? (
-              <div className='w-7 h-7 rounded-full bg-surface animate-pulse' />
+              <div
+                className='h-4 w-32 rounded animate-pulse'
+                style={{ backgroundColor: 'var(--color-surface)' }}
+              />
             ) : (
-              avatar
+              <>
+                <p
+                  className='text-[14px] font-semibold'
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Welcome back, {user?.name?.split(' ')[0] ?? 'Student'} 🌿
+                </p>
+                <p
+                  className='text-[11px]'
+                  style={{ color: 'var(--color-primary-muted)' }}
+                >
+                  Continue your healing journey
+                </p>
+              </>
             )}
-            <span className='hidden sm:block text-[13px] font-medium text-primary-mid'>
-              {user?.name?.split(' ')[0] ?? 'Student'}
-            </span>
+          </div>
+        </div>
+
+        {/* Right */}
+        <div className='flex items-center gap-2'>
+          {/* Bell */}
+          <button className='topbar-icon-btn relative'>
+            <BellIconSVG />
+            <span
+              className='absolute top-1.5 right-1.5 w-2 h-2 rounded-full'
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            />
           </button>
 
-          {showProfile && (
-            <div className='absolute right-0 top-full mt-2 w-48 bg-white border border-surface-border rounded-2xl shadow-xl shadow-purple-100/60 py-2 z-50'>
-              <div className='px-4 py-2 border-b border-surface-border mb-1'>
-                <p className='text-[13px] font-semibold text-primary-dark truncate'>
-                  {user?.name}
-                </p>
-                <p className='text-[11px] text-primary-muted truncate'>
-                  {user?.email}
-                </p>
-              </div>
-              <Link
-                href='/dashboard/profile'
-                onClick={() => setShowProfile(false)}
-                className='flex items-center gap-2 px-4 py-2 text-[13px] text-primary-mid hover:bg-surface transition-colors no-underline'
+          {/* Profile */}
+          <div className='relative'>
+            <button
+              onClick={() => setShowProfile(!showProfile)}
+              className='topbar-profile-btn'
+            >
+              {loading ? (
+                <div
+                  className='w-7 h-7 rounded-full animate-pulse'
+                  style={{ backgroundColor: 'var(--color-surface)' }}
+                />
+              ) : (
+                avatar
+              )}
+              <span
+                className='hidden sm:block text-[13px] font-medium'
+                style={{ color: 'var(--color-primary-mid)' }}
               >
-                My Profile
-              </Link>
-              <Link
-                href='/dashboard'
-                onClick={() => setShowProfile(false)}
-                className='flex items-center gap-2 px-4 py-2 text-[13px] text-primary-mid hover:bg-surface transition-colors no-underline'
-              >
-                Dashboard
-              </Link>
-              <div className='border-t border-surface-border mt-1 pt-1'>
-                <button
-                  onClick={handleSignOut}
-                  disabled={signingOut}
-                  className='w-full text-left flex items-center gap-2 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60'
+                {user?.name?.split(' ')[0] ?? 'Student'}
+              </span>
+            </button>
+
+            {showProfile && (
+              <div className='topbar-dropdown'>
+                {/* User info */}
+                <div
+                  className='px-4 py-2.5 mb-1'
+                  style={{
+                    borderBottom: '1px solid var(--color-surface-border)',
+                  }}
                 >
-                  {signingOut ? 'Signing out...' : 'Sign Out'}
-                </button>
+                  <p
+                    className='text-[13px] font-semibold truncate'
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    {user?.name}
+                  </p>
+                  <p
+                    className='text-[11px] truncate'
+                    style={{ color: 'var(--color-primary-muted)' }}
+                  >
+                    {user?.email}
+                  </p>
+                </div>
+
+                <Link
+                  href='/dashboard/profile'
+                  onClick={() => setShowProfile(false)}
+                  className='topbar-dropdown-link'
+                >
+                  My Profile
+                </Link>
+                <Link
+                  href='/dashboard'
+                  onClick={() => setShowProfile(false)}
+                  className='topbar-dropdown-link'
+                >
+                  Dashboard
+                </Link>
+
+                <div
+                  className='mt-1 pt-1'
+                  style={{ borderTop: '1px solid var(--color-surface-border)' }}
+                >
+                  <button
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className='topbar-signout-btn'
+                  >
+                    {signingOut ? 'Signing out…' : 'Sign Out'}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   )
 }

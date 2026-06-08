@@ -7,7 +7,7 @@ interface StatCardProps {
     value: number
     label: string
   }
-  color?: 'purple' | 'green' | 'blue' | 'orange'
+  color?: 'purple' | 'green' | 'blue' | 'orange' | 'primary'
 }
 
 const colorMap = {
@@ -15,6 +15,7 @@ const colorMap = {
   green: 'bg-green-50 text-green-600',
   blue: 'bg-blue-50 text-blue-600',
   orange: 'bg-orange-50 text-orange-600',
+  primary: 'bg-[#F3EEFF] text-[#7C5CBF]',
 }
 
 export default function StatCard({
@@ -23,7 +24,7 @@ export default function StatCard({
   subtitle,
   icon,
   trend,
-  color = 'purple',
+  color = 'primary',
 }: StatCardProps) {
   return (
     <div className='bg-white border border-purple-100 rounded-2xl p-5'>

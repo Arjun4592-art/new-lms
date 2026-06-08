@@ -56,8 +56,8 @@ const courses = [
 
   // ── 2. 4-Week Emotional Healing Programme ─────────────────────
   {
-    id: '4-week-emotional-healing',
-    title: '4-Week Emotional Healing Programme',
+    id: '4-week-emotional-transformational',
+    title: '4-Week Emotional  Programme',
     description:
       'A 4-session deep transformation journey — from awareness to rising into your personal power. Heal your past, rebuild self-worth, and step into the strongest version of you.',
     thumbnail: '',
@@ -139,7 +139,7 @@ const courses = [
 const sections4Week = [
   {
     id: 'sec-4w-1',
-    courseId: '4-week-emotional-healing',
+    courseId: '4-week-emotional-transformational',
     title: 'Session 1 — Awareness: Understanding Your Story',
     order: 1,
   },

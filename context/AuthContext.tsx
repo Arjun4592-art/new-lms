@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setFirebaseUser(null)
     router.push('/login')
+    router.refresh() // ← refresh add kiya
   }, [router])
 
   // ── Auth state listener ───────────────────────────────────────────────
@@ -77,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setFirebaseUser(fbUser)
         const lmsUser = await loadUser(fbUser)
 
-        // ── Auto redirect after login ────────────────────────────────
         const publicPaths = [
           '/login',
           '/signup',
@@ -90,17 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )
 
         if (isOnPublicPage && lmsUser) {
-          // Email verified check
           if (!fbUser.emailVerified && !lmsUser.emailVerified) {
-            // OTP verify page pe rehne do
             if (!currentPath.startsWith('/verify-email')) {
               router.push(
                 `/verify-email?email=${encodeURIComponent(lmsUser.email)}`,
               )
+              router.refresh() // ← refresh add kiya
             }
           } else {
-            // Verified — dashboard pe bhejo
-            router.push(lmsUser.role === 'admin' ? '/admin' : '/dashboard')
+            const target = lmsUser.role === 'admin' ? '/admin' : '/dashboard'
+            router.push(target)
+            router.refresh() // ← refresh add kiya
           }
         }
       } else {

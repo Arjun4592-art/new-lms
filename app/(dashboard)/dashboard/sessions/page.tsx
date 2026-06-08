@@ -26,10 +26,8 @@ export default function SessionsPage() {
 
   useEffect(() => {
     if (!user?.uid) return
-
     async function fetchSessions() {
       try {
-        // Step 1 — get enrolled courseIds from enrollments collection
         const enrollSnap = await getDocs(
           query(
             collection(db, 'enrollments'),
@@ -40,7 +38,6 @@ export default function SessionsPage() {
           (d) => d.data().courseId as string,
         )
 
-        // Step 2 — fetch sessions visible to all
         const allSessionsSnap = await getDocs(
           query(collection(db, 'sessions'), where('visibleTo', '==', 'all')),
         )
@@ -48,7 +45,6 @@ export default function SessionsPage() {
           (d) => ({ id: d.id, ...d.data() }) as Session,
         )
 
-        // Step 3 — fetch sessions for enrolled courses (only if enrolled in any)
         let enrolledSessions: Session[] = []
         if (enrolledCourseIds.length > 0) {
           const enrolledSnap = await getDocs(
@@ -62,7 +58,6 @@ export default function SessionsPage() {
           )
         }
 
-        // Step 4 — merge, deduplicate, filter upcoming, sort
         const seen = new Set<string>()
         const merged = [...allSessions, ...enrolledSessions].filter((s) => {
           if (seen.has(s.id)) return false
@@ -70,20 +65,19 @@ export default function SessionsPage() {
           return true
         })
 
-        const upcoming = merged
-          .filter((s) => !s.isRecorded)
-          .sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-          )
-
-        setSessions(upcoming)
+        setSessions(
+          merged
+            .filter((s) => !s.isRecorded)
+            .sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+            ),
+        )
       } catch (err) {
         console.error('Sessions fetch error:', err)
       } finally {
         setLoading(false)
       }
     }
-
     fetchSessions()
   }, [user?.uid])
 
@@ -91,94 +85,165 @@ export default function SessionsPage() {
     return (
       <div className='space-y-4 animate-pulse max-w-3xl mx-auto'>
         {[...Array(3)].map((_, i) => (
-          <div key={i} className='h-24 bg-purple-100 rounded-2xl' />
+          <div
+            key={i}
+            className='h-24 rounded-xl'
+            style={{ backgroundColor: 'var(--color-surface)' }}
+          />
         ))}
       </div>
     )
   }
 
   return (
-    <div className='space-y-6 max-w-3xl mx-auto'>
-      <div>
-        <p className='text-[12px] text-[#A67DD4] font-semibold uppercase tracking-widest mb-1'>
-          Dashboard
-        </p>
-        <h1 className='font-serif text-[26px] font-bold text-[#2D1B5E]'>
-          Upcoming Sessions
-        </h1>
-        <p className='text-[13px] text-[#8470A8] mt-1'>
-          {sessions.length} upcoming session{sessions.length !== 1 ? 's' : ''}
-        </p>
-      </div>
+    <>
+      <style>{`
+        .sess-card {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 20px;
+          display: flex; align-items: flex-start; gap: 16px;
+        }
+        .sess-icon {
+          width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0;
+          background-color: var(--color-primary);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .sess-type-badge {
+          padding: 2px 8px; border-radius: 9999px;
+          font-size: 11px; font-weight: 600;
+          background-color: var(--color-surface);
+          color: var(--color-primary);
+          border: 1px solid var(--color-surface-border);
+        }
+        .sess-today-badge {
+          padding: 2px 8px; border-radius: 9999px;
+          font-size: 11px; font-weight: 600;
+          background-color: #DCFCE7; color: #16A34A;
+        }
+        .sess-join-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          margin-top: 12px; padding: 8px 16px;
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          font-size: 13px; font-weight: 600;
+          border-radius: 8px; text-decoration: none;
+          transition: background-color 0.2s;
+        }
+        .sess-join-btn:hover { background-color: var(--color-primary-hover); }
+        .sess-empty {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 40px; text-align: center;
+        }
+      `}</style>
 
-      {sessions.length === 0 ? (
-        <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-10 text-center'>
-          <ClockIcon size={32} className='text-[#C084F5] mx-auto mb-3' />
-          <p className='text-[15px] font-semibold text-[#2D1B5E] mb-1'>
-            No upcoming sessions
+      <div className='space-y-6 max-w-3xl mx-auto'>
+        {/* Header */}
+        <div>
+          <p
+            className='text-[11px] font-semibold uppercase tracking-widest mb-1'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            Dashboard
           </p>
-          <p className='text-[13px] text-[#8470A8]'>
-            Check back soon for new sessions.
+          <h1
+            className='font-serif text-[26px] font-medium'
+            style={{ color: 'var(--color-text)' }}
+          >
+            Upcoming Sessions
+          </h1>
+          <p
+            className='text-[13px] mt-1'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            {sessions.length} upcoming session{sessions.length !== 1 ? 's' : ''}
           </p>
         </div>
-      ) : (
-        <div className='space-y-4'>
-          {sessions.map((session) => {
-            const isToday =
-              new Date(session.date).toDateString() ===
-              new Date().toDateString()
-            return (
-              <div
-                key={session.id}
-                className='bg-white border border-purple-100 rounded-2xl p-5 flex items-start gap-4'
-              >
-                <div className='w-12 h-12 rounded-xl bg-[#7C5CBF] flex items-center justify-center text-white shrink-0'>
-                  <ClockIcon size={20} />
-                </div>
-                <div className='flex-1 min-w-0'>
-                  <div className='flex items-center gap-2 mb-1 flex-wrap'>
-                    <p className='text-[15px] font-bold text-[#2D1B5E]'>
-                      {session.title}
-                    </p>
-                    <span className='px-2 py-0.5 bg-[#F3EEFF] text-[#7C5CBF] text-[11px] font-semibold rounded-full'>
-                      {session.type}
-                    </span>
-                    {isToday && (
-                      <span className='px-2 py-0.5 bg-green-50 text-green-600 text-[11px] font-semibold rounded-full'>
-                        Today
-                      </span>
-                    )}
+
+        {/* Empty state */}
+        {sessions.length === 0 ? (
+          <div className='sess-empty'>
+            <ClockIcon
+              size={32}
+              style={{
+                color: 'var(--color-primary-muted)',
+                margin: '0 auto 12px',
+              }}
+            />
+            <p
+              className='text-[15px] font-medium mb-1'
+              style={{ color: 'var(--color-text)' }}
+            >
+              No upcoming sessions
+            </p>
+            <p
+              className='text-[13px] font-light'
+              style={{ color: 'var(--color-primary-muted)' }}
+            >
+              Check back soon for new sessions.
+            </p>
+          </div>
+        ) : (
+          <div className='space-y-4'>
+            {sessions.map((session) => {
+              const isToday =
+                new Date(session.date).toDateString() ===
+                new Date().toDateString()
+              return (
+                <div key={session.id} className='sess-card'>
+                  <div className='sess-icon'>
+                    <ClockIcon size={20} style={{ color: 'var(--color-bg)' }} />
                   </div>
-                  <p className='text-[13px] text-[#8470A8]'>
-                    {new Date(session.date).toLocaleDateString('en-IN', {
-                      weekday: 'long',
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}{' '}
-                    · {session.time} · {session.duration} min
-                  </p>
-                  {session.zoomLink && isToday && (
-                    <a
-                      href={session.zoomLink}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='inline-flex items-center gap-2 mt-3 px-4 py-2 bg-[#7C5CBF] text-white text-[13px] font-semibold rounded-xl no-underline hover:bg-[#6A4DAD] transition-colors'
+                  <div className='flex-1 min-w-0'>
+                    <div className='flex items-center gap-2 mb-1 flex-wrap'>
+                      <p
+                        className='text-[15px] font-semibold'
+                        style={{ color: 'var(--color-text)' }}
+                      >
+                        {session.title}
+                      </p>
+                      <span className='sess-type-badge'>{session.type}</span>
+                      {isToday && (
+                        <span className='sess-today-badge'>Today</span>
+                      )}
+                    </div>
+                    <p
+                      className='text-[13px]'
+                      style={{ color: 'var(--color-primary-muted)' }}
                     >
-                      <LinkIcon size={13} /> Join Zoom
-                    </a>
-                  )}
-                  {session.zoomLink && !isToday && (
-                    <p className='text-[12px] text-[#B0A0CC] mt-2'>
-                      Zoom link will be available on the day of the session
+                      {new Date(session.date).toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}{' '}
+                      · {session.time} · {session.duration} min
                     </p>
-                  )}
+                    {session.zoomLink && isToday ? (
+                      <a
+                        href={session.zoomLink}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='sess-join-btn'
+                      >
+                        <LinkIcon size={13} /> Join Zoom
+                      </a>
+                    ) : session.zoomLink && !isToday ? (
+                      <p
+                        className='text-[12px] mt-2'
+                        style={{ color: 'var(--color-primary-muted)' }}
+                      >
+                        Zoom link will be available on the day of the session
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { PlayIcon, CheckIcon, ClockIcon, LockIcon } from '@/components/ui/Icons'
+import { PlayIcon, CheckIcon, ClockIcon } from '@/components/ui/Icons'
 
 export interface Lesson {
   id: string
@@ -78,17 +78,36 @@ function TypeIcon({ type }: { type: Lesson['type'] }) {
   return <PlayIcon size={13} />
 }
 
-// Demo lesson for when no URL is provided
 function VideoPlaceholder({ title }: { title: string }) {
   return (
-    <div className='w-full aspect-video bg-gradient-to-br from-[#2D1B5E] to-[#4A2D8A] rounded-2xl flex flex-col items-center justify-center text-white'>
-      <div className='w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4'>
-        <PlayIcon size={28} className='text-white ml-1' />
+    <div
+      className='w-full aspect-video rounded-xl flex flex-col items-center justify-center'
+      style={{
+        background:
+          'linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-mid) 100%)',
+      }}
+    >
+      <div
+        className='w-16 h-16 rounded-full flex items-center justify-center mb-4'
+        style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+      >
+        <PlayIcon
+          size={28}
+          style={{ color: 'var(--color-primary-light)', marginLeft: '3px' }}
+        />
       </div>
-      <p className='font-serif text-[18px] font-bold text-center px-6'>
+      <p
+        className='font-serif text-[18px] font-medium text-center px-6'
+        style={{ color: 'var(--color-primary-light)' }}
+      >
         {title}
       </p>
-      <p className='text-purple-300 text-[13px] mt-2'>Click to play lesson</p>
+      <p
+        className='text-[13px] mt-2'
+        style={{ color: 'var(--color-primary-muted)' }}
+      >
+        Click to play lesson
+      </p>
     </div>
   )
 }
@@ -126,208 +145,306 @@ export default function LessonPlayer({
   }
 
   return (
-    <div className='flex flex-col lg:flex-row gap-6 w-full'>
-      {/* ── Video / content area ── */}
-      <div className='flex-1 min-w-0'>
-        {activeLesson ? (
-          <div className='space-y-4'>
-            {/* Player */}
-            {activeLesson.videoUrl ? (
-              <div className='w-full aspect-video rounded-2xl overflow-hidden bg-black'>
-                <iframe
-                  src={activeLesson.videoUrl}
-                  className='w-full h-full'
-                  allowFullScreen
-                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                />
-              </div>
-            ) : (
-              <VideoPlaceholder title={activeLesson.title} />
-            )}
+    <>
+      <style>{`
+        .lp-card {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 20px;
+        }
+        .lp-mark-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 16px; border-radius: 10px;
+          font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        .lp-mark-btn.done {
+          background-color: #DCFCE7; color: #16A34A; cursor: default;
+        }
+        .lp-mark-btn.pending {
+          background-color: var(--color-primary); color: var(--color-bg);
+        }
+        .lp-mark-btn.pending:hover { background-color: var(--color-primary-hover); }
 
-            {/* Lesson info */}
-            <div className='bg-white border border-purple-100 rounded-2xl p-5'>
-              <div className='flex items-start justify-between gap-4 flex-wrap'>
-                <div>
-                  <h2 className='font-serif text-[20px] font-bold text-[#2D1B5E]'>
-                    {activeLesson.title}
-                  </h2>
-                  <div className='flex items-center gap-3 mt-1 text-[13px] text-[#8470A8]'>
-                    <div className='flex items-center gap-1'>
-                      <ClockIcon size={13} /> {activeLesson.duration}
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      <TypeIcon type={activeLesson.type} /> {activeLesson.type}
+        .lp-progress-bar {
+          height: 8px; border-radius: 9999px; overflow: hidden;
+          background-color: var(--color-surface);
+        }
+        .lp-progress-fill {
+          height: 100%; border-radius: 9999px;
+          background-color: var(--color-primary);
+          transition: width 0.5s ease;
+        }
+
+        /* Sidebar */
+        .lp-sidebar {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; overflow: hidden;
+        }
+        .lp-sidebar-header {
+          padding: 14px 20px;
+          background-color: var(--color-surface);
+          border-bottom: 1px solid var(--color-surface-border);
+        }
+        .lp-module-btn {
+          width: 100%; display: flex; align-items: center; justify-content: space-between;
+          padding: 12px 20px; background: transparent; border: none; cursor: pointer;
+          text-align: left; transition: background-color 0.15s;
+        }
+        .lp-module-btn:hover { background-color: var(--color-surface); }
+        .lp-lesson-btn {
+          width: 100%; display: flex; align-items: center; gap: 12px;
+          padding: 10px 20px; background: transparent; border: none; cursor: pointer;
+          text-align: left; transition: background-color 0.15s;
+        }
+        .lp-lesson-btn.active { background-color: var(--color-primary-light); }
+        .lp-lesson-btn:not(.active):not(:disabled):hover { background-color: var(--color-surface); }
+        .lp-lesson-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        .lp-lesson-dot {
+          width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .lp-lesson-dot.done { background-color: #DCFCE7; color: #16A34A; }
+        .lp-lesson-dot.active { background-color: var(--color-primary); color: var(--color-bg); }
+        .lp-lesson-dot.locked { background-color: var(--color-surface); color: var(--color-primary-muted); }
+        .lp-lesson-dot.default { background-color: var(--color-surface); color: var(--color-primary); }
+      `}</style>
+
+      <div className='flex flex-col lg:flex-row gap-6 w-full'>
+        {/* ── Video area ── */}
+        <div className='flex-1 min-w-0 space-y-4'>
+          {activeLesson ? (
+            <>
+              {/* Player */}
+              {activeLesson.videoUrl ? (
+                <div className='w-full aspect-video rounded-xl overflow-hidden bg-black'>
+                  <iframe
+                    src={activeLesson.videoUrl}
+                    className='w-full h-full'
+                    allowFullScreen
+                    allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                  />
+                </div>
+              ) : (
+                <VideoPlaceholder title={activeLesson.title} />
+              )}
+
+              {/* Lesson info */}
+              <div className='lp-card'>
+                <div className='flex items-start justify-between gap-4 flex-wrap'>
+                  <div>
+                    <h2
+                      className='font-serif text-[20px] font-medium mb-1'
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      {activeLesson.title}
+                    </h2>
+                    <div
+                      className='flex items-center gap-3 text-[13px]'
+                      style={{ color: 'var(--color-primary-muted)' }}
+                    >
+                      <div className='flex items-center gap-1'>
+                        <ClockIcon
+                          size={13}
+                          style={{ color: 'var(--color-primary)' }}
+                        />
+                        {activeLesson.duration}
+                      </div>
+                      <div className='flex items-center gap-1'>
+                        <TypeIcon type={activeLesson.type} />
+                        {activeLesson.type}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => markComplete(activeLesson.id)}
-                  disabled={completed.includes(activeLesson.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all ${
-                    completed.includes(activeLesson.id)
-                      ? 'bg-green-100 text-green-700 cursor-default'
-                      : 'bg-[#7C5CBF] text-white hover:bg-[#6A4DAD]'
-                  }`}
-                >
-                  <CheckIcon size={14} />
-                  {completed.includes(activeLesson.id)
-                    ? 'Completed'
-                    : 'Mark Complete'}
-                </button>
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            <div className='bg-white border border-purple-100 rounded-2xl p-5'>
-              <div className='flex items-center justify-between mb-2'>
-                <p className='text-[13px] font-semibold text-[#4A3570]'>
-                  Course Progress
-                </p>
-                <p className='text-[13px] font-bold text-[#7C5CBF]'>
-                  {completedCount}/{totalLessons} lessons · {progress}%
-                </p>
-              </div>
-              <div className='h-2 bg-purple-100 rounded-full overflow-hidden'>
-                <div
-                  className='h-full bg-[#7C5CBF] rounded-full transition-all duration-500'
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className='bg-white border border-purple-100 rounded-2xl p-12 text-center'>
-            <div className='text-[48px] mb-4'>🌸</div>
-            <h3 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-2'>
-              Select a lesson to begin
-            </h3>
-            <p className='text-[14px] text-[#8470A8]'>
-              Choose a lesson from the curriculum on the right.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Curriculum sidebar ── */}
-      <div className='lg:w-[320px] shrink-0'>
-        <div className='bg-white border border-purple-100 rounded-2xl overflow-hidden sticky top-24'>
-          <div className='px-5 py-4 border-b border-purple-100 bg-[#F9F5FF]'>
-            <h3 className='font-serif text-[15px] font-bold text-[#2D1B5E]'>
-              Course Curriculum
-            </h3>
-            <p className='text-[12px] text-[#8470A8] mt-0.5'>
-              {completedCount}/{totalLessons} completed
-            </p>
-          </div>
-
-          <div className='overflow-y-auto max-h-[520px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
-            {modules.map((mod) => {
-              const isOpen = openModules.includes(mod.id)
-              const modCompleted = mod.lessons.filter((l) =>
-                completed.includes(l.id),
-              ).length
-
-              return (
-                <div
-                  key={mod.id}
-                  className='border-b border-purple-50 last:border-0'
-                >
-                  {/* Module header */}
                   <button
-                    onClick={() => toggleModule(mod.id)}
-                    className='w-full flex items-center justify-between px-5 py-3.5 bg-transparent border-none cursor-pointer hover:bg-[#F9F5FF] transition-colors text-left'
+                    onClick={() => markComplete(activeLesson.id)}
+                    disabled={completed.includes(activeLesson.id)}
+                    className={`lp-mark-btn ${completed.includes(activeLesson.id) ? 'done' : 'pending'}`}
                   >
-                    <div>
-                      <p className='text-[13px] font-semibold text-[#2D1B5E]'>
-                        {mod.title}
-                      </p>
-                      <p className='text-[11px] text-[#8470A8] mt-0.5'>
-                        {modCompleted}/{mod.lessons.length} done
-                      </p>
-                    </div>
-                    <svg
-                      width='14'
-                      height='14'
-                      viewBox='0 0 24 24'
-                      fill='none'
-                      stroke='#A67DD4'
-                      strokeWidth='2.5'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      className='shrink-0 transition-transform duration-200'
-                      style={{
-                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      }}
-                    >
-                      <polyline points='6 9 12 15 18 9' />
-                    </svg>
+                    <CheckIcon size={14} />
+                    {completed.includes(activeLesson.id)
+                      ? 'Completed'
+                      : 'Mark Complete'}
                   </button>
-
-                  {/* Lessons */}
-                  {isOpen && (
-                    <div className='divide-y divide-purple-50'>
-                      {mod.lessons.map((lesson) => {
-                        const isActive = activeLesson?.id === lesson.id
-                        const isDone = completed.includes(lesson.id)
-
-                        return (
-                          <button
-                            key={lesson.id}
-                            onClick={() =>
-                              !lesson.isLocked && setActiveLesson(lesson)
-                            }
-                            disabled={lesson.isLocked}
-                            className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors border-none cursor-pointer ${
-                              isActive
-                                ? 'bg-[#F3EEFF]'
-                                : lesson.isLocked
-                                  ? 'cursor-not-allowed opacity-50 bg-transparent'
-                                  : 'hover:bg-[#FAF8FF] bg-transparent'
-                            }`}
-                          >
-                            {/* Status icon */}
-                            <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                                isDone
-                                  ? 'bg-green-100 text-green-600'
-                                  : isActive
-                                    ? 'bg-[#7C5CBF] text-white'
-                                    : lesson.isLocked
-                                      ? 'bg-purple-100 text-[#B0A0CC]'
-                                      : 'bg-purple-100 text-[#A67DD4]'
-                              }`}
-                            >
-                              {isDone ? (
-                                <CheckIcon size={11} />
-                              ) : lesson.isLocked ? (
-                                <LockIconSVG size={11} />
-                              ) : (
-                                <TypeIcon type={lesson.type} />
-                              )}
-                            </div>
-
-                            <div className='flex-1 min-w-0'>
-                              <p
-                                className={`text-[12.5px] font-medium truncate ${isActive ? 'text-[#7C5CBF]' : 'text-[#2D1B5E]'}`}
-                              >
-                                {lesson.title}
-                              </p>
-                              <p className='text-[11px] text-[#8470A8]'>
-                                {lesson.duration}
-                              </p>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
                 </div>
-              )
-            })}
+              </div>
+
+              {/* Progress */}
+              <div className='lp-card'>
+                <div className='flex items-center justify-between mb-2'>
+                  <p
+                    className='text-[13px] font-semibold'
+                    style={{ color: 'var(--color-primary-mid)' }}
+                  >
+                    Course Progress
+                  </p>
+                  <p
+                    className='text-[13px] font-semibold'
+                    style={{ color: 'var(--color-primary)' }}
+                  >
+                    {completedCount}/{totalLessons} lessons · {progress}%
+                  </p>
+                </div>
+                <div className='lp-progress-bar'>
+                  <div
+                    className='lp-progress-fill'
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className='lp-card p-12 text-center'>
+              <div className='text-[48px] mb-4'>🌿</div>
+              <h3
+                className='font-serif text-[20px] font-medium mb-2'
+                style={{ color: 'var(--color-text)' }}
+              >
+                Select a lesson to begin
+              </h3>
+              <p
+                className='text-[14px] font-light'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
+                Choose a lesson from the curriculum on the right.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Curriculum sidebar ── */}
+        <div className='lg:w-[320px] shrink-0'>
+          <div className='lp-sidebar sticky top-24'>
+            <div className='lp-sidebar-header'>
+              <h3
+                className='font-serif text-[15px] font-medium'
+                style={{ color: 'var(--color-text)' }}
+              >
+                Course Curriculum
+              </h3>
+              <p
+                className='text-[12px] mt-0.5'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
+                {completedCount}/{totalLessons} completed
+              </p>
+            </div>
+
+            <div className='overflow-y-auto max-h-130 scrollbar-none [&::-webkit-scrollbar]:hidden'>
+              {modules.map((mod) => {
+                const isOpen = openModules.includes(mod.id)
+                const modCompleted = mod.lessons.filter((l) =>
+                  completed.includes(l.id),
+                ).length
+
+                return (
+                  <div
+                    key={mod.id}
+                    style={{
+                      borderBottom: '1px solid var(--color-surface-border)',
+                    }}
+                    className='last:border-0'
+                  >
+                    {/* Module header */}
+                    <button
+                      onClick={() => toggleModule(mod.id)}
+                      className='lp-module-btn'
+                    >
+                      <div>
+                        <p
+                          className='text-[13px] font-semibold'
+                          style={{ color: 'var(--color-text)' }}
+                        >
+                          {mod.title}
+                        </p>
+                        <p
+                          className='text-[11px] mt-0.5'
+                          style={{ color: 'var(--color-primary-muted)' }}
+                        >
+                          {modCompleted}/{mod.lessons.length} done
+                        </p>
+                      </div>
+                      <svg
+                        width='14'
+                        height='14'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='var(--color-primary-muted)'
+                        strokeWidth='2.5'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        className='shrink-0 transition-transform duration-200'
+                        style={{
+                          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        }}
+                      >
+                        <polyline points='6 9 12 15 18 9' />
+                      </svg>
+                    </button>
+
+                    {/* Lessons */}
+                    {isOpen && (
+                      <div
+                        style={{ borderTop: '1px solid var(--color-surface)' }}
+                      >
+                        {mod.lessons.map((lesson) => {
+                          const isActive = activeLesson?.id === lesson.id
+                          const isDone = completed.includes(lesson.id)
+
+                          return (
+                            <button
+                              key={lesson.id}
+                              onClick={() =>
+                                !lesson.isLocked && setActiveLesson(lesson)
+                              }
+                              disabled={lesson.isLocked}
+                              className={`lp-lesson-btn ${isActive ? 'active' : ''}`}
+                            >
+                              <div
+                                className={`lp-lesson-dot ${isDone ? 'done' : isActive ? 'active' : lesson.isLocked ? 'locked' : 'default'}`}
+                              >
+                                {isDone ? (
+                                  <CheckIcon size={11} />
+                                ) : lesson.isLocked ? (
+                                  <LockIconSVG size={11} />
+                                ) : (
+                                  <TypeIcon type={lesson.type} />
+                                )}
+                              </div>
+                              <div className='flex-1 min-w-0'>
+                                <p
+                                  className='text-[12.5px] font-medium truncate'
+                                  style={{
+                                    color: isActive
+                                      ? 'var(--color-primary)'
+                                      : 'var(--color-text)',
+                                  }}
+                                >
+                                  {lesson.title}
+                                </p>
+                                <p
+                                  className='text-[11px]'
+                                  style={{
+                                    color: 'var(--color-primary-muted)',
+                                  }}
+                                >
+                                  {lesson.duration}
+                                </p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

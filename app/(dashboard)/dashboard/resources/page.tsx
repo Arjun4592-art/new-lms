@@ -22,13 +22,14 @@ interface Resource {
 }
 
 function getIcon(type: string) {
+  const style = { color: 'var(--color-primary)' }
   switch (type) {
     case 'Video':
-      return <VideoIcon size={16} className='text-[#7C5CBF]' />
+      return <VideoIcon size={16} style={style} />
     case 'PDF':
-      return <FileTextIcon size={16} className='text-[#7C5CBF]' />
+      return <FileTextIcon size={16} style={style} />
     default:
-      return <FileIcon size={16} className='text-[#7C5CBF]' />
+      return <FileIcon size={16} style={style} />
   }
 }
 
@@ -39,10 +40,8 @@ export default function ResourcesPage() {
 
   useEffect(() => {
     if (!user?.uid) return
-
     async function fetchResources() {
       try {
-        // Step 1 — get enrolled courseIds
         const enrollSnap = await getDocs(
           query(
             collection(db, 'enrollments'),
@@ -53,7 +52,6 @@ export default function ResourcesPage() {
           (d) => d.data().courseId as string,
         )
 
-        // Step 2 — fetch public resources
         const publicSnap = await getDocs(
           query(collection(db, 'resources'), where('visibleTo', '==', 'all')),
         )
@@ -61,7 +59,6 @@ export default function ResourcesPage() {
           (d) => ({ id: d.id, ...d.data() }) as Resource,
         )
 
-        // Step 3 — fetch enrolled-course resources
         let enrolledResources: Resource[] = []
         if (enrolledCourseIds.length > 0) {
           const enrolledSnap = await getDocs(
@@ -75,7 +72,6 @@ export default function ResourcesPage() {
           )
         }
 
-        // Step 4 — merge and deduplicate
         const seen = new Set<string>()
         const merged = [...publicResources, ...enrolledResources].filter(
           (r) => {
@@ -84,7 +80,6 @@ export default function ResourcesPage() {
             return true
           },
         )
-
         setResources(merged)
       } catch (err) {
         console.error('Resources fetch error:', err)
@@ -92,61 +87,137 @@ export default function ResourcesPage() {
         setLoading(false)
       }
     }
-
     fetchResources()
   }, [user?.uid])
 
   if (loading) {
     return (
       <div className='space-y-4 animate-pulse max-w-4xl mx-auto'>
-        <div className='h-10 w-48 bg-purple-100 rounded' />
+        <div
+          className='h-10 w-48 rounded'
+          style={{ backgroundColor: 'var(--color-surface)' }}
+        />
         {[...Array(4)].map((_, i) => (
-          <div key={i} className='h-16 bg-purple-100 rounded-2xl' />
+          <div
+            key={i}
+            className='h-16 rounded-xl'
+            style={{ backgroundColor: 'var(--color-surface)' }}
+          />
         ))}
       </div>
     )
   }
 
   return (
-    <div className='space-y-6 max-w-4xl mx-auto'>
-      <div>
-        <p className='text-[12px] text-[#A67DD4] font-semibold uppercase tracking-widest mb-1'>
-          Student Portal
-        </p>
-        <h1 className='font-serif text-[26px] sm:text-[30px] font-bold text-[#2D1B5E]'>
-          My Resources
-        </h1>
-        <p className='text-[14px] text-[#8470A8] mt-1'>
-          {resources.length} resources available
-        </p>
-      </div>
+    <>
+      <style>{`
+        .res-list {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; overflow: hidden;
+        }
+        .res-row {
+          display: flex; align-items: center; gap: 16px;
+          padding: 14px 24px;
+          border-bottom: 1px solid var(--color-surface-border);
+          transition: background-color 0.15s;
+        }
+        .res-row:last-child { border-bottom: none; }
+        .res-row:hover { background-color: var(--color-surface); }
+        .res-icon {
+          width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+          background-color: var(--color-surface);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .res-dl-btn {
+          display: flex; align-items: center; gap: 6px;
+          padding: 8px 14px; border-radius: 8px;
+          font-size: 13px; font-weight: 600; text-decoration: none;
+          flex-shrink: 0;
+          background-color: var(--color-surface);
+          color: var(--color-primary);
+          border: 1px solid var(--color-surface-border);
+          transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .res-dl-btn:hover {
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          border-color: var(--color-primary);
+        }
+        .res-empty {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 40px; text-align: center;
+        }
+        .res-footer {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 18px; text-align: center;
+        }
+      `}</style>
 
-      {resources.length === 0 ? (
-        <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-10 text-center'>
-          <DownloadIcon size={32} className='text-[#C084F5] mx-auto mb-3' />
-          <p className='text-[15px] font-semibold text-[#2D1B5E] mb-1'>
-            No resources yet
+      <div className='space-y-6 max-w-4xl mx-auto'>
+        {/* Header */}
+        <div>
+          <p
+            className='text-[11px] font-semibold uppercase tracking-widest mb-1'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            Student Portal
           </p>
-          <p className='text-[13px] text-[#8470A8]'>
-            Resources will appear here once you enroll in a course.
+          <h1
+            className='font-serif text-[26px] sm:text-[30px] font-medium'
+            style={{ color: 'var(--color-text)' }}
+          >
+            My Resources
+          </h1>
+          <p
+            className='text-[14px] mt-1'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            {resources.length} resources available
           </p>
         </div>
-      ) : (
-        <div className='bg-white border border-purple-100 rounded-2xl overflow-hidden'>
-          <div className='divide-y divide-purple-50'>
+
+        {/* Empty state */}
+        {resources.length === 0 ? (
+          <div className='res-empty'>
+            <DownloadIcon
+              size={32}
+              style={{
+                color: 'var(--color-primary-muted)',
+                margin: '0 auto 12px',
+              }}
+            />
+            <p
+              className='text-[15px] font-medium mb-1'
+              style={{ color: 'var(--color-text)' }}
+            >
+              No resources yet
+            </p>
+            <p
+              className='text-[13px] font-light'
+              style={{ color: 'var(--color-primary-muted)' }}
+            >
+              Resources will appear here once you enroll in a course.
+            </p>
+          </div>
+        ) : (
+          <div className='res-list'>
             {resources.map((r) => (
-              <div
-                key={r.id}
-                className='flex items-center gap-4 px-6 py-4 hover:bg-[#F9F5FF] transition-colors group'
-              >
-                <div className='w-10 h-10 bg-[#F3EEFF] rounded-xl flex items-center justify-center shrink-0'>
-                  {getIcon(r.type)}
-                </div>
+              <div key={r.id} className='res-row'>
+                <div className='res-icon'>{getIcon(r.type)}</div>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-[14px] font-semibold text-[#2D1B5E] truncate'>
+                  <p
+                    className='text-[14px] font-semibold truncate'
+                    style={{ color: 'var(--color-text)' }}
+                  >
                     {r.title}
                   </p>
-                  <p className='text-[12px] text-[#8470A8]'>
+                  <p
+                    className='text-[12px]'
+                    style={{ color: 'var(--color-primary-muted)' }}
+                  >
                     {r.type} · {r.size}
                   </p>
                 </div>
@@ -154,22 +225,26 @@ export default function ResourcesPage() {
                   href={r.url}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex items-center gap-2 px-4 py-2 bg-[#F3EEFF] hover:bg-[#7C5CBF] text-[#7C5CBF] hover:text-white rounded-xl text-[13px] font-semibold transition-all no-underline shrink-0'
+                  className='res-dl-btn'
                 >
-                  <DownloadIcon size={14} /> Download
+                  <DownloadIcon size={13} /> Download
                 </a>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      <div className='bg-[#F9F5FF] border border-purple-100 rounded-2xl p-5 text-center'>
-        <p className='text-[14px] text-[#6B5B8B] leading-relaxed'>
-          🌸 New resources are added regularly. If you need something specific,
-          reach out to Masuma directly.
-        </p>
+        {/* Footer note */}
+        <div className='res-footer'>
+          <p
+            className='text-[14px] font-light leading-relaxed'
+            style={{ color: 'var(--color-primary)' }}
+          >
+            🌿 New resources are added regularly. If you need something
+            specific, reach out to Masuma directly.
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

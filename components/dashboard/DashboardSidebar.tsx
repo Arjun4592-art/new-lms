@@ -49,21 +49,93 @@ const NAV = [
 
 function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
+
   return (
     <>
-      <div className='flex items-center gap-3 px-4 py-4 border-b border-surface-border'>
-        <div className='w-9 h-9 rounded-full bg-linear-to-br from-primary to-primary-light flex items-center justify-center shrink-0'>
-          <span className='text-white text-[11px] font-bold'>P2P</span>
+      <style>{`
+        .dash-nav-link {
+          display: flex; align-items: center; gap: 10px;
+          padding: 9px 12px; border-radius: 10px;
+          font-size: 13.5px; font-weight: 500;
+          text-decoration: none;
+          transition: background-color 0.2s, color 0.2s;
+          color: var(--color-primary-mid);
+        }
+        .dash-nav-link:hover {
+          background-color: var(--color-surface);
+          color: var(--color-primary);
+        }
+        .dash-nav-link.active {
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          box-shadow: 0 2px 10px rgba(122,106,88,0.22);
+        }
+        .dash-nav-link.active .dash-nav-icon { color: var(--color-bg); }
+        .dash-nav-link:not(.active) .dash-nav-icon { color: var(--color-primary-muted); }
+
+        .dash-support-card {
+          background-color: var(--color-surface);
+          border-radius: 10px; padding: 14px; margin-bottom: 10px;
+        }
+        .dash-contact-btn {
+          display: block; text-align: center;
+          font-size: 12px; font-weight: 600;
+          color: var(--color-primary);
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 8px; padding: 6px;
+          text-decoration: none;
+          transition: background-color 0.2s;
+        }
+        .dash-contact-btn:hover { background-color: var(--color-surface); }
+
+        .dash-back-link {
+          display: flex; align-items: center; gap: 8px;
+          font-size: 12.5px; text-decoration: none;
+          color: var(--color-primary-muted);
+          padding: 4px 8px; border-radius: 6px;
+          transition: color 0.2s, background-color 0.2s;
+        }
+        .dash-back-link:hover {
+          color: var(--color-primary);
+          background-color: var(--color-surface);
+        }
+      `}</style>
+
+      {/* Logo */}
+      <div
+        className='flex items-center gap-3 px-4 py-4'
+        style={{ borderBottom: '1px solid var(--color-surface-border)' }}
+      >
+        <div
+          className='w-9 h-9 rounded-full flex items-center justify-center shrink-0'
+          style={{ backgroundColor: 'var(--color-primary)' }}
+        >
+          <span
+            className='text-[11px] font-bold'
+            style={{ color: 'var(--color-bg)' }}
+          >
+            P2P
+          </span>
         </div>
         <div>
-          <p className='font-serif text-[14px] font-bold text-primary-dark'>
+          <p
+            className='font-serif text-[14px] font-medium'
+            style={{ color: 'var(--color-text)' }}
+          >
             Pain to Power
           </p>
-          <p className='text-[10px] text-primary-accent'>Student Portal</p>
+          <p
+            className='text-[10px]'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            Student Portal
+          </p>
         </div>
       </div>
 
-      <nav className='flex-1 px-3 py-4 space-y-1 overflow-y-auto'>
+      {/* Nav */}
+      <nav className='flex-1 px-3 py-4 space-y-0.5 overflow-y-auto'>
         {NAV.map((item) => {
           const active =
             item.href === '/dashboard'
@@ -74,42 +146,42 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
               key={item.href}
               href={item.href}
               onClick={onLinkClick}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium no-underline transition-all ${
-                active
-                  ? 'bg-primary text-white shadow-md shadow-purple-200'
-                  : 'text-primary-mid hover:bg-surface hover:text-primary'
-              }`}
+              className={`dash-nav-link ${active ? 'active' : ''}`}
             >
-              <span className={active ? 'text-white' : 'text-primary-accent'}>
-                {item.icon}
-              </span>
+              <span className='dash-nav-icon'>{item.icon}</span>
               {item.label}
             </Link>
           )
         })}
       </nav>
 
-      <div className='px-3 py-4 border-t border-surface-border'>
-        <div className='bg-surface rounded-2xl p-4 mb-3'>
-          <p className='text-[12px] font-bold text-primary-dark mb-1'>
+      {/* Footer */}
+      <div
+        className='px-3 py-4'
+        style={{ borderTop: '1px solid var(--color-surface-border)' }}
+      >
+        <div className='dash-support-card'>
+          <p
+            className='text-[12px] font-semibold mb-1'
+            style={{ color: 'var(--color-text)' }}
+          >
             Need Support?
           </p>
-          <p className='text-[11px] text-primary-muted mb-3'>
+          <p
+            className='text-[11px] mb-3'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
             Reach out to Masuma directly.
           </p>
           <Link
             href='/contact'
             onClick={onLinkClick}
-            className='block text-center text-[12px] font-semibold text-primary bg-white border border-surface-border rounded-lg py-1.5 no-underline hover:bg-surface transition-colors'
+            className='dash-contact-btn'
           >
             Contact Coach
           </Link>
         </div>
-        <Link
-          href='/'
-          onClick={onLinkClick}
-          className='flex items-center gap-2 text-[12.5px] text-primary-muted hover:text-primary no-underline transition-colors px-2'
-        >
+        <Link href='/' onClick={onLinkClick} className='dash-back-link'>
           <svg
             width='14'
             height='14'
@@ -145,26 +217,62 @@ export default function DashboardSidebar() {
     }
   }, [])
 
+  const sidebarBase = 'flex flex-col h-full'
+  const sidebarStyle = {
+    backgroundColor: 'var(--color-bg)',
+    borderRight: '1px solid var(--color-surface-border)',
+  }
+
   return (
     <>
-      <aside className='hidden lg:flex w-56 h-screen bg-white border-r border-surface-border flex-col shrink-0 fixed top-0 left-0 z-30'>
+      <style>{`
+        .dash-sidebar-mobile {
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dash-overlay {
+          animation: overlayIn 0.2s ease forwards;
+        }
+        @keyframes overlayIn {
+          from { opacity: 0; } to { opacity: 1; }
+        }
+      `}</style>
+
+      {/* Desktop */}
+      <aside
+        className='hidden lg:flex w-56 h-screen flex-col shrink-0 fixed top-0 left-0 z-30'
+        style={sidebarStyle}
+      >
         <SidebarContent />
       </aside>
 
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className='fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden'
+          className='dash-overlay fixed inset-0 z-40 lg:hidden'
+          style={{
+            backgroundColor: 'rgba(44,34,24,0.4)',
+            backdropFilter: 'blur(4px)',
+          }}
           onClick={() => setMobileOpen(false)}
         />
       )}
 
+      {/* Mobile sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-60 bg-white border-r border-surface-border flex flex-col z-50 lg:hidden transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`dash-sidebar-mobile fixed top-0 left-0 h-full w-60 z-50 lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={sidebarStyle}
       >
         <div className='flex items-center justify-end px-4 pt-3'>
           <button
             onClick={() => setMobileOpen(false)}
-            className='w-8 h-8 flex items-center justify-center text-primary-muted hover:bg-surface rounded-lg'
+            className='w-8 h-8 flex items-center justify-center rounded-lg transition-colors'
+            style={{ color: 'var(--color-primary-muted)' }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = 'var(--color-surface)')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = 'transparent')
+            }
           >
             <CloseIcon size={18} />
           </button>

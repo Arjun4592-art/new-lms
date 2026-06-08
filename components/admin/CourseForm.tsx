@@ -70,7 +70,6 @@ export default function CourseForm({ initial, courseId }: Props) {
     e.preventDefault()
     setError('')
     setSaving(true)
-
     try {
       const data = {
         title: form.title,
@@ -96,7 +95,6 @@ export default function CourseForm({ initial, courseId }: Props) {
         rating: initial?.rating ?? 0,
         reviewCount: initial?.reviewCount ?? 0,
       }
-
       if (isEditing) {
         await setDoc(doc(db, 'courses', courseId), data, { merge: true })
       } else {
@@ -105,7 +103,6 @@ export default function CourseForm({ initial, courseId }: Props) {
           createdAt: serverTimestamp(),
         })
       }
-
       router.push('/admin/courses')
       router.refresh()
     } catch (err) {
@@ -117,342 +114,392 @@ export default function CourseForm({ initial, courseId }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-6 max-w-3xl mx-auto'>
-      {error && (
-        <div className='bg-red-50 border border-red-200 text-red-600 text-[13px] px-4 py-3 rounded-xl'>
-          {error}
-        </div>
-      )}
+    <>
+      <style>{`
+        .cf-card {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; padding: 24px;
+        }
+        .cf-card-title {
+          font-family: var(--font-serif);
+          font-size: 17px; font-weight: 500;
+          color: var(--color-text); margin-bottom: 18px;
+        }
+        .cf-label {
+          display: block; font-size: 13px; font-weight: 600;
+          color: var(--color-primary-mid); margin-bottom: 6px;
+        }
+        .cf-input {
+          width: 100%; padding: 11px 16px;
+          border: 1px solid var(--color-surface-border);
+          border-radius: 10px; font-size: 14px;
+          color: var(--color-text);
+          background-color: var(--color-bg);
+          font-family: var(--font-sans);
+          outline: none; resize: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .cf-input:focus {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(122,106,88,0.12);
+        }
+        .cf-input::placeholder { color: var(--color-primary-muted); }
 
-      {/* Basic info */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6 space-y-5'>
-        <h2 className='font-serif text-[17px] font-bold text-[#2D1B5E]'>
-          Basic Information
-        </h2>
+        .cf-emoji-btn {
+          width: 40px; height: 40px; border-radius: 10px;
+          font-size: 20px; display: flex; align-items: center; justify-content: center;
+          border: none; cursor: pointer; transition: background-color 0.15s;
+          background-color: var(--color-surface);
+        }
+        .cf-emoji-btn:hover { background-color: var(--color-surface-hover); }
+        .cf-emoji-btn.selected {
+          background-color: var(--color-primary);
+          box-shadow: 0 4px 12px rgba(122,106,88,0.25);
+        }
 
-        {/* Title */}
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Course Title *
-          </label>
-          <input
-            type='text'
-            name='title'
-            required
-            value={form.title}
-            onChange={handleChange}
-            placeholder='e.g. Pain to Power Masterclass'
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-          />
-        </div>
+        .cf-color-btn {
+          width: 40px; height: 40px; border-radius: 10px;
+          border: 2px solid transparent; cursor: pointer;
+          transition: transform 0.15s;
+        }
+        .cf-color-btn.selected {
+          outline: 2px solid var(--color-primary);
+          outline-offset: 2px;
+        }
+        .cf-color-btn:hover { transform: scale(1.1); }
 
-        {/* Description */}
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Description *
-          </label>
-          <textarea
-            name='description'
-            required
-            value={form.description}
-            onChange={handleChange}
-            rows={3}
-            placeholder='Describe what this course is about...'
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all resize-none'
-          />
-        </div>
+        .cf-checkbox-label {
+          display: flex; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .cf-checkbox {
+          width: 16px; height: 16px;
+          accent-color: var(--color-primary); cursor: pointer;
+        }
 
-        {/* Emoji picker */}
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Emoji
-          </label>
-          <div className='flex flex-wrap gap-2'>
-            {EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type='button'
-                onClick={() => setForm((p) => ({ ...p, emoji }))}
-                className={`w-10 h-10 rounded-xl text-[20px] flex items-center justify-center transition-all ${
-                  form.emoji === emoji
-                    ? 'bg-[#7C5CBF] shadow-lg'
-                    : 'bg-[#F3EEFF] hover:bg-[#E8DEFF]'
-                }`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
+        .cf-submit-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 12px 28px; border-radius: 10px;
+          font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          font-family: var(--font-sans);
+          transition: background-color 0.2s;
+          box-shadow: 0 4px 14px rgba(122,106,88,0.22);
+        }
+        .cf-submit-btn:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+        .cf-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        {/* Color picker */}
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Card Color
-          </label>
-          <div className='flex flex-wrap gap-2'>
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                type='button'
-                onClick={() => setForm((p) => ({ ...p, color }))}
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} transition-all ${
-                  form.color === color
-                    ? 'ring-2 ring-[#7C5CBF] ring-offset-2'
-                    : ''
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+        .cf-cancel-btn {
+          padding: 12px 22px; border-radius: 10px;
+          font-size: 14px; font-weight: 600; cursor: pointer;
+          background: transparent;
+          color: var(--color-primary-mid);
+          border: 1px solid var(--color-surface-border);
+          font-family: var(--font-sans);
+          transition: background-color 0.2s, border-color 0.2s;
+        }
+        .cf-cancel-btn:hover {
+          background-color: var(--color-surface);
+          border-color: var(--color-primary-muted);
+        }
+      `}</style>
 
-        {/* Thumbnail */}
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Thumbnail URL
-          </label>
-          <input
-            type='url'
-            name='thumbnail'
-            value={form.thumbnail}
-            onChange={handleChange}
-            placeholder='https://...'
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-          />
-        </div>
-      </div>
-
-      {/* Pricing */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6 space-y-5'>
-        <h2 className='font-serif text-[17px] font-bold text-[#2D1B5E]'>
-          Pricing
-        </h2>
-
-        <label className='flex items-center gap-3 cursor-pointer'>
-          <input
-            type='checkbox'
-            name='isFree'
-            checked={form.isFree}
-            onChange={handleChange}
-            className='w-4 h-4 accent-[#7C5CBF]'
-          />
-          <span className='text-[14px] font-medium text-[#4A3570]'>
-            This is a free course
-          </span>
-        </label>
-
-        {!form.isFree && (
-          <div>
-            <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-              Price (₹)
-            </label>
-            <input
-              type='number'
-              name='price'
-              value={form.price}
-              onChange={handleChange}
-              min={0}
-              placeholder='12999'
-              className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-            />
+      <form onSubmit={handleSubmit} className='space-y-6 max-w-3xl mx-auto'>
+        {error && (
+          <div
+            className='px-4 py-3 rounded-xl text-[13px]'
+            style={{
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              color: '#DC2626',
+            }}
+          >
+            {error}
           </div>
         )}
-      </div>
 
-      {/* Course details */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6 space-y-5'>
-        <h2 className='font-serif text-[17px] font-bold text-[#2D1B5E]'>
-          Course Details
-        </h2>
-
-        <div className='grid grid-cols-2 gap-4'>
-          <div>
-            <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-              Format
-            </label>
-            <select
-              name='format'
-              value={form.format}
-              onChange={handleChange}
-              className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-            >
-              <option>Recorded</option>
-              <option>Live</option>
-              <option>Live + Recorded</option>
-            </select>
-          </div>
+        {/* ── Basic info ── */}
+        <div className='cf-card space-y-5'>
+          <h2 className='cf-card-title'>Basic Information</h2>
 
           <div>
-            <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-              Category
-            </label>
-            <select
-              name='category'
-              value={form.category}
-              onChange={handleChange}
-              className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-            >
-              <option>Healing</option>
-              <option>Workshops</option>
-              <option>Coaching</option>
-              <option>Self-Development</option>
-            </select>
-          </div>
-
-          <div>
-            <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-              Total Lessons
-            </label>
+            <label className='cf-label'>Course Title *</label>
             <input
-              type='number'
-              name='totalLessons'
-              value={form.totalLessons}
+              type='text'
+              name='title'
+              required
+              value={form.title}
               onChange={handleChange}
-              min={0}
-              className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
+              placeholder='e.g. Pain to Power Masterclass'
+              className='cf-input'
             />
           </div>
 
           <div>
-            <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-              Duration (minutes)
-            </label>
-            <input
-              type='number'
-              name='totalDuration'
-              value={form.totalDuration}
+            <label className='cf-label'>Description *</label>
+            <textarea
+              name='description'
+              required
+              value={form.description}
               onChange={handleChange}
-              min={0}
-              className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
+              rows={3}
+              placeholder='Describe what this course is about...'
+              className='cf-input'
+            />
+          </div>
+
+          {/* Emoji */}
+          <div>
+            <label className='cf-label'>Emoji</label>
+            <div className='flex flex-wrap gap-2'>
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type='button'
+                  onClick={() => setForm((p) => ({ ...p, emoji }))}
+                  className={`cf-emoji-btn ${form.emoji === emoji ? 'selected' : ''}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label className='cf-label'>Card Color</label>
+            <div className='flex flex-wrap gap-2'>
+              {COLORS.map((color) => (
+                <button
+                  key={color}
+                  type='button'
+                  onClick={() => setForm((p) => ({ ...p, color }))}
+                  className={`cf-color-btn bg-gradient-to-br ${color} ${form.color === color ? 'selected' : ''}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className='cf-label'>Thumbnail URL</label>
+            <input
+              type='url'
+              name='thumbnail'
+              value={form.thumbnail}
+              onChange={handleChange}
+              placeholder='https://...'
+              className='cf-input'
             />
           </div>
         </div>
 
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Tags (comma separated)
-          </label>
-          <input
-            type='text'
-            name='tags'
-            value={form.tags}
-            onChange={handleChange}
-            placeholder='healing, confidence, women'
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-          />
-        </div>
-
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Instructor Name
-          </label>
-          <input
-            type='text'
-            name='instructorName'
-            value={form.instructorName}
-            onChange={handleChange}
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
-          />
-        </div>
-      </div>
-
-      {/* What you'll learn */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6 space-y-5'>
-        <h2 className='font-serif text-[17px] font-bold text-[#2D1B5E]'>
-          What You'll Learn
-        </h2>
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            One point per line
-          </label>
-          <textarea
-            name='whatYouLearn'
-            value={form.whatYouLearn}
-            onChange={handleChange}
-            rows={4}
-            placeholder={
-              'Break emotional patterns\nBuild confidence\nSet healthy boundaries'
-            }
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all resize-none'
-          />
-        </div>
-
-        <div>
-          <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
-            Course Includes (one per line)
-          </label>
-          <textarea
-            name='includes'
-            value={form.includes}
-            onChange={handleChange}
-            rows={4}
-            placeholder={
-              '8 live Zoom sessions\nRecorded replays\n1:1 coaching call'
-            }
-            className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all resize-none'
-          />
-        </div>
-      </div>
-
-      {/* Publish */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-        <label className='flex items-center gap-3 cursor-pointer'>
-          <input
-            type='checkbox'
-            name='published'
-            checked={form.published}
-            onChange={handleChange}
-            className='w-4 h-4 accent-[#7C5CBF]'
-          />
-          <div>
-            <p className='text-[14px] font-semibold text-[#4A3570]'>
-              Publish this course
-            </p>
-            <p className='text-[12px] text-[#8470A8]'>
-              Published courses are visible to students
-            </p>
-          </div>
-        </label>
-      </div>
-
-      {/* Submit */}
-      <div className='flex items-center gap-4'>
-        <button
-          type='submit'
-          disabled={saving}
-          className='flex items-center gap-2 px-8 py-3.5 bg-[#7C5CBF] hover:bg-[#6A4DAD] text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-200 disabled:opacity-60'
-        >
-          {saving && (
-            <svg
-              className='animate-spin w-4 h-4'
-              viewBox='0 0 24 24'
-              fill='none'
+        {/* ── Pricing ── */}
+        <div className='cf-card space-y-5'>
+          <h2 className='cf-card-title'>Pricing</h2>
+          <label className='cf-checkbox-label'>
+            <input
+              type='checkbox'
+              name='isFree'
+              checked={form.isFree}
+              onChange={handleChange}
+              className='cf-checkbox'
+            />
+            <span
+              className='text-[14px] font-medium'
+              style={{ color: 'var(--color-primary-mid)' }}
             >
-              <circle
-                className='opacity-25'
-                cx='12'
-                cy='12'
-                r='10'
-                stroke='currentColor'
-                strokeWidth='4'
+              This is a free course
+            </span>
+          </label>
+          {!form.isFree && (
+            <div>
+              <label className='cf-label'>Price (₹)</label>
+              <input
+                type='number'
+                name='price'
+                value={form.price}
+                onChange={handleChange}
+                min={0}
+                placeholder='12999'
+                className='cf-input'
               />
-              <path
-                className='opacity-75'
-                fill='currentColor'
-                d='M4 12a8 8 0 018-8v8H4z'
-              />
-            </svg>
+            </div>
           )}
-          {saving ? 'Saving...' : isEditing ? 'Update Course' : 'Create Course'}
-        </button>
-        <button
-          type='button'
-          onClick={() => router.push('/admin/courses')}
-          className='px-6 py-3.5 border border-purple-200 text-[#6B5B8B] font-semibold rounded-xl hover:bg-[#F9F5FF] transition-colors'
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+        </div>
+
+        {/* ── Course details ── */}
+        <div className='cf-card space-y-5'>
+          <h2 className='cf-card-title'>Course Details</h2>
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div>
+              <label className='cf-label'>Format</label>
+              <select
+                name='format'
+                value={form.format}
+                onChange={handleChange}
+                className='cf-input'
+              >
+                <option>Recorded</option>
+                <option>Live</option>
+                <option>Live + Recorded</option>
+              </select>
+            </div>
+            <div>
+              <label className='cf-label'>Category</label>
+              <select
+                name='category'
+                value={form.category}
+                onChange={handleChange}
+                className='cf-input'
+              >
+                <option>Healing</option>
+                <option>Workshops</option>
+                <option>Coaching</option>
+                <option>Self-Development</option>
+              </select>
+            </div>
+            <div>
+              <label className='cf-label'>Total Lessons</label>
+              <input
+                type='number'
+                name='totalLessons'
+                value={form.totalLessons}
+                onChange={handleChange}
+                min={0}
+                className='cf-input'
+              />
+            </div>
+            <div>
+              <label className='cf-label'>Duration (minutes)</label>
+              <input
+                type='number'
+                name='totalDuration'
+                value={form.totalDuration}
+                onChange={handleChange}
+                min={0}
+                className='cf-input'
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className='cf-label'>Tags (comma separated)</label>
+            <input
+              type='text'
+              name='tags'
+              value={form.tags}
+              onChange={handleChange}
+              placeholder='healing, confidence, boundaries'
+              className='cf-input'
+            />
+          </div>
+          <div>
+            <label className='cf-label'>Instructor Name</label>
+            <input
+              type='text'
+              name='instructorName'
+              value={form.instructorName}
+              onChange={handleChange}
+              className='cf-input'
+            />
+          </div>
+        </div>
+
+        {/* ── What you'll learn ── */}
+        <div className='cf-card space-y-5'>
+          <h2 className='cf-card-title'>What You&apos;ll Learn</h2>
+          <div>
+            <label className='cf-label'>One point per line</label>
+            <textarea
+              name='whatYouLearn'
+              value={form.whatYouLearn}
+              onChange={handleChange}
+              rows={4}
+              placeholder={
+                'Break emotional patterns\nBuild confidence\nSet healthy boundaries'
+              }
+              className='cf-input'
+            />
+          </div>
+          <div>
+            <label className='cf-label'>Course Includes (one per line)</label>
+            <textarea
+              name='includes'
+              value={form.includes}
+              onChange={handleChange}
+              rows={4}
+              placeholder={
+                '8 live Zoom sessions\nRecorded replays\n1:1 coaching call'
+              }
+              className='cf-input'
+            />
+          </div>
+        </div>
+
+        {/* ── Publish ── */}
+        <div className='cf-card'>
+          <label className='cf-checkbox-label'>
+            <input
+              type='checkbox'
+              name='published'
+              checked={form.published}
+              onChange={handleChange}
+              className='cf-checkbox'
+            />
+            <div>
+              <p
+                className='text-[14px] font-semibold'
+                style={{ color: 'var(--color-primary-mid)' }}
+              >
+                Publish this course
+              </p>
+              <p
+                className='text-[12px]'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
+                Published courses are visible to students
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {/* ── Submit ── */}
+        <div className='flex items-center gap-4'>
+          <button type='submit' disabled={saving} className='cf-submit-btn'>
+            {saving && (
+              <svg
+                className='animate-spin w-4 h-4'
+                viewBox='0 0 24 24'
+                fill='none'
+              >
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                />
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8v8H4z'
+                />
+              </svg>
+            )}
+            {saving ? 'Saving…' : isEditing ? 'Update Course' : 'Create Course'}
+          </button>
+          <button
+            type='button'
+            onClick={() => router.push('/admin/courses')}
+            className='cf-cancel-btn'
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </>
   )
 }
