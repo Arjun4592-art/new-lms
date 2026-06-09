@@ -42,7 +42,7 @@ const AuthContext = createContext<AuthContextType>({
 
 async function createSession(fbUser: User) {
   try {
-    const idToken = await fbUser.getIdToken()
+    const idToken = await fbUser.getIdToken(true) // ← true = force refresh
     await fetch('/api/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,6 +50,9 @@ async function createSession(fbUser: User) {
     })
   } catch (err) {
     console.error('Failed to create session:', err)
+    // Token refresh fail — matlab user deleted/disabled hai
+    await logOut()
+    await deleteSession()
   }
 }
 
