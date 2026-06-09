@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase-admin'
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,21 +7,14 @@ export async function POST(req: NextRequest) {
     if (!idToken)
       return NextResponse.json({ error: 'No token' }, { status: 400 })
 
-    // ← idToken ki jagah Firebase session cookie banao — 7 days valid
-    const expiresIn = 60 * 60 * 24 * 7 * 1000 // 7 days milliseconds
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, {
-      expiresIn,
-    })
-
     const res = NextResponse.json({ success: true })
-    res.cookies.set('session', sessionCookie, {
+    res.cookies.set('session', idToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days seconds
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
-
     return res
   } catch (err) {
     console.error('Session error:', err)
