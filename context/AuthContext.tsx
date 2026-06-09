@@ -38,11 +38,34 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
-// ── Protected paths — inpe bina login ke nahi jaana ──────────────────────
+// ── Session cookie helpers (API route ke through) ─────────────────────────
+
+async function createSession(fbUser: User) {
+  try {
+    const idToken = await fbUser.getIdToken()
+    await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    })
+  } catch (err) {
+    console.error('Failed to create session:', err)
+  }
+}
+
+async function deleteSession() {
+  try {
+    await fetch('/api/auth/session', { method: 'DELETE' })
+  } catch (err) {
+    console.error('Failed to delete session:', err)
+  }
+}
+
+// ── Protected paths ───────────────────────────────────────────────────────
 const PROTECTED_PATHS = ['/dashboard', '/admin', '/profile']
 
-// ── Public paths — inpe logged in user ko redirect karo ──────────────────
-const PUBLIC_PATHS = ['/login', '/signup', '/verify-email', '/forgot-password']
+// ── Public paths — verified logged-in user yahan nahi rehna chahiye ───────
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password']
 
 // ── Provider ──────────────────────────────────────────────────────────────
 
@@ -71,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = useCallback(async () => {
     await logOut()
+    await deleteSession()
     setUser(null)
     setFirebaseUser(null)
     router.push('/login')
@@ -84,52 +108,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (fbUser) {
         setFirebaseUser(fbUser)
-        const lmsUser = await loadUser(fbUser)
 
-        // Firebase mein user hai lekin Firestore mein data nahi
-        // (deleted user ya corrupted state) — website pe bhejo
-        if (!lmsUser) {
-          await logOut()
+        // Firebase Auth ka emailVerified check karo — real-time value
+        const isEmailVerified = fbUser.emailVerified
+
+        if (!isEmailVerified) {
+          // Email verify nahi hua — session delete karo, verify page pe bhejo
           setUser(null)
-          setFirebaseUser(null)
-          router.push('/')
-          router.refresh()
+          await deleteSession()
           setLoading(false)
+
+          if (!currentPath.startsWith('/verify-email')) {
+            router.push(
+              `/verify-email?email=${encodeURIComponent(fbUser.email ?? '')}`,
+            )
+            router.refresh()
+          }
           return
         }
+
+        // Email verified — Firestore se user load karo
+        const lmsUser = await loadUser(fbUser)
+
+        // Firestore mein data nahi — force logout
+        if (!lmsUser) {
+          await logOut()
+          await deleteSession()
+          setUser(null)
+          setFirebaseUser(null)
+          setLoading(false)
+          router.push('/login')
+          router.refresh()
+          return
+        }
+
+        // Sab theek — server-side session cookie set karo
+        await createSession(fbUser)
 
         const isOnPublicPage = PUBLIC_PATHS.some((p) =>
           currentPath.startsWith(p),
         )
 
         if (isOnPublicPage) {
-          // Email verify nahi hua — verify page pe bhejo
-          if (!lmsUser.emailVerified) {
-            if (!currentPath.startsWith('/verify-email')) {
-              router.push(
-                `/verify-email?email=${encodeURIComponent(lmsUser.email)}`,
-              )
-              router.refresh()
-            }
-          } else {
-            // Email verified — dashboard/admin pe bhejo
-            const target = lmsUser.role === 'admin' ? '/admin' : '/dashboard'
-            router.push(target)
-            router.refresh()
-          }
+          const target = lmsUser.role === 'admin' ? '/admin' : '/dashboard'
+          router.push(target)
+          router.refresh()
         }
       } else {
-        // Firebase mein user nahi hai (logout ya deleted)
+        // Logout ya no session
         setFirebaseUser(null)
         setUser(null)
+        await deleteSession()
 
-        // Protected page pe hai toh website homepage pe bhejo
         const isOnProtectedPage = PROTECTED_PATHS.some((p) =>
           currentPath.startsWith(p),
         )
 
         if (isOnProtectedPage) {
-          router.push('/')
+          router.push('/login')
           router.refresh()
         }
       }
