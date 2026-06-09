@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { verifyOTP, resendOTP } from '@/lib/firebase/auth'
+import { auth } from '@/lib/firebase/config'
 
 function VerifyEmailContent() {
   const router = useRouter()
@@ -33,7 +34,6 @@ function VerifyEmailContent() {
     if (!email) router.push('/signup')
   }, [email, router])
 
-  // Auto focus first input on mount
   useEffect(() => {
     inputRefs.current[0]?.focus()
   }, [])
@@ -67,6 +67,20 @@ function VerifyEmailContent() {
     }
   }
 
+  async function setSessionCookie() {
+    if (!auth.currentUser) return
+    try {
+      const idToken = await auth.currentUser.getIdToken(true)
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      })
+    } catch (err) {
+      console.error('Session set failed:', err)
+    }
+  }
+
   async function handleVerify(code?: string) {
     const finalOtp = code ?? otp.join('')
     if (finalOtp.length !== 6) {
@@ -77,8 +91,15 @@ function VerifyEmailContent() {
     setError('')
     try {
       await verifyOTP(email, finalOtp)
+
+      // Session cookie pehle set karo, phir redirect
+      await setSessionCookie()
+
       setSuccess('Email verified! Redirecting...')
-      setTimeout(() => router.push('/dashboard'), 1500)
+      setTimeout(() => {
+        router.push('/dashboard')
+        router.refresh()
+      }, 1500)
     } catch (err: any) {
       setError(err.message ?? 'Verification failed')
       setOtp(['', '', '', '', '', ''])
@@ -101,7 +122,11 @@ function VerifyEmailContent() {
       setOtp(['', '', '', '', '', ''])
       inputRefs.current[0]?.focus()
     } catch (err: any) {
-      setError(err.message ?? 'Failed to resend OTP')
+      if (err.message === 'Failed to resend OTP') {
+        setError('Could not send OTP. Please try again.')
+      } else {
+        setError(err.message ?? 'Failed to resend OTP')
+      }
     } finally {
       setResendLoading(false)
     }
