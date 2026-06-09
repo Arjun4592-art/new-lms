@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
@@ -39,10 +40,12 @@ export default function LoginPage() {
     } catch (err: any) {
       const code = err?.code ?? ''
       if (
-        code === 'auth/user-not-found' ||
-        code === 'auth/wrong-password' ||
-        code === 'auth/invalid-credential' ||
-        code === 'auth/invalid-email'
+        [
+          'auth/user-not-found',
+          'auth/wrong-password',
+          'auth/invalid-credential',
+          'auth/invalid-email',
+        ].includes(code)
       ) {
         setError('Invalid email or password. Please try again.')
       } else if (code === 'auth/too-many-requests') {
@@ -69,15 +72,13 @@ export default function LoginPage() {
       router.refresh()
     } catch (err: any) {
       const code = err?.code ?? ''
-      if (code === 'auth/popup-closed-by-user') {
+      if (code === 'auth/popup-closed-by-user')
         setError('Google sign in was cancelled. Please try again.')
-      } else if (code === 'auth/popup-blocked') {
+      else if (code === 'auth/popup-blocked')
         setError('Popup was blocked. Please allow popups and try again.')
-      } else if (code === 'auth/network-request-failed') {
+      else if (code === 'auth/network-request-failed')
         setError('Network error. Please check your connection.')
-      } else {
-        setError('Google sign in failed. Please try again.')
-      }
+      else setError('Google sign in failed. Please try again.')
     } finally {
       setGoogleLoading(false)
     }
@@ -85,11 +86,9 @@ export default function LoginPage() {
 
   return (
     <div className='min-h-screen bg-surface flex items-center justify-center px-4 py-12 relative overflow-hidden'>
-      {/* ── Blobs ── */}
       <div className='absolute -top-20 -left-20 w-75 h-75 rounded-full bg-primary-light opacity-50 blur-[60px] pointer-events-none' />
       <div className='absolute -bottom-20 -right-20 w-60 h-60 rounded-full bg-surface-hover opacity-60 blur-[60px] pointer-events-none' />
 
-      {/* ── Card ── */}
       <div
         ref={cardRef}
         className='w-full max-w-110 bg-bg border border-surface rounded-2xl px-8 py-9 relative z-10 opacity-0 translate-y-6 transition-all duration-700 ease-out'
@@ -111,7 +110,7 @@ export default function LoginPage() {
               <circle cx='12' cy='7' r='4' />
             </svg>
           </div>
-          <h1 className='font-serif text-[28px] font-medium text-(--color-text)] mb-1'>
+          <h1 className='font-serif text-[28px] font-medium text-[var(--color-text)] mb-1'>
             Welcome Back
           </h1>
           <p className='text-[13.5px] font-light text-primary-muted'>
@@ -138,22 +137,63 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder='you@example.com'
-              className='w-full px-4 py-2.75 border border-surface rounded-[10px] text-[14px] text-(--color-text) bg-bg outline-none font-sans placeholder:text-primary-muted focus:border-primary focus:shadow-[0_0_0_3px_rgba(122,106,88,0.12)] transition-all duration-200'
+              className='w-full px-4 py-2.75 border border-surface rounded-[10px] text-[14px] text-[var(--color-text)] bg-bg outline-none font-sans placeholder:text-primary-muted focus:border-primary focus:shadow-[0_0_0_3px_rgba(122,106,88,0.12)] transition-all duration-200'
             />
           </div>
 
+          {/* Password with show/hide */}
           <div>
             <label className='block text-[13px] font-semibold text-primary-mid mb-1.5'>
               Password
             </label>
-            <input
-              type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder='Your password'
-              className='w-full px-4 py-2.75 border border-surface rounded-[10px] text-[14px] text-(--color-text) bg-bg outline-none font-sans placeholder:text-primary-muted focus:border-primary focus:shadow-[0_0_0_3px_rgba(122,106,88,0.12)] transition-all duration-200'
-            />
+            <div className='relative'>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder='Your password'
+                className='w-full px-4 py-2.75 pr-11 border border-surface rounded-[10px] text-[14px] text-[var(--color-text)] bg-bg outline-none font-sans placeholder:text-primary-muted focus:border-primary focus:shadow-[0_0_0_3px_rgba(122,106,88,0.12)] transition-all duration-200'
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-primary-muted hover:text-primary transition-colors'
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  /* Eye-off icon */
+                  <svg
+                    width='18'
+                    height='18'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  >
+                    <path d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24' />
+                    <line x1='1' y1='1' x2='23' y2='23' />
+                  </svg>
+                ) : (
+                  /* Eye icon */
+                  <svg
+                    width='18'
+                    height='18'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  >
+                    <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
+                    <circle cx='12' cy='12' r='3' />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           <div className='flex justify-end'>
@@ -187,7 +227,7 @@ export default function LoginPage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading || loading}
-          className='w-full py-3 bg-bg border border-surface rounded-[10px] text-[13.5px] font-medium font-sans text-(--color-text) flex items-center justify-center gap-2.5 hover:bg-surface hover:border-primary-muted transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed'
+          className='w-full py-3 bg-bg border border-surface rounded-[10px] text-[13.5px] font-medium font-sans text-[var(--color-text)] flex items-center justify-center gap-2.5 hover:bg-surface hover:border-primary-muted transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed'
         >
           <svg className='w-5 h-5 shrink-0' viewBox='0 0 24 24'>
             <path
@@ -210,7 +250,6 @@ export default function LoginPage() {
           {googleLoading ? 'Signing in…' : 'Continue with Google'}
         </button>
 
-        {/* Signup link */}
         <p className='text-center text-[13px] text-primary-muted mt-6'>
           Don&apos;t have an account?{' '}
           <Link
