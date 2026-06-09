@@ -40,22 +40,8 @@ export async function signUpWithEmail(
 
     await updateProfile(credential.user, { displayName: name })
 
-    const user: LMSUser = {
-      uid: credential.user.uid,
-      email,
-      name,
-      photoURL: null,
-      role,
-      createdAt: new Date().toISOString(),
-      enrolledCourses: [],
-      emailVerified: false,
-    }
-
-    await setDoc(doc(db, 'users', credential.user.uid), {
-      ...user,
-      createdAt: serverTimestamp(),
-    })
-
+    // ← Firestore mein mat likho abhi
+    // Sirf OTP bhejo
     const res = await fetch('/api/auth/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +54,17 @@ export async function signUpWithEmail(
       throw new Error('Failed to send OTP email')
     }
 
-    return user
+    // Sirf return karo — Firestore write nahi
+    return {
+      uid: credential.user.uid,
+      email,
+      name,
+      photoURL: null,
+      role,
+      createdAt: new Date().toISOString(),
+      enrolledCourses: [],
+      emailVerified: false,
+    }
   } catch (err: any) {
     console.error('❌ signUpWithEmail FAILED at some step')
     console.error('Error code:', err?.code)
@@ -107,8 +103,21 @@ export async function verifyOTP(email: string, otp: string): Promise<void> {
   }
 
   const user = auth.currentUser
+  console.log('🔍 currentUser at verify time:', user?.uid, user?.email)
   if (user) {
-    await updateDoc(doc(db, 'users', user.uid), { emailVerified: true })
+    console.log('💾 Firestore mein save karne ki koshish...')
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName ?? 'User',
+      photoURL: null,
+      role: 'student',
+      createdAt: serverTimestamp(),
+      enrolledCourses: [],
+      emailVerified: true,
+    })
+    console.log('✅ Firestore save ho gaya!')
+    await user.reload()
   }
 }
 
@@ -147,11 +156,10 @@ export async function signInWithEmail(
         throw new Error(otpData.error ?? 'Failed to send OTP')
       }
 
-
       return { user, emailVerified: false }
     }
 
-    await setSessionCookie() // ← add karo
+    await setSessionCookie()
 
     return { user, emailVerified: true }
   } catch (err: any) {
@@ -170,12 +178,11 @@ export async function signInWithGoogle(
   try {
     const credential = await signInWithPopup(auth, googleProvider)
 
-
     const { uid, email, displayName, photoURL } = credential.user
 
     const existing = await getUserFromFirestore(uid)
     if (existing) {
-      await setSessionCookie() // ← add karo
+      await setSessionCookie()
       return { user: existing, isNew: false }
     }
 
@@ -187,7 +194,7 @@ export async function signInWithGoogle(
       role,
       createdAt: new Date().toISOString(),
       enrolledCourses: [],
-      emailVerified: true, // ← Google users always verified
+      emailVerified: true,
     }
 
     await setDoc(doc(db, 'users', uid), {
@@ -195,8 +202,7 @@ export async function signInWithGoogle(
       createdAt: serverTimestamp(),
     })
 
-
-    await setSessionCookie() // ← add karo
+    await setSessionCookie()
     return { user, isNew: true }
   } catch (err: any) {
     console.error('❌ signInWithGoogle FAILED')
@@ -206,12 +212,12 @@ export async function signInWithGoogle(
   }
 }
 
-// ── Handle Google Redirect Result — deprecated, returns null ──────────────
+// ── Handle Google Redirect Result — deprecated ────────────────────────────
 
 export async function handleGoogleRedirectResult(): Promise<{
   user: LMSUser
 } | null> {
-  return null // Popup use kar rahe hain ab — redirect nahi
+  return null
 }
 
 // ── Forgot Password ───────────────────────────────────────────────────────
@@ -237,7 +243,6 @@ export async function changePassword(
 
 export async function logOut(): Promise<void> {
   await signOut(auth)
-  // Session cookie delete karo
   await fetch('/api/auth/session', { method: 'DELETE' })
 }
 
@@ -277,6 +282,7 @@ export async function updateUserProfile(
 }
 
 // ── Helper — session cookie set karo ─────────────────────────────────────
+
 async function setSessionCookie() {
   try {
     const idToken = await auth.currentUser?.getIdToken()

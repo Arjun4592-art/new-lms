@@ -90,16 +90,16 @@ function VerifyEmailContent() {
     setLoading(true)
     setError('')
     try {
+      // verifyOTP ke andar user.reload() call hota hai
+      // jo onAuthStateChanged trigger karega
+      // auth-context khud /dashboard pe redirect karega
       await verifyOTP(email, finalOtp)
-
-      // Session cookie pehle set karo, phir redirect
       await setSessionCookie()
-
       setSuccess('Email verified! Redirecting...')
+
       setTimeout(() => {
-        router.push('/dashboard')
-        router.refresh()
-      }, 1500)
+        window.location.href = '/dashboard'
+      }, 1000)
     } catch (err: any) {
       setError(err.message ?? 'Verification failed')
       setOtp(['', '', '', '', '', ''])

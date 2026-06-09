@@ -14,8 +14,6 @@ import { auth } from '@/lib/firebase/config'
 import { getUserFromFirestore, logOut } from '@/lib/firebase/auth'
 import type { LMSUser } from '@/types'
 
-// ── Types ─────────────────────────────────────────────────────────────────
-
 interface AuthContextType {
   user: LMSUser | null
   firebaseUser: User | null
@@ -25,8 +23,6 @@ interface AuthContextType {
   refreshUser: () => Promise<void>
   signOut: () => Promise<void>
 }
-
-// ── Context ───────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -38,11 +34,9 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
-// ── Session cookie helpers ────────────────────────────────────────────────
-
 async function createSession(fbUser: User) {
   try {
-    const idToken = await fbUser.getIdToken(true) // ← true = force refresh
+    const idToken = await fbUser.getIdToken(true)
     await fetch('/api/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,7 +44,6 @@ async function createSession(fbUser: User) {
     })
   } catch (err) {
     console.error('Failed to create session:', err)
-    // Token refresh fail — matlab user deleted/disabled hai
     await logOut()
     await deleteSession()
   }
@@ -64,12 +57,8 @@ async function deleteSession() {
   }
 }
 
-// ── Protected / Public paths ──────────────────────────────────────────────
-
 const PROTECTED_PATHS = ['/dashboard', '/admin', '/profile']
-const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password']
-
-// ── Provider ──────────────────────────────────────────────────────────────
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password', '/verify-email']
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LMSUser | null>(null)
@@ -99,11 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await deleteSession()
     setUser(null)
     setFirebaseUser(null)
-    router.push('/login')
+    router.push('/')
     router.refresh()
   }, [router])
-
-  // ── Auth state listener ───────────────────────────────────────────────
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -115,11 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const firebaseEmailVerified = fbUser.emailVerified
 
         if (!firebaseEmailVerified) {
-          // Firebase Auth verified nahi — Firestore check karo (OTP flow)
           const firestoreUser = await getUserFromFirestore(fbUser.uid)
 
           if (!firestoreUser?.emailVerified) {
-            // Genuinely unverified — verify page pe bhejo
             setUser(null)
             await deleteSession()
             setLoading(false)
@@ -132,27 +117,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             return
           }
-
-          // Firestore mein verified hai — aage badho
         }
 
-        // Firestore se user load karo
         const lmsUser = await loadUser(fbUser)
 
-        // Firestore mein data nahi — force logout
         if (!lmsUser) {
           await logOut()
           await deleteSession()
           setUser(null)
           setFirebaseUser(null)
           setLoading(false)
-          router.push('/login')
+          router.push('/')
           router.refresh()
           return
         }
 
-        // Session cookie set karo
+        // ✅ Session set karo
         await createSession(fbUser)
+
+        // ✅ Loading false karo PEHLE redirect se
+        setLoading(false)
 
         const isOnPublicPage = PUBLIC_PATHS.some((p) =>
           currentPath.startsWith(p),
@@ -160,26 +144,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (isOnPublicPage) {
           const target = lmsUser.role === 'admin' ? '/admin' : '/dashboard'
-          router.push(target)
-          router.refresh()
+          window.location.href = target
         }
       } else {
-        // Logout ya no session
         setFirebaseUser(null)
         setUser(null)
         await deleteSession()
+
+        // ✅ Loading false pehle
+        setLoading(false)
 
         const isOnProtectedPage = PROTECTED_PATHS.some((p) =>
           currentPath.startsWith(p),
         )
 
         if (isOnProtectedPage) {
-          router.push('/login')
+          router.push('/')
           router.refresh()
         }
       }
-
-      setLoading(false)
     })
 
     return () => unsubscribe()
@@ -204,8 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   )
 }
-
-// ── Hooks ─────────────────────────────────────────────────────────────────
 
 export function useAuthContext() {
   const context = useContext(AuthContext)

@@ -36,10 +36,12 @@ export default function DashboardPage() {
     useEnrolledCourses(courseIds)
   const [upcomingSessions, setUpcomingSessions] = useState<any[]>([])
   const [recentResources, setRecentResources] = useState<any[]>([])
-  const loading = authLoading || enrollmentsLoading || coursesLoading
+
+  // ✅ authLoading hataya — layout already handle karta hai
+  const loading = enrollmentsLoading || coursesLoading
 
   useEffect(() => {
-    if (authLoading || !user?.uid || courseIds.length === 0) return
+    if (!user?.uid || courseIds.length === 0) return
     async function fetchData() {
       try {
         const sessSnap = await getDocs(
@@ -68,7 +70,7 @@ export default function DashboardPage() {
       }
     }
     fetchData()
-  }, [authLoading, user?.uid, courseIds])
+  }, [user?.uid, courseIds])
 
   const totalProgress =
     enrolledCourses.length > 0
@@ -87,7 +89,8 @@ export default function DashboardPage() {
     0,
   )
 
-  if (loading) {
+  // ✅ authLoading bhi check karo — user load hone tak wait karo
+  if (authLoading || loading) {
     return (
       <div className='space-y-6 max-w-5xl mx-auto animate-pulse'>
         <div
@@ -110,6 +113,9 @@ export default function DashboardPage() {
       </div>
     )
   }
+
+  // ✅ User null guard
+  if (!user) return null
 
   return (
     <>

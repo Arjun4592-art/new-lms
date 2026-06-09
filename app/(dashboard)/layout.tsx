@@ -10,14 +10,11 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { loading, user } = useAuth()
+  console.log('🏠 Layout render:', { loading, user: user?.uid ?? 'null' })
+  // Auth check chal raha hai — wait kar
 
-  if (loading || !user) {
-    return (
-      <div className='min-h-screen bg-[#FAF8FF] flex items-center justify-center'>
-        <div className='w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin' />
-      </div>
-    )
-  }
+  // Loading done, lekin user nahi — middleware/context redirect karega
+  if (!user) return null
 
   return (
     <div className='flex h-screen bg-[#FAF8FF] overflow-hidden'>

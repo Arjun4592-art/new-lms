@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { adminAuth } from '@/lib/firebase-admin'
+
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
     const { idToken } = await req.json()
-    if (!idToken)
-      return NextResponse.json({ error: 'No token' }, { status: 400 })
 
+    if (!idToken) {
+      return NextResponse.json({ error: 'No token' }, { status: 400 })
+    }
+
+    // ← Temporarily verify hata diya
     const res = NextResponse.json({ success: true })
     res.cookies.set('session', idToken, {
       httpOnly: true,
