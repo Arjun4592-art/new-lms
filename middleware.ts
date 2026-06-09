@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { adminAuth } from '@/lib/firebase-admin'
 
 const AUTH_PATHS = [
   '/login',
@@ -16,19 +17,24 @@ export async function middleware(req: NextRequest) {
   const isAuthPath = AUTH_PATHS.some((p) => pathname.startsWith(p))
   const isProtectedPath = PROTECTED_PATHS.some((p) => pathname.startsWith(p))
 
-  // Server-side httpOnly session cookie check karo
   const session = req.cookies.get('session')?.value
-  const isLoggedIn = !!session
+  let isLoggedIn = false
 
-  // Protected page — session nahi hai toh login pe bhejo
+  if (session) {
+    try {
+      await adminAuth.verifyIdToken(session)
+      isLoggedIn = true
+    } catch {
+      isLoggedIn = false // deleted/expired user
+    }
+  }
+
   if (isProtectedPath && !isLoggedIn) {
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Auth page — session hai toh dashboard pe bhejo
-  // verify-email ko allow karo — unverified user wahan ja sake
   if (isAuthPath && isLoggedIn && !pathname.startsWith('/verify-email')) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }

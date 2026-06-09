@@ -1,3 +1,6 @@
+'use client'
+
+import { useAuth } from '@/context/AuthContext'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import DashboardTopbar from '@/components/dashboard/DashboardTopbar'
 
@@ -6,6 +9,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { loading, user } = useAuth()
+
+  if (loading || !user) {
+    return (
+      <div className='min-h-screen bg-[#FAF8FF] flex items-center justify-center'>
+        <div className='w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin' />
+      </div>
+    )
+  }
+
   return (
     <div className='flex h-screen bg-[#FAF8FF] overflow-hidden'>
       <DashboardSidebar />

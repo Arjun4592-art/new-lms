@@ -38,7 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
-// ── Session cookie helpers (API route ke through) ─────────────────────────
+// ── Session cookie helpers ────────────────────────────────────────────────
 
 async function createSession(fbUser: User) {
   try {
@@ -61,10 +61,9 @@ async function deleteSession() {
   }
 }
 
-// ── Protected paths ───────────────────────────────────────────────────────
-const PROTECTED_PATHS = ['/dashboard', '/admin', '/profile']
+// ── Protected / Public paths ──────────────────────────────────────────────
 
-// ── Public paths — verified logged-in user yahan nahi rehna chahiye ───────
+const PROTECTED_PATHS = ['/dashboard', '/admin', '/profile']
 const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password']
 
 // ── Provider ──────────────────────────────────────────────────────────────
@@ -102,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router])
 
   // ── Auth state listener ───────────────────────────────────────────────
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       const currentPath = window.location.pathname
@@ -109,25 +109,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         setFirebaseUser(fbUser)
 
-        // Firebase Auth ka emailVerified check karo — real-time value
-        const isEmailVerified = fbUser.emailVerified
+        const firebaseEmailVerified = fbUser.emailVerified
 
-        if (!isEmailVerified) {
-          // Email verify nahi hua — session delete karo, verify page pe bhejo
-          setUser(null)
-          await deleteSession()
-          setLoading(false)
+        if (!firebaseEmailVerified) {
+          // Firebase Auth verified nahi — Firestore check karo (OTP flow)
+          const firestoreUser = await getUserFromFirestore(fbUser.uid)
 
-          if (!currentPath.startsWith('/verify-email')) {
-            router.push(
-              `/verify-email?email=${encodeURIComponent(fbUser.email ?? '')}`,
-            )
-            router.refresh()
+          if (!firestoreUser?.emailVerified) {
+            // Genuinely unverified — verify page pe bhejo
+            setUser(null)
+            await deleteSession()
+            setLoading(false)
+
+            if (!currentPath.startsWith('/verify-email')) {
+              router.push(
+                `/verify-email?email=${encodeURIComponent(fbUser.email ?? '')}`,
+              )
+              router.refresh()
+            }
+            return
           }
-          return
+
+          // Firestore mein verified hai — aage badho
         }
 
-        // Email verified — Firestore se user load karo
+        // Firestore se user load karo
         const lmsUser = await loadUser(fbUser)
 
         // Firestore mein data nahi — force logout
@@ -142,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        // Sab theek — server-side session cookie set karo
+        // Session cookie set karo
         await createSession(fbUser)
 
         const isOnPublicPage = PUBLIC_PATHS.some((p) =>
@@ -196,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────
+// ── Hooks ─────────────────────────────────────────────────────────────────
 
 export function useAuthContext() {
   const context = useContext(AuthContext)
