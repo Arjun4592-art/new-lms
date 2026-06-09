@@ -7,16 +7,18 @@ export async function POST(req: NextRequest) {
     if (!idToken)
       return NextResponse.json({ error: 'No token' }, { status: 400 })
 
-    // Token verify karo
-    await adminAuth.verifyIdToken(idToken)
+    // ← idToken ki jagah Firebase session cookie banao — 7 days valid
+    const expiresIn = 60 * 60 * 24 * 7 * 1000 // 7 days milliseconds
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+      expiresIn,
+    })
 
-    // Session cookie set karo — 7 days
     const res = NextResponse.json({ success: true })
-    res.cookies.set('session', idToken, {
+    res.cookies.set('session', sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days seconds
       path: '/',
     })
 

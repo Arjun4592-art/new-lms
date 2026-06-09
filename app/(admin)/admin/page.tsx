@@ -227,28 +227,39 @@ export default function AdminOverviewPage() {
             title='Total Students'
             value={stats.totalStudents}
             subtitle='Registered users'
-            icon={<UsersIcon size={18} />}
+            icon={
+              <UsersIcon size={18} style={{ color: 'var(--color-primary)' }} />
+            }
             color='primary'
           />
           <StatCard
             title='Total Courses'
             value={stats.totalCourses}
             subtitle='Published courses'
-            icon={<BookIcon size={18} />}
+            icon={
+              <BookIcon size={18} style={{ color: 'var(--color-primary)' }} />
+            }
             color='primary'
           />
           <StatCard
             title='Enrollments'
             value={stats.totalEnrollments}
             subtitle='Total enrollments'
-            icon={<CheckIcon size={18} />}
+            icon={
+              <CheckIcon size={18} style={{ color: 'var(--color-primary)' }} />
+            }
             color='primary'
           />
           <StatCard
             title='Revenue'
             value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
             subtitle='Total earned'
-            icon={<CreditCardIcon size={18} />}
+            icon={
+              <CreditCardIcon
+                size={18}
+                style={{ color: 'var(--color-primary)' }}
+              />
+            }
             color='primary'
           />
         </div>

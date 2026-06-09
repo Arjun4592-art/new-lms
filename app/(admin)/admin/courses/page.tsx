@@ -51,97 +51,191 @@ export default function AdminCoursesPage() {
 
   if (loading) {
     return (
-      <div className='space-y-4 animate-pulse'>
+      <div className='space-y-4 animate-pulse max-w-6xl mx-auto'>
         {[...Array(4)].map((_, i) => (
-          <div key={i} className='h-20 bg-purple-100 rounded-2xl' />
+          <div
+            key={i}
+            className='h-20 rounded-xl'
+            style={{ backgroundColor: 'var(--color-surface)' }}
+          />
         ))}
       </div>
     )
   }
 
   return (
-    <div className='space-y-6 max-w-6xl mx-auto'>
-      {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='font-serif text-[26px] font-bold text-[#2D1B5E]'>
-            Courses
-          </h1>
-          <p className='text-[13px] text-[#8470A8]'>
-            {courses.length} total courses
-          </p>
-        </div>
-        <Link
-          href='/admin/courses/new'
-          className='flex items-center gap-2 px-5 py-2.5 bg-[#7C5CBF] text-white font-bold rounded-xl no-underline hover:bg-[#6A4DAD] transition-colors text-[13.5px]'
-        >
-          + Add Course
-        </Link>
-      </div>
+    <>
+      <style>{`
+        .ac-table {
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-surface-border);
+          border-radius: 12px; overflow: hidden;
+        }
+        .ac-table-header {
+          padding: 12px 20px;
+          background-color: var(--color-surface);
+          border-bottom: 1px solid var(--color-surface-border);
+          display: grid; grid-template-columns: 5fr 2fr 2fr 1fr 2fr; gap: 16px;
+          align-items: center;
+        }
+        .ac-col-label {
+          font-size: 11px; font-weight: 600; text-transform: uppercase;
+          letter-spacing: 0.08em; color: var(--color-primary-muted);
+        }
+        .ac-row {
+          padding: 14px 20px;
+          display: grid; grid-template-columns: 5fr 2fr 2fr 1fr 2fr; gap: 16px;
+          align-items: center;
+          border-bottom: 1px solid var(--color-surface-border);
+          transition: background-color 0.15s;
+        }
+        .ac-row:last-child { border-bottom: none; }
+        .ac-row:hover { background-color: var(--color-surface); }
 
-      {/* Courses table */}
-      <div className='bg-white border border-purple-100 rounded-2xl overflow-hidden'>
-        <div className='px-6 py-3 border-b border-purple-100 bg-[#F9F5FF] grid grid-cols-12 gap-4'>
-          <p className='col-span-5 text-[12px] font-semibold text-[#8470A8] uppercase tracking-wider'>
-            Course
-          </p>
-          <p className='col-span-2 text-[12px] font-semibold text-[#8470A8] uppercase tracking-wider'>
-            Price
-          </p>
-          <p className='col-span-2 text-[12px] font-semibold text-[#8470A8] uppercase tracking-wider'>
-            Status
-          </p>
-          <p className='col-span-1 text-[12px] font-semibold text-[#8470A8] uppercase tracking-wider'>
-            Lessons
-          </p>
-          <p className='col-span-2 text-[12px] font-semibold text-[#8470A8] uppercase tracking-wider'>
-            Actions
-          </p>
-        </div>
+        /* Mobile: stack */
+        @media (max-width: 640px) {
+          .ac-table-header { display: none; }
+          .ac-row {
+            grid-template-columns: 1fr;
+            gap: 10px; padding: 14px 16px;
+          }
+        }
 
-        {courses.length === 0 ? (
-          <div className='px-6 py-12 text-center'>
-            <BookIcon size={32} className='text-[#C084F5] mx-auto mb-3' />
-            <p className='text-[15px] font-semibold text-[#2D1B5E] mb-1'>
-              No courses yet
-            </p>
-            <p className='text-[13px] text-[#8470A8] mb-4'>
-              Add your first course to get started
-            </p>
-            <Link
-              href='/admin/courses/new'
-              className='inline-flex items-center gap-2 px-5 py-2.5 bg-[#7C5CBF] text-white font-bold rounded-xl no-underline hover:bg-[#6A4DAD] transition-colors text-[13.5px]'
+        .ac-edit-btn {
+          padding: 5px 12px; border-radius: 7px;
+          font-size: 12px; font-weight: 600; text-decoration: none;
+          background-color: var(--color-surface);
+          color: var(--color-primary);
+          border: 1px solid var(--color-surface-border);
+          transition: background-color 0.15s, border-color 0.15s;
+        }
+        .ac-edit-btn:hover {
+          background-color: var(--color-surface-hover);
+          border-color: var(--color-primary-muted);
+        }
+        .ac-delete-btn {
+          padding: 5px 12px; border-radius: 7px;
+          font-size: 12px; font-weight: 600;
+          background-color: #FEF2F2; color: #EF4444;
+          border: none; cursor: pointer;
+          transition: background-color 0.15s;
+        }
+        .ac-delete-btn:hover { background-color: #FEE2E2; color: #DC2626; }
+        .ac-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .ac-add-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 10px 18px; border-radius: 10px;
+          font-size: 13.5px; font-weight: 600; text-decoration: none;
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          transition: background-color 0.2s;
+        }
+        .ac-add-btn:hover { background-color: var(--color-primary-hover); }
+
+        .ac-published-badge {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 3px 9px; border-radius: 9999px;
+          font-size: 11px; font-weight: 600;
+          background-color: #DCFCE7; color: #16A34A;
+        }
+        .ac-draft-badge {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 3px 9px; border-radius: 9999px;
+          font-size: 11px; font-weight: 600;
+          background-color: #FFF7ED; color: #EA580C;
+        }
+      `}</style>
+
+      <div className='space-y-6 max-w-6xl mx-auto'>
+        {/* Header */}
+        <div className='flex items-center justify-between gap-4 flex-wrap'>
+          <div>
+            <h1
+              className='font-serif text-[26px] font-medium'
+              style={{ color: 'var(--color-text)' }}
             >
-              Add Course <ArrowRightIcon size={14} />
-            </Link>
+              Courses
+            </h1>
+            <p
+              className='text-[13px]'
+              style={{ color: 'var(--color-primary-muted)' }}
+            >
+              {courses.length} total courses
+            </p>
           </div>
-        ) : (
-          <div className='divide-y divide-purple-50'>
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className='px-6 py-4 grid grid-cols-12 gap-4 items-center hover:bg-[#FAFAFE]'
+          <Link href='/admin/courses/new' className='ac-add-btn'>
+            + Add Course
+          </Link>
+        </div>
+
+        {/* Table */}
+        <div className='ac-table'>
+          <div className='ac-table-header'>
+            <span className='ac-col-label'>Course</span>
+            <span className='ac-col-label'>Price</span>
+            <span className='ac-col-label'>Status</span>
+            <span className='ac-col-label'>Lessons</span>
+            <span className='ac-col-label'>Actions</span>
+          </div>
+
+          {courses.length === 0 ? (
+            <div className='px-6 py-12 text-center'>
+              <BookIcon
+                size={32}
+                style={{
+                  color: 'var(--color-primary-muted)',
+                  margin: '0 auto 12px',
+                }}
+              />
+              <p
+                className='text-[15px] font-medium mb-1'
+                style={{ color: 'var(--color-text)' }}
               >
+                No courses yet
+              </p>
+              <p
+                className='text-[13px] mb-4 font-light'
+                style={{ color: 'var(--color-primary-muted)' }}
+              >
+                Add your first course to get started
+              </p>
+              <Link href='/admin/courses/new' className='ac-add-btn'>
+                Add Course <ArrowRightIcon size={14} />
+              </Link>
+            </div>
+          ) : (
+            courses.map((course) => (
+              <div key={course.id} className='ac-row'>
                 {/* Course info */}
-                <div className='col-span-5 flex items-center gap-3 min-w-0'>
+                <div className='flex items-center gap-3 min-w-0'>
                   <div
-                    className={`w-10 h-10 rounded-xl bg-linear-to-br ${course.color} flex items-center justify-center shrink-0 text-[20px]`}
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${course.color} flex items-center justify-center shrink-0 text-[20px]`}
                   >
                     {course.emoji}
                   </div>
                   <div className='min-w-0'>
-                    <p className='text-[13.5px] font-semibold text-[#2D1B5E] truncate'>
+                    <p
+                      className='text-[13.5px] font-semibold truncate'
+                      style={{ color: 'var(--color-text)' }}
+                    >
                       {course.title}
                     </p>
-                    <p className='text-[11.5px] text-[#8470A8] truncate'>
+                    <p
+                      className='text-[11.5px]'
+                      style={{ color: 'var(--color-primary-muted)' }}
+                    >
                       {course.format} · {course.category}
                     </p>
                   </div>
                 </div>
 
                 {/* Price */}
-                <div className='col-span-2'>
-                  <p className='text-[13.5px] font-semibold text-[#2D1B5E]'>
+                <div>
+                  <p
+                    className='text-[13.5px] font-semibold'
+                    style={{ color: 'var(--color-text)' }}
+                  >
                     {course.isFree
                       ? 'Free'
                       : `₹${course.price.toLocaleString('en-IN')}`}
@@ -149,52 +243,47 @@ export default function AdminCoursesPage() {
                 </div>
 
                 {/* Status */}
-                <div className='col-span-2'>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                      course.published
-                        ? 'bg-green-50 text-green-600'
-                        : 'bg-orange-50 text-orange-600'
-                    }`}
-                  >
-                    {course.published ? (
-                      <>
-                        <CheckIcon size={10} /> Published
-                      </>
-                    ) : (
-                      'Draft'
-                    )}
-                  </span>
+                <div>
+                  {course.published ? (
+                    <span className='ac-published-badge'>
+                      <CheckIcon size={9} /> Published
+                    </span>
+                  ) : (
+                    <span className='ac-draft-badge'>Draft</span>
+                  )}
                 </div>
 
                 {/* Lessons */}
-                <div className='col-span-1'>
-                  <p className='text-[13.5px] text-[#2D1B5E]'>
+                <div>
+                  <p
+                    className='text-[13.5px]'
+                    style={{ color: 'var(--color-text)' }}
+                  >
                     {course.totalLessons}
                   </p>
                 </div>
 
                 {/* Actions */}
-                <div className='col-span-2 flex items-center gap-2'>
+                <div className='flex items-center gap-2'>
                   <Link
                     href={`/admin/courses/${course.id}`}
-                    className='px-3 py-1.5 text-[12px] font-semibold text-[#7C5CBF] bg-[#F3EEFF] hover:bg-[#E8DEFF] rounded-lg no-underline transition-colors'
+                    className='ac-edit-btn'
                   >
                     Edit
                   </Link>
                   <button
                     onClick={() => handleDelete(course.id)}
                     disabled={deleting === course.id}
-                    className='px-3 py-1.5 text-[12px] font-semibold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50'
+                    className='ac-delete-btn'
                   >
-                    {deleting === course.id ? '...' : 'Delete'}
+                    {deleting === course.id ? '…' : 'Delete'}
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

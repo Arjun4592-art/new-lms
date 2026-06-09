@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { adminAuth } from '@/lib/firebase-admin'
 
 const AUTH_PATHS = [
   '/login',
@@ -17,16 +18,34 @@ export async function middleware(req: NextRequest) {
 
   const session = req.cookies.get('session')?.value
 
-  // Dashboard/Admin — session nahi hai toh login pe bhejo
-  if (!session && (isDashboard || isAdmin)) {
-    const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('from', pathname)
-    return NextResponse.redirect(loginUrl)
+  if (isDashboard || isAdmin) {
+    if (!session) {
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('from', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    try {
+      // ← Session cookie verify karo
+      await adminAuth.verifySessionCookie(session, true)
+      return NextResponse.next()
+    } catch {
+      // Cookie invalid ya expired — login pe bhejo
+      const res = NextResponse.redirect(new URL('/login', req.url))
+      res.cookies.delete('session')
+      return res
+    }
   }
 
-  // Login/Signup — session hai toh dashboard pe bhejo
-  if (session && isAuthPath) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Login page pe hai aur valid session hai — dashboard pe bhejo
+  if (isAuthPath && session) {
+    try {
+      await adminAuth.verifySessionCookie(session, true)
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    } catch {
+      // Invalid session — login pe rehne do
+      return NextResponse.next()
+    }
   }
 
   return NextResponse.next()

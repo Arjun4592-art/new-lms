@@ -16,11 +16,17 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts'
 import type { Course, Enrollment, LMSUser } from '@/types'
 
-const COLORS = ['#7C5CBF', '#C084F5', '#A67DD4', '#8B5CF6', '#9B6FC8']
+// Earthy palette for charts
+const CHART_COLORS = ['#7a6a58', '#5c4a38', '#b8a898', '#2c2218', '#d8cebc']
+const CHART_LINE = '#7a6a58'
+const CHART_LINE2 = '#b8a898'
+const CHART_BAR = '#7a6a58'
+const CHART_BAR2 = '#b8a898'
+const CHART_GRID = '#e8dfd0'
+const CHART_TICK = '#b8a898'
 
 export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true)
@@ -31,7 +37,7 @@ export default function AdminAnalyticsPage() {
   const [completionRates, setCompletionRates] = useState<any[]>([])
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchData() {
       try {
         const [enrollSnap, courseSnap, studentSnap] = await Promise.all([
           getDocs(collection(db, 'enrollments')),
@@ -47,7 +53,7 @@ export default function AdminAnalyticsPage() {
         )
         const students = studentSnap.docs.map((d) => d.data() as LMSUser)
 
-        // Monthly enrollment data
+        // Monthly enrollment + revenue
         const monthlyMap: Record<
           string,
           { enrollments: number; revenue: number }
@@ -55,15 +61,10 @@ export default function AdminAnalyticsPage() {
         enrollments.forEach((e) => {
           const date = new Date(e.enrolledAt)
           const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-          const label = date.toLocaleDateString('en-IN', {
-            month: 'short',
-            year: '2-digit',
-          })
           if (!monthlyMap[key]) monthlyMap[key] = { enrollments: 0, revenue: 0 }
           monthlyMap[key].enrollments += 1
           monthlyMap[key].revenue += e.price ?? 0
         })
-
         const sortedMonths = Object.entries(monthlyMap)
           .sort(([a], [b]) => a.localeCompare(b))
           .slice(-6)
@@ -74,22 +75,21 @@ export default function AdminAnalyticsPage() {
             }),
             ...val,
           }))
-
         setEnrollmentData(sortedMonths)
         setRevenueData(sortedMonths)
 
         // Course popularity
-        const popularity = courses.map((c) => ({
-          name: c.title.length > 20 ? c.title.slice(0, 20) + '...' : c.title,
-          students: enrollments.filter((e) => e.courseId === c.id).length,
-        }))
-        setCoursePopularity(popularity)
+        setCoursePopularity(
+          courses.map((c) => ({
+            name: c.title.length > 20 ? c.title.slice(0, 20) + '…' : c.title,
+            students: enrollments.filter((e) => e.courseId === c.id).length,
+          })),
+        )
 
-        // Student growth by month
+        // Student growth
         const studentMap: Record<string, number> = {}
         students.forEach((s) => {
-          const date = new Date(s.createdAt)
-          const label = date.toLocaleDateString('en-IN', {
+          const label = new Date(s.createdAt).toLocaleDateString('en-IN', {
             month: 'short',
             year: '2-digit',
           })
@@ -103,101 +103,135 @@ export default function AdminAnalyticsPage() {
         )
 
         // Completion rates
-        const rates = courses.map((c) => {
-          const courseEnrollments = enrollments.filter(
-            (e) => e.courseId === c.id,
-          )
-          const completed = courseEnrollments.filter(
-            (e) => e.progress === 100,
-          ).length
-          return {
-            name: c.title.length > 20 ? c.title.slice(0, 20) + '...' : c.title,
-            rate:
-              courseEnrollments.length > 0
-                ? Math.round((completed / courseEnrollments.length) * 100)
-                : 0,
-          }
-        })
-        setCompletionRates(rates)
+        setCompletionRates(
+          courses.map((c) => {
+            const ce = enrollments.filter((e) => e.courseId === c.id)
+            const completed = ce.filter((e) => e.progress === 100).length
+            return {
+              name: c.title.length > 20 ? c.title.slice(0, 20) + '…' : c.title,
+              rate:
+                ce.length > 0 ? Math.round((completed / ce.length) * 100) : 0,
+            }
+          }),
+        )
       } catch (err) {
         console.error(err)
       } finally {
         setLoading(false)
       }
     }
-    fetch()
+    fetchData()
   }, [])
 
   if (loading) {
     return (
-      <div className='space-y-6 animate-pulse'>
-        <div className='h-10 w-48 bg-purple-100 rounded' />
-        <div className='grid grid-cols-2 gap-6'>
+      <div className='space-y-6 animate-pulse max-w-6xl mx-auto'>
+        <div
+          className='h-10 w-48 rounded'
+          style={{ backgroundColor: 'var(--color-surface)' }}
+        />
+        <div className='grid lg:grid-cols-2 gap-6'>
           {[...Array(4)].map((_, i) => (
-            <div key={i} className='h-64 bg-purple-100 rounded-2xl' />
+            <div
+              key={i}
+              className='h-64 rounded-xl'
+              style={{ backgroundColor: 'var(--color-surface)' }}
+            />
           ))}
         </div>
       </div>
     )
   }
 
+  const cardStyle = {
+    backgroundColor: 'var(--color-bg)',
+    border: '1px solid var(--color-surface-border)',
+    borderRadius: 12,
+    padding: 24,
+  }
+
+  const titleStyle = {
+    fontFamily: 'var(--font-serif)',
+    fontSize: 16,
+    fontWeight: 500,
+    color: 'var(--color-text)',
+    marginBottom: 16,
+  }
+
   return (
     <div className='space-y-6 max-w-6xl mx-auto'>
       <div>
-        <h1 className='font-serif text-[26px] font-bold text-[#2D1B5E]'>
+        <h1
+          className='font-serif text-[26px] font-medium'
+          style={{ color: 'var(--color-text)' }}
+        >
           Analytics
         </h1>
-        <p className='text-[13px] text-[#8470A8]'>
+        <p
+          className='text-[13px]'
+          style={{ color: 'var(--color-primary-muted)' }}
+        >
           Overview of your platform performance
         </p>
       </div>
 
       <div className='grid lg:grid-cols-2 gap-6'>
         {/* Monthly Enrollments */}
-        <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-          <h2 className='font-serif text-[16px] font-bold text-[#2D1B5E] mb-4'>
-            Monthly Enrollments
-          </h2>
+        <div style={cardStyle}>
+          <p style={titleStyle}>Monthly Enrollments</p>
           <ResponsiveContainer width='100%' height={220}>
             <LineChart data={enrollmentData}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#F3EEFF' />
-              <XAxis dataKey='month' tick={{ fontSize: 11, fill: '#8470A8' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#8470A8' }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray='3 3' stroke={CHART_GRID} />
+              <XAxis
+                dataKey='month'
+                tick={{ fontSize: 11, fill: CHART_TICK }}
+              />
+              <YAxis tick={{ fontSize: 11, fill: CHART_TICK }} />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 8,
+                  border: `1px solid ${CHART_GRID}`,
+                  fontSize: 12,
+                }}
+              />
               <Line
                 type='monotone'
                 dataKey='enrollments'
-                stroke='#7C5CBF'
+                stroke={CHART_LINE}
                 strokeWidth={2}
-                dot={{ fill: '#7C5CBF' }}
+                dot={{ fill: CHART_LINE }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Monthly Revenue */}
-        <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-          <h2 className='font-serif text-[16px] font-bold text-[#2D1B5E] mb-4'>
-            Monthly Revenue (₹)
-          </h2>
+        <div style={cardStyle}>
+          <p style={titleStyle}>Monthly Revenue (₹)</p>
           <ResponsiveContainer width='100%' height={220}>
             <BarChart data={revenueData}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#F3EEFF' />
-              <XAxis dataKey='month' tick={{ fontSize: 11, fill: '#8470A8' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#8470A8' }} />
+              <CartesianGrid strokeDasharray='3 3' stroke={CHART_GRID} />
+              <XAxis
+                dataKey='month'
+                tick={{ fontSize: 11, fill: CHART_TICK }}
+              />
+              <YAxis tick={{ fontSize: 11, fill: CHART_TICK }} />
               <Tooltip
                 formatter={(v) => `₹${Number(v).toLocaleString('en-IN')}`}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: `1px solid ${CHART_GRID}`,
+                  fontSize: 12,
+                }}
               />
-              <Bar dataKey='revenue' fill='#7C5CBF' radius={[4, 4, 0, 0]} />
+              <Bar dataKey='revenue' fill={CHART_BAR} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Course Popularity */}
-        <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-          <h2 className='font-serif text-[16px] font-bold text-[#2D1B5E] mb-4'>
-            Course Popularity
-          </h2>
+        <div style={cardStyle}>
+          <p style={titleStyle}>Course Popularity</p>
           <ResponsiveContainer width='100%' height={220}>
             <PieChart>
               <Pie
@@ -212,31 +246,44 @@ export default function AdminAnalyticsPage() {
                 }
               >
                 {coursePopularity.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 8,
+                  border: `1px solid ${CHART_GRID}`,
+                  fontSize: 12,
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Student Growth */}
-        <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-          <h2 className='font-serif text-[16px] font-bold text-[#2D1B5E] mb-4'>
-            Student Growth
-          </h2>
+        <div style={cardStyle}>
+          <p style={titleStyle}>Student Growth</p>
           <ResponsiveContainer width='100%' height={220}>
             <LineChart data={studentGrowth}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#F3EEFF' />
-              <XAxis dataKey='month' tick={{ fontSize: 11, fill: '#8470A8' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#8470A8' }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray='3 3' stroke={CHART_GRID} />
+              <XAxis
+                dataKey='month'
+                tick={{ fontSize: 11, fill: CHART_TICK }}
+              />
+              <YAxis tick={{ fontSize: 11, fill: CHART_TICK }} />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 8,
+                  border: `1px solid ${CHART_GRID}`,
+                  fontSize: 12,
+                }}
+              />
               <Line
                 type='monotone'
                 dataKey='count'
-                stroke='#C084F5'
+                stroke={CHART_LINE2}
                 strokeWidth={2}
-                dot={{ fill: '#C084F5' }}
+                dot={{ fill: CHART_LINE2 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -244,27 +291,32 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Completion Rates */}
-      <div className='bg-white border border-purple-100 rounded-2xl p-6'>
-        <h2 className='font-serif text-[16px] font-bold text-[#2D1B5E] mb-4'>
-          Course Completion Rates
-        </h2>
+      <div style={cardStyle}>
+        <p style={titleStyle}>Course Completion Rates</p>
         <ResponsiveContainer width='100%' height={220}>
           <BarChart data={completionRates} layout='vertical'>
-            <CartesianGrid strokeDasharray='3 3' stroke='#F3EEFF' />
+            <CartesianGrid strokeDasharray='3 3' stroke={CHART_GRID} />
             <XAxis
               type='number'
               domain={[0, 100]}
-              tick={{ fontSize: 11, fill: '#8470A8' }}
+              tick={{ fontSize: 11, fill: CHART_TICK }}
               tickFormatter={(v) => `${v}%`}
             />
             <YAxis
               dataKey='name'
               type='category'
-              tick={{ fontSize: 11, fill: '#8470A8' }}
+              tick={{ fontSize: 11, fill: CHART_TICK }}
               width={120}
             />
-            <Tooltip formatter={(v) => `${v}%`} />
-            <Bar dataKey='rate' fill='#A67DD4' radius={[0, 4, 4, 0]} />
+            <Tooltip
+              formatter={(v) => `${v}%`}
+              contentStyle={{
+                borderRadius: 8,
+                border: `1px solid ${CHART_GRID}`,
+                fontSize: 12,
+              }}
+            />
+            <Bar dataKey='rate' fill={CHART_BAR2} radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

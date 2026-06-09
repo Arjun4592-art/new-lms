@@ -10,14 +10,6 @@ interface StatCardProps {
   color?: 'purple' | 'green' | 'blue' | 'orange' | 'primary'
 }
 
-const colorMap = {
-  purple: 'bg-[#F3EEFF] text-[#7C5CBF]',
-  green: 'bg-green-50 text-green-600',
-  blue: 'bg-blue-50 text-blue-600',
-  orange: 'bg-orange-50 text-orange-600',
-  primary: 'bg-[#F3EEFF] text-[#7C5CBF]',
-}
-
 export default function StatCard({
   title,
   value,
@@ -26,30 +18,72 @@ export default function StatCard({
   trend,
   color = 'primary',
 }: StatCardProps) {
+  // Non-brand colors kept as-is; brand colors use CSS variables
+  const iconStyle: React.CSSProperties =
+    color === 'primary' || color === 'purple'
+      ? {
+          backgroundColor: 'var(--color-surface)',
+          color: 'var(--color-primary)',
+        }
+      : color === 'green'
+        ? { backgroundColor: '#F0FDF4', color: '#16A34A' }
+        : color === 'blue'
+          ? { backgroundColor: '#EFF6FF', color: '#2563EB' }
+          : { backgroundColor: '#FFF7ED', color: '#EA580C' } // orange
+
   return (
-    <div className='bg-white border border-purple-100 rounded-2xl p-5'>
+    <div
+      className='rounded-xl p-5'
+      style={{
+        backgroundColor: 'var(--color-bg)',
+        border: '1px solid var(--color-surface-border)',
+      }}
+    >
       <div className='flex items-center justify-between mb-4'>
-        <p className='text-[13px] font-semibold text-[#8470A8]'>{title}</p>
+        <p
+          className='text-[13px] font-semibold'
+          style={{ color: 'var(--color-primary-muted)' }}
+        >
+          {title}
+        </p>
         <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center ${colorMap[color]}`}
+          className='w-9 h-9 rounded-xl flex items-center justify-center'
+          style={iconStyle}
         >
           {icon}
         </div>
       </div>
-      <p className='text-[28px] font-bold text-[#2D1B5E] leading-none mb-1'>
+
+      <p
+        className='text-[28px] font-semibold leading-none mb-1'
+        style={{ color: 'var(--color-text)' }}
+      >
         {value}
       </p>
-      {subtitle && <p className='text-[12px] text-[#8470A8]'>{subtitle}</p>}
+
+      {subtitle && (
+        <p
+          className='text-[12px]'
+          style={{ color: 'var(--color-primary-muted)' }}
+        >
+          {subtitle}
+        </p>
+      )}
+
       {trend && (
         <div className='mt-3 flex items-center gap-1'>
           <span
-            className={`text-[12px] font-semibold ${
-              trend.value >= 0 ? 'text-green-600' : 'text-red-500'
-            }`}
+            className='text-[12px] font-semibold'
+            style={{ color: trend.value >= 0 ? '#16A34A' : '#DC2626' }}
           >
             {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
           </span>
-          <span className='text-[12px] text-[#8470A8]'>{trend.label}</span>
+          <span
+            className='text-[12px]'
+            style={{ color: 'var(--color-primary-muted)' }}
+          >
+            {trend.label}
+          </span>
         </div>
       )}
     </div>
