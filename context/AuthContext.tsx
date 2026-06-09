@@ -38,6 +38,12 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
+// ── Protected paths — inpe bina login ke nahi jaana ──────────────────────
+const PROTECTED_PATHS = ['/dashboard', '/admin', '/profile']
+
+// ── Public paths — inpe logged in user ko redirect karo ──────────────────
+const PUBLIC_PATHS = ['/login', '/signup', '/verify-email', '/forgot-password']
+
 // ── Provider ──────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -68,45 +74,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setFirebaseUser(null)
     router.push('/login')
-    router.refresh() // ← refresh add kiya
+    router.refresh()
   }, [router])
 
   // ── Auth state listener ───────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      const currentPath = window.location.pathname
+
       if (fbUser) {
         setFirebaseUser(fbUser)
         const lmsUser = await loadUser(fbUser)
 
-        const publicPaths = [
-          '/login',
-          '/signup',
-          '/verify-email',
-          '/forgot-password',
-        ]
-        const currentPath = window.location.pathname
-        const isOnPublicPage = publicPaths.some((p) =>
+        // Firebase mein user hai lekin Firestore mein data nahi
+        // (deleted user ya corrupted state) — website pe bhejo
+        if (!lmsUser) {
+          await logOut()
+          setUser(null)
+          setFirebaseUser(null)
+          router.push('/')
+          router.refresh()
+          setLoading(false)
+          return
+        }
+
+        const isOnPublicPage = PUBLIC_PATHS.some((p) =>
           currentPath.startsWith(p),
         )
 
-        if (isOnPublicPage && lmsUser) {
-          if (!fbUser.emailVerified && !lmsUser.emailVerified) {
+        if (isOnPublicPage) {
+          // Email verify nahi hua — verify page pe bhejo
+          if (!lmsUser.emailVerified) {
             if (!currentPath.startsWith('/verify-email')) {
               router.push(
                 `/verify-email?email=${encodeURIComponent(lmsUser.email)}`,
               )
-              router.refresh() // ← refresh add kiya
+              router.refresh()
             }
           } else {
+            // Email verified — dashboard/admin pe bhejo
             const target = lmsUser.role === 'admin' ? '/admin' : '/dashboard'
             router.push(target)
-            router.refresh() // ← refresh add kiya
+            router.refresh()
           }
         }
       } else {
+        // Firebase mein user nahi hai (logout ya deleted)
         setFirebaseUser(null)
         setUser(null)
+
+        // Protected page pe hai toh website homepage pe bhejo
+        const isOnProtectedPage = PROTECTED_PATHS.some((p) =>
+          currentPath.startsWith(p),
+        )
+
+        if (isOnProtectedPage) {
+          router.push('/')
+          router.refresh()
+        }
       }
+
       setLoading(false)
     })
 

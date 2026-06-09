@@ -33,6 +33,11 @@ function VerifyEmailContent() {
     if (!email) router.push('/signup')
   }, [email, router])
 
+  // Auto focus first input on mount
+  useEffect(() => {
+    inputRefs.current[0]?.focus()
+  }, [])
+
   function handleChange(index: number, value: string) {
     if (!/^\d*$/.test(value)) return
     const newOtp = [...otp]
@@ -103,13 +108,13 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className='min-h-screen bg-surface flex items-center justify-center px-4 py-12'>
-      <div className='w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-surface'>
+    <div className='min-h-screen bg-surface flex items-center justify-center px-4 py-8 sm:py-12'>
+      <div className='w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-surface'>
         {/* Icon */}
-        <div className='flex justify-center mb-6'>
-          <div className='w-16 h-16 rounded-full bg-surface flex items-center justify-center'>
+        <div className='flex justify-center mb-5 sm:mb-6'>
+          <div className='w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-surface flex items-center justify-center'>
             <svg
-              className='w-8 h-8 text-primary'
+              className='w-7 h-7 sm:w-8 sm:h-8 text-primary'
               fill='none'
               viewBox='0 0 24 24'
               stroke='currentColor'
@@ -125,32 +130,37 @@ function VerifyEmailContent() {
         </div>
 
         {/* Header */}
-        <div className='text-center mb-8'>
-          <h1 className='text-2xl font-bold text-primary-dark font-serif mb-2'>
+        <div className='text-center mb-6 sm:mb-8'>
+          <h1 className='text-xl sm:text-2xl font-bold text-primary-dark font-serif mb-2'>
             Verify your email
           </h1>
-          <p className='text-primary-muted text-sm'>
+          <p className='text-primary-muted text-xs sm:text-sm'>
             We sent a 6-digit code to
           </p>
-          <p className='text-primary font-medium text-sm mt-1'>{email}</p>
+          <p className='text-primary font-medium text-xs sm:text-sm mt-1 break-all px-2'>
+            {email}
+          </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className='mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm text-center'>
+          <div className='mb-4 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm text-center'>
             {error}
           </div>
         )}
 
         {/* Success */}
         {success && (
-          <div className='mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-600 text-sm text-center'>
+          <div className='mb-4 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-green-50 border border-green-200 text-green-600 text-xs sm:text-sm text-center'>
             {success}
           </div>
         )}
 
         {/* OTP Inputs */}
-        <div className='flex gap-3 justify-center mb-6' onPaste={handlePaste}>
+        <div
+          className='flex gap-2 sm:gap-3 justify-center mb-5 sm:mb-6'
+          onPaste={handlePaste}
+        >
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -164,7 +174,7 @@ function VerifyEmailContent() {
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               disabled={loading}
-              className='w-12 h-12 text-center text-xl font-bold rounded-lg border-2 border-surface text-primary-dark focus:outline-none focus:border-primary transition-colors disabled:opacity-50'
+              className='w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-bold rounded-lg border-2 border-surface text-primary-dark focus:outline-none focus:border-primary transition-colors disabled:opacity-50'
             />
           ))}
         </div>
@@ -173,13 +183,13 @@ function VerifyEmailContent() {
         <button
           onClick={() => handleVerify()}
           disabled={loading || otp.some((d) => d === '')}
-          className='w-full py-3 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed'
+          className='w-full py-2.5 sm:py-3 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed'
         >
           {loading ? 'Verifying...' : 'Verify Email'}
         </button>
 
         {/* Resend */}
-        <div className='text-center mt-6'>
+        <div className='text-center mt-5 sm:mt-6'>
           {canResend ? (
             <button
               onClick={handleResend}
@@ -189,7 +199,7 @@ function VerifyEmailContent() {
               {resendLoading ? 'Sending...' : 'Resend code'}
             </button>
           ) : (
-            <p className='text-primary-muted text-sm'>
+            <p className='text-primary-muted text-xs sm:text-sm'>
               Resend code in{' '}
               <span className='text-primary font-medium'>{countdown}s</span>
             </p>
@@ -197,7 +207,7 @@ function VerifyEmailContent() {
         </div>
 
         {/* Back */}
-        <div className='text-center mt-4'>
+        <div className='text-center mt-3 sm:mt-4'>
           <Link
             href='/signup'
             className='text-primary-muted text-xs hover:text-primary transition-colors'
@@ -215,7 +225,7 @@ export default function VerifyEmailPage() {
     <Suspense
       fallback={
         <div className='min-h-screen bg-surface flex items-center justify-center'>
-          <div className='w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin' />
+          <div className='w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-primary border-t-transparent animate-spin' />
         </div>
       }
     >

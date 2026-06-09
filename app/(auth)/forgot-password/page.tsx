@@ -32,18 +32,18 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] flex items-center justify-center px-4 py-12'>
-      <div className='w-full max-w-md'>
+    <div className='min-h-screen bg-gradient-to-br from-[#F9F5FF] via-[#F3EEFF] to-[#FDF4FF] flex items-center justify-center px-4 py-8 sm:py-12'>
+      <div className='w-full max-w-sm sm:max-w-md'>
         {/* Logo */}
-        <div className='text-center mb-8'>
+        <div className='text-center mb-6 sm:mb-8'>
           <Link
             href='/'
             className='inline-flex flex-col items-center no-underline'
           >
-            <div className='w-12 h-12 rounded-full bg-gradient-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center mb-3'>
+            <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#7C5CBF] to-[#C084F5] flex items-center justify-center mb-2 sm:mb-3'>
               <svg
-                width='22'
-                height='22'
+                width='20'
+                height='20'
                 viewBox='0 0 24 24'
                 fill='none'
                 stroke='white'
@@ -56,20 +56,23 @@ export default function ForgotPasswordPage() {
                 <path d='M19 17L19.5 18.5L21 19L19.5 19.5L19 21L18.5 19.5L17 19L18.5 18.5L19 17Z' />
               </svg>
             </div>
-            <p className='font-serif text-[20px] font-bold text-[#2D1B5E]'>
+            <p className='font-serif text-lg sm:text-[20px] font-bold text-[#2D1B5E]'>
               Pain to Power
             </p>
-            <p className='text-[13px] text-[#8470A8]'>Reset your password</p>
+            <p className='text-xs sm:text-[13px] text-[#8470A8]'>
+              Reset your password
+            </p>
           </Link>
         </div>
 
-        <div className='bg-white rounded-3xl shadow-xl shadow-purple-100/60 border border-purple-100 p-8'>
+        {/* Card */}
+        <div className='bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-purple-100/60 border border-purple-100 p-6 sm:p-8'>
           {sent ? (
-            <div className='text-center py-4'>
-              <div className='w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <div className='text-center py-2 sm:py-4'>
+              <div className='w-14 h-14 sm:w-16 sm:h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4'>
                 <svg
-                  width='28'
-                  height='28'
+                  width='24'
+                  height='24'
                   viewBox='0 0 24 24'
                   fill='none'
                   stroke='#16a34a'
@@ -80,38 +83,39 @@ export default function ForgotPasswordPage() {
                   <polyline points='20 6 9 17 4 12' />
                 </svg>
               </div>
-              <h2 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-2'>
+              <h2 className='font-serif text-lg sm:text-[20px] font-bold text-[#2D1B5E] mb-2'>
                 Check your email
               </h2>
-              <p className='text-[14px] text-[#8470A8] mb-6'>
-                We sent a password reset link to <strong>{email}</strong>. Check
-                your inbox and follow the instructions.
+              <p className='text-xs sm:text-[14px] text-[#8470A8] mb-6'>
+                We sent a password reset link to{' '}
+                <strong className='break-all'>{email}</strong>. Check your inbox
+                and follow the instructions.
               </p>
               <Link
                 href='/login'
-                className='block w-full py-3 bg-[#7C5CBF] text-white font-bold rounded-xl text-center no-underline hover:bg-[#6A4DAD] transition-colors'
+                className='block w-full py-2.5 sm:py-3 bg-[#7C5CBF] text-white font-bold rounded-xl text-center text-sm no-underline hover:bg-[#6A4DAD] transition-colors'
               >
                 Back to Sign In
               </Link>
             </div>
           ) : (
             <>
-              <h2 className='font-serif text-[20px] font-bold text-[#2D1B5E] mb-2'>
+              <h2 className='font-serif text-lg sm:text-[20px] font-bold text-[#2D1B5E] mb-1.5 sm:mb-2'>
                 Forgot your password?
               </h2>
-              <p className='text-[13.5px] text-[#8470A8] mb-6'>
+              <p className='text-xs sm:text-[13.5px] text-[#8470A8] mb-5 sm:mb-6'>
                 Enter your email and we'll send you a reset link.
               </p>
 
               {error && (
-                <div className='mb-5 bg-red-50 border border-red-200 text-red-600 text-[13px] px-4 py-3 rounded-xl'>
+                <div className='mb-4 sm:mb-5 bg-red-50 border border-red-200 text-red-600 text-xs sm:text-[13px] px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl'>
                   {error}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className='space-y-4'>
                 <div>
-                  <label className='block text-[13px] font-semibold text-[#4A3570] mb-1.5'>
+                  <label className='block text-xs sm:text-[13px] font-semibold text-[#4A3570] mb-1.5'>
                     Email Address
                   </label>
                   <input
@@ -120,18 +124,18 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder='you@example.com'
-                    className='w-full px-4 py-3 border border-purple-200 rounded-xl text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
+                    className='w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-purple-200 rounded-xl text-sm sm:text-[14px] text-[#2D1B5E] outline-none focus:border-[#7C5CBF] focus:ring-2 focus:ring-[#7C5CBF]/15 transition-all'
                   />
                 </div>
 
                 <button
                   type='submit'
                   disabled={loading}
-                  className='w-full py-3.5 bg-[#7C5CBF] hover:bg-[#6A4DAD] text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-200 disabled:opacity-50 flex items-center justify-center gap-2'
+                  className='w-full py-3 sm:py-3.5 bg-[#7C5CBF] hover:bg-[#6A4DAD] text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-purple-200 disabled:opacity-50 flex items-center justify-center gap-2'
                 >
                   {loading && (
                     <svg
-                      className='animate-spin w-5 h-5'
+                      className='animate-spin w-4 h-4 sm:w-5 sm:h-5'
                       viewBox='0 0 24 24'
                       fill='none'
                     >
@@ -154,7 +158,7 @@ export default function ForgotPasswordPage() {
                 </button>
               </form>
 
-              <p className='mt-5 text-center text-[13px] text-[#8470A8]'>
+              <p className='mt-4 sm:mt-5 text-center text-xs sm:text-[13px] text-[#8470A8]'>
                 Remember your password?{' '}
                 <Link
                   href='/login'
