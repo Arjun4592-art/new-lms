@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase-admin'
 
+// Middleware runs in the Edge runtime in many Next.js configs.
+// Keep it explicitly on the Node.js runtime so firebase-admin can use Node core modules.
+export const config = {
+  runtime: 'nodejs',
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+}
+
+// NOTE: only one `config` export is allowed in this file.
+// (removed the duplicate config export that was previously at the bottom)
+
 const AUTH_PATHS = [
   '/login',
   '/signup',
@@ -49,8 +59,4 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 }
