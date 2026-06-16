@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { ShieldIcon } from '@/components/ui/Icons'
 
@@ -47,6 +48,15 @@ export default function EnrollModal({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
 
   const displayPrice = (price / 100).toLocaleString('en-IN', {
     style: 'currency',
@@ -59,7 +69,6 @@ export default function EnrollModal({
     setError('')
 
     try {
-      // Razorpay script load karo
       const loaded = await loadRazorpayScript()
       if (!loaded) {
         setError('Payment gateway load nahi hua. Please try again.')
@@ -67,7 +76,6 @@ export default function EnrollModal({
         return
       }
 
-      // Order create karo
       const orderRes = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +90,6 @@ export default function EnrollModal({
         return
       }
 
-      // Razorpay checkout open karo
       const options = {
         key: orderData.key,
         amount: orderData.amount,
@@ -91,7 +98,6 @@ export default function EnrollModal({
         description: courseTitle,
         order_id: orderData.orderId,
         handler: async function (response: any) {
-          // Payment successful — verify karo
           const verifyRes = await fetch('/api/payment/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -138,11 +144,10 @@ export default function EnrollModal({
     }
   }
 
-  return (
-    // ── Backdrop ──
+  const modalContent = (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center px-4'
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      className='fixed inset-0 z-[9999] flex items-center justify-center px-4'
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -152,14 +157,21 @@ export default function EnrollModal({
           border: '1px solid var(--color-surface-border)',
         }}
       >
-        {/* Close button */}
+        {/* Close */}
         <button
           onClick={onClose}
-          className='absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors'
+          className='absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm'
           style={{
             backgroundColor: 'var(--color-surface)',
             color: 'var(--color-primary-muted)',
           }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor =
+              'var(--color-surface-hover)')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = 'var(--color-surface)')
+          }
         >
           ✕
         </button>
@@ -290,4 +302,7 @@ export default function EnrollModal({
       </div>
     </div>
   )
+
+  if (!mounted) return null
+  return createPortal(modalContent, document.body)
 }
