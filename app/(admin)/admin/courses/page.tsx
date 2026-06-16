@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   collection,
@@ -18,6 +18,8 @@ export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const tableRef = useRef<HTMLDivElement>(null)
 
   async function fetchCourses() {
     try {
@@ -35,6 +37,22 @@ export default function AdminCoursesPage() {
   useEffect(() => {
     fetchCourses()
   }, [])
+
+  // Animate header on mount
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    requestAnimationFrame(() => el.classList.add('ac-header-in'))
+  }, [])
+
+  // Animate rows after courses load
+  useEffect(() => {
+    if (loading || !tableRef.current) return
+    const rows = tableRef.current.querySelectorAll('.ac-row')
+    rows.forEach((row, i) => {
+      setTimeout(() => row.classList.add('ac-row-in'), i * 60)
+    })
+  }, [loading, courses])
 
   async function handleDelete(id: string) {
     if (!confirm('Are you sure you want to delete this course?')) return
@@ -82,23 +100,11 @@ export default function AdminCoursesPage() {
           font-size: 11px; font-weight: 600; text-transform: uppercase;
           letter-spacing: 0.08em; color: var(--color-primary-muted);
         }
-        .ac-row {
-          padding: 14px 20px;
-          display: grid; grid-template-columns: 5fr 2fr 2fr 1fr 2fr; gap: 16px;
-          align-items: center;
-          border-bottom: 1px solid var(--color-surface-border);
-          transition: background-color 0.15s;
-        }
-        .ac-row:last-child { border-bottom: none; }
-        .ac-row:hover { background-color: var(--color-surface); }
 
         /* Mobile: stack */
         @media (max-width: 640px) {
           .ac-table-header { display: none; }
-          .ac-row {
-            grid-template-columns: 1fr;
-            gap: 10px; padding: 14px 16px;
-          }
+          .ac-row { grid-template-columns: 1fr; gap: 10px; padding: 14px 16px; }
         }
 
         .ac-edit-btn {
@@ -145,11 +151,33 @@ export default function AdminCoursesPage() {
           font-size: 11px; font-weight: 600;
           background-color: #FFF7ED; color: #EA580C;
         }
+
+        /* Animations */
+        .ac-header {
+          opacity: 0; transform: translateY(16px);
+          transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .ac-header.ac-header-in { opacity: 1; transform: translateY(0); }
+
+        .ac-row {
+          padding: 14px 20px;
+          display: grid; grid-template-columns: 5fr 2fr 2fr 1fr 2fr; gap: 16px;
+          align-items: center;
+          border-bottom: 1px solid var(--color-surface-border);
+          opacity: 0; transform: translateX(-10px);
+          transition: opacity 0.4s ease, transform 0.4s ease, background-color 0.15s;
+        }
+        .ac-row.ac-row-in { opacity: 1; transform: translateX(0); }
+        .ac-row:last-child { border-bottom: none; }
+        .ac-row:hover { background-color: var(--color-surface); }
       `}</style>
 
       <div className='space-y-6 max-w-6xl mx-auto'>
         {/* Header */}
-        <div className='flex items-center justify-between gap-4 flex-wrap'>
+        <div
+          ref={headerRef}
+          className='ac-header flex items-center justify-between gap-4 flex-wrap'
+        >
           <div>
             <h1
               className='font-serif text-[26px] font-medium'
@@ -170,7 +198,7 @@ export default function AdminCoursesPage() {
         </div>
 
         {/* Table */}
-        <div className='ac-table'>
+        <div className='ac-table' ref={tableRef}>
           <div className='ac-table-header'>
             <span className='ac-col-label'>Course</span>
             <span className='ac-col-label'>Price</span>

@@ -267,6 +267,8 @@ export default function CourseDetailPage() {
           <div data-anim data-anim-delay='3'>
             <EnrollButton
               courseId={courseId}
+              courseTitle={course.title}
+              price={course.price}
               isFree={course.isFree}
               isEnrolled={!!enrollment}
             />

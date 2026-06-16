@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase/config'
 import {
   MailIcon,
   InstagramIcon,
@@ -47,12 +49,13 @@ export default function ContactPage() {
   })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [programmes, setProgrammes] = useState<string[]>([])
 
   const heroRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLDivElement>(null)
   const infoRef = useRef<HTMLDivElement>(null)
 
-  function animateEls(ref: React.RefObject<HTMLDivElement | null>) {
+  function setupObserver(ref: React.RefObject<HTMLDivElement | null>) {
     const els = ref.current?.querySelectorAll('[data-anim]')
     if (!els?.length) return
     const observer = new IntersectionObserver(
@@ -69,13 +72,33 @@ export default function ContactPage() {
     return () => observer.disconnect()
   }
 
+  // Hero + info — once on mount
   useEffect(() => {
-    const cleanups = [
-      animateEls(heroRef),
-      animateEls(formRef),
-      animateEls(infoRef),
-    ]
+    const cleanups = [setupObserver(heroRef), setupObserver(infoRef)]
     return () => cleanups.forEach((fn) => fn?.())
+  }, [])
+
+  // Form — re-run when submitted changes so fresh elements get observed
+  useEffect(() => {
+    const cleanup = setupObserver(formRef)
+    return () => cleanup?.()
+  }, [submitted])
+
+  useEffect(() => {
+    const fetchProgrammes = async () => {
+      try {
+        const q = query(collection(db, 'courses'), orderBy('createdAt'))
+        const snapshot = await getDocs(q)
+        setProgrammes(
+          snapshot.docs
+            .filter((doc) => doc.data().published === true)
+            .map((doc) => doc.data().title as string),
+        )
+      } catch (err) {
+        console.error('Courses fetch error:', err)
+      }
+    }
+    fetchProgrammes()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -87,10 +110,8 @@ export default function ContactPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data?.error ?? 'Failed to submit')
-      }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? 'Failed to submit')
       setSubmitted(true)
     } catch (err) {
       console.error('Contact form submit error:', err)
@@ -102,7 +123,6 @@ export default function ContactPage() {
   return (
     <>
       <style>{`
-        /* ── Animations ── */
         [data-anim] {
           opacity: 0; transform: translateY(20px);
           transition: opacity 0.6s ease, transform 0.6s ease;
@@ -114,7 +134,6 @@ export default function ContactPage() {
         [data-anim][data-delay="4"] { transition-delay: 0.4s; }
         [data-anim][data-delay="5"] { transition-delay: 0.5s; }
 
-        /* ── Hero ── */
         .contact-hero {
           background-color: var(--color-surface);
           border-bottom: 1px solid var(--color-surface-border);
@@ -128,11 +147,7 @@ export default function ContactPage() {
           border: 1px solid var(--color-surface-border);
           padding: 5px 14px; border-radius: 9999px; margin-bottom: 20px;
         }
-
-        /* ── Sections ── */
         .contact-main { background-color: var(--color-bg); }
-
-        /* ── Form fields ── */
         .contact-label {
           display: block; font-size: 13px; font-weight: 600;
           color: var(--color-primary-mid); margin-bottom: 6px;
@@ -150,8 +165,6 @@ export default function ContactPage() {
           border-color: var(--color-primary);
           box-shadow: 0 0 0 3px rgba(122,106,88,0.12);
         }
-
-        /* ── Submit btn ── */
         .contact-submit {
           width: 100%; padding: 14px;
           background-color: var(--color-primary);
@@ -165,8 +178,6 @@ export default function ContactPage() {
         }
         .contact-submit:hover { background-color: var(--color-primary-hover); }
         .contact-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* ── Contact link items ── */
         .contact-link-item {
           display: flex; align-items: center; gap: 16px;
           padding: 14px 16px;
@@ -194,16 +205,12 @@ export default function ContactPage() {
         }
         .contact-link-value {
           font-size: 14px; font-weight: 500;
-          color: var(--color-text);
-          transition: color 0.2s;
+          color: var(--color-text); transition: color 0.2s;
         }
         .contact-link-item:hover .contact-link-value { color: var(--color-primary); }
-
-        /* ── Free call card ── */
         .free-call-card {
           background-color: var(--color-primary-dark);
           border-radius: 12px; padding: 28px;
-          color: var(--color-primary-light);
         }
         .free-call-btn {
           display: inline-flex; align-items: center; gap: 8px;
@@ -214,8 +221,6 @@ export default function ContactPage() {
           text-decoration: none; transition: background-color 0.2s;
         }
         .free-call-btn:hover { background-color: var(--color-surface); }
-
-        /* ── Success card ── */
         .success-card {
           background-color: var(--color-surface);
           border: 1px solid var(--color-surface-border);
@@ -264,7 +269,7 @@ export default function ContactPage() {
       {/* ── Main ── */}
       <section className='contact-main py-16 px-4 sm:px-6'>
         <div className='max-w-5xl mx-auto grid lg:grid-cols-2 gap-12'>
-          {/* Form */}
+          {/* ── Form column ── */}
           <div ref={formRef}>
             <h2
               data-anim
@@ -276,7 +281,8 @@ export default function ContactPage() {
             </h2>
 
             {submitted ? (
-              <div data-anim data-delay='1' className='success-card'>
+              /* No data-anim on success card — seedha visible */
+              <div className='success-card'>
                 <div className='text-[48px] mb-4'>🌿</div>
                 <h3
                   className='font-serif text-[22px] font-medium mb-2'
@@ -336,14 +342,16 @@ export default function ContactPage() {
                     }
                     className='contact-input cursor-pointer'
                   >
-                    <option value=''>Select a programme…</option>
-                    <option>Pain to Power Masterclass</option>
-                    <option>5-Day WhatsApp Challenge</option>
-                    <option>4-Week Emotional Healing Programme</option>
-                    <option>Self-Boundaries &amp; Letting Go Course</option>
-                    <option>Recorded Healing Workshops</option>
-                    <option>Free Exploration Call</option>
-                    <option>General Enquiry</option>
+                    <option value=''>
+                      {programmes.length === 0
+                        ? 'Loading…'
+                        : 'Select a programme…'}
+                    </option>
+                    {programmes.map((title) => (
+                      <option key={title} value={title}>
+                        {title}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -398,7 +406,7 @@ export default function ContactPage() {
             )}
           </div>
 
-          {/* Contact info */}
+          {/* ── Contact info column ── */}
           <div ref={infoRef}>
             <h2
               data-anim
@@ -429,7 +437,6 @@ export default function ContactPage() {
               ))}
             </div>
 
-            {/* Free call card */}
             <div data-anim data-delay='5' className='free-call-card'>
               <div className='text-[32px] mb-3'>☎️</div>
               <h3

@@ -16,36 +16,53 @@ export default function EditCoursePage({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchCourse() {
       const snap = await getDoc(doc(db, 'courses', id))
-      if (snap.exists()) {
-        setCourse({ id: snap.id, ...snap.data() } as Course)
-      }
+      if (snap.exists()) setCourse({ id: snap.id, ...snap.data() } as Course)
       setLoading(false)
     }
-    fetch()
+    fetchCourse()
   }, [id])
 
   if (loading) {
     return (
       <div className='space-y-4 animate-pulse max-w-3xl mx-auto'>
-        <div className='h-10 w-48 bg-purple-100 rounded' />
-        <div className='h-96 bg-purple-100 rounded-2xl' />
+        <div
+          className='h-10 w-48 rounded'
+          style={{ backgroundColor: 'var(--color-surface)' }}
+        />
+        <div
+          className='h-96 rounded-xl'
+          style={{ backgroundColor: 'var(--color-surface)' }}
+        />
       </div>
     )
   }
 
   if (!course) {
-    return <p className='text-[#8470A8] text-center py-12'>Course not found.</p>
+    return (
+      <p
+        className='text-center py-12'
+        style={{ color: 'var(--color-primary-muted)' }}
+      >
+        Course not found.
+      </p>
+    )
   }
 
   return (
     <div className='space-y-6'>
       <div>
-        <p className='text-[12px] text-[#A67DD4] font-semibold uppercase tracking-widest mb-1'>
+        <p
+          className='text-[11px] font-semibold uppercase tracking-widest mb-1'
+          style={{ color: 'var(--color-primary-muted)' }}
+        >
           Admin · Courses
         </p>
-        <h1 className='font-serif text-[26px] font-bold text-[#2D1B5E]'>
+        <h1
+          className='font-serif text-[26px] font-medium'
+          style={{ color: 'var(--color-text)' }}
+        >
           Edit Course
         </h1>
       </div>

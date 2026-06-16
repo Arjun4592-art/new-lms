@@ -1,5 +1,5 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import * as dotenv from 'dotenv'
 
 dotenv.config({ path: '.env.local' })
@@ -57,13 +57,13 @@ const courses = [
   // ── 2. 4-Week Emotional Healing Programme ─────────────────────
   {
     id: '4-week-emotional-transformational',
-    title: '4-Week Emotional  Programme',
+    title: '4-Week Emotional Tranformational Programme',
     description:
       'A 4-session deep transformation journey — from awareness to rising into your personal power. Heal your past, rebuild self-worth, and step into the strongest version of you.',
     thumbnail: '',
     emoji: '🌸',
     color: '#C084FC',
-    price: 0,
+    price: 49900, // ₹499
     isFree: false,
     instructorId: 'masuma',
     instructorName: 'Masuma',
@@ -101,7 +101,7 @@ const courses = [
     thumbnail: '',
     emoji: '🔮',
     color: '#6D28D9',
-    price: 0,
+    price: 99900, // ₹999
     isFree: false,
     instructorId: 'masuma',
     instructorName: 'Masuma',
@@ -145,19 +145,19 @@ const sections4Week = [
   },
   {
     id: 'sec-4w-2',
-    courseId: '4-week-emotional-healing',
+    courseId: '4-week-emotional-transformational',
     title: 'Session 2 — Release: Letting Go of the Past',
     order: 2,
   },
   {
     id: 'sec-4w-3',
-    courseId: '4-week-emotional-healing',
+    courseId: '4-week-emotional-transformational',
     title: 'Session 3 — Re-Set: Rebuilding Self-Worth',
     order: 3,
   },
   {
     id: 'sec-4w-4',
-    courseId: '4-week-emotional-healing',
+    courseId: '4-week-emotional-transformational',
     title: 'Session 4 — Rise: Stepping into Personal Power',
     order: 4,
   },
@@ -216,22 +216,25 @@ const sections8Week = [
 ]
 
 async function seed() {
-  // Add courses
-
+  console.log('🌱 Seeding courses...')
   for (const course of courses) {
     await db.collection('courses').doc(course.id).set(course)
+    console.log(`✅ Course: ${course.title}`)
   }
 
-  // Add 4-week sections
+  console.log('🌱 Seeding 4-week sections...')
   for (const section of sections4Week) {
     await db.collection('sections').doc(section.id).set(section)
+    console.log(`✅ Section: ${section.title}`)
   }
 
-  // Add 8-week sections
+  console.log('🌱 Seeding 8-week sections...')
   for (const section of sections8Week) {
     await db.collection('sections').doc(section.id).set(section)
+    console.log(`✅ Section: ${section.title}`)
   }
 
+  console.log('🎉 Seeding complete!')
   process.exit(0)
 }
 

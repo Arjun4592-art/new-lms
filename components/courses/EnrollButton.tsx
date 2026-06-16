@@ -12,9 +12,12 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
+import EnrollModal from '@/components/courses/EnrollModal'
 
 interface EnrollButtonProps {
   courseId: string
+  courseTitle: string
+  price: number
   isFree: boolean
   isEnrolled: boolean
 }
@@ -28,6 +31,8 @@ const TRUST_ITEMS = [
 
 export default function EnrollButton({
   courseId,
+  courseTitle,
+  price,
   isFree,
   isEnrolled,
 }: EnrollButtonProps) {
@@ -35,8 +40,10 @@ export default function EnrollButton({
   const { user } = useAuthContext()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
 
-  async function handleEnroll() {
+  // ── Free course enroll ────────────────────────────────────────
+  async function handleFreeEnroll() {
     if (!user) return router.push(`/login?from=/courses/${courseId}`)
     setLoading(true)
     setError('')
@@ -65,6 +72,16 @@ export default function EnrollButton({
     }
   }
 
+  // ── Enroll button click ───────────────────────────────────────
+  function handleEnrollClick() {
+    if (!user) return router.push(`/login?from=/courses/${courseId}`)
+    if (isFree) {
+      handleFreeEnroll()
+    } else {
+      setShowModal(true)
+    }
+  }
+
   const cardStyle = {
     backgroundColor: 'var(--color-bg)',
     border: '1px solid var(--color-surface-border)',
@@ -76,7 +93,7 @@ export default function EnrollButton({
   const outlineBtnClass =
     'w-full mt-3 py-3 font-semibold rounded-xl transition-colors border-2'
 
-  // ── Enrolled state ──
+  // ── Enrolled ──────────────────────────────────────────────────
   if (isEnrolled) {
     return (
       <div className='rounded-xl p-6 sticky top-24' style={cardStyle}>
@@ -130,16 +147,10 @@ export default function EnrollButton({
     )
   }
 
-  // ── Not logged in ──
+  // ── Not logged in ─────────────────────────────────────────────
   if (!user) {
     return (
       <div className='rounded-xl p-6 sticky top-24' style={cardStyle}>
-        <p
-          className='text-[32px] font-semibold mb-4'
-          style={{ color: 'var(--color-text)' }}
-        >
-          Free
-        </p>
         <button
           onClick={() => router.push(`/login?from=/courses/${courseId}`)}
           className={primaryBtnClass}
@@ -175,101 +186,124 @@ export default function EnrollButton({
         >
           Book a Free Call First
         </button>
-        <TrustList />
+        <TrustList isFree={isFree} />
       </div>
     )
   }
 
-  // ── Logged in, not enrolled ──
+  // ── Logged in, not enrolled ───────────────────────────────────
   return (
-    <div className='rounded-xl p-6 sticky top-24' style={cardStyle}>
-      <p
-        className='text-[32px] font-semibold mb-4'
-        style={{ color: 'var(--color-text)' }}
-      >
-        Free
-      </p>
-
-      {error && (
-        <div
-          className='mb-4 text-[13px] px-4 py-3 rounded-xl'
-          style={{
-            backgroundColor: '#FEF2F2',
-            border: '1px solid #FECACA',
-            color: '#DC2626',
-          }}
-        >
-          {error}
-        </div>
+    <>
+      {showModal && user && (
+        <EnrollModal
+          courseId={courseId}
+          courseTitle={courseTitle}
+          price={price}
+          userId={user.uid}
+          onClose={() => setShowModal(false)}
+        />
       )}
 
-      <button
-        onClick={handleEnroll}
-        disabled={loading}
-        className={`${primaryBtnClass} disabled:opacity-60`}
-        style={{
-          backgroundColor: 'var(--color-primary)',
-          color: 'var(--color-bg)',
-          boxShadow: '0 8px 24px rgba(122,106,88,0.25)',
-        }}
-        onMouseEnter={(e) =>
-          !loading &&
-          (e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)')
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = 'var(--color-primary)')
-        }
-      >
-        {loading ? (
-          <svg className='animate-spin w-5 h-5' viewBox='0 0 24 24' fill='none'>
-            <circle
-              cx='12'
-              cy='12'
-              r='10'
-              stroke='currentColor'
-              strokeWidth='4'
-              className='opacity-25'
-            />
-            <path
-              fill='currentColor'
-              d='M4 12a8 8 0 018-8v8H4z'
-              className='opacity-75'
-            />
-          </svg>
-        ) : (
-          <>
-            Enroll for Free <ArrowRightIcon size={18} />
-          </>
+      <div className='rounded-xl p-6 sticky top-24' style={cardStyle}>
+        {error && (
+          <div
+            className='mb-4 text-[13px] px-4 py-3 rounded-xl'
+            style={{
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              color: '#DC2626',
+            }}
+          >
+            {error}
+          </div>
         )}
-      </button>
 
-      <button
-        onClick={() => router.push('/contact')}
-        className={outlineBtnClass}
-        style={{
-          borderColor: 'var(--color-primary)',
-          color: 'var(--color-primary)',
-          backgroundColor: 'transparent',
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = 'var(--color-surface)')
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = 'transparent')
-        }
-      >
-        Book a Free Call First
-      </button>
+        <button
+          onClick={handleEnrollClick}
+          disabled={loading}
+          className={`${primaryBtnClass} disabled:opacity-60`}
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-bg)',
+            boxShadow: '0 8px 24px rgba(122,106,88,0.25)',
+          }}
+          onMouseEnter={(e) =>
+            !loading &&
+            (e.currentTarget.style.backgroundColor =
+              'var(--color-primary-hover)')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = 'var(--color-primary)')
+          }
+        >
+          {loading ? (
+            <svg
+              className='animate-spin w-5 h-5'
+              viewBox='0 0 24 24'
+              fill='none'
+            >
+              <circle
+                cx='12'
+                cy='12'
+                r='10'
+                stroke='currentColor'
+                strokeWidth='4'
+                className='opacity-25'
+              />
+              <path
+                fill='currentColor'
+                d='M4 12a8 8 0 018-8v8H4z'
+                className='opacity-75'
+              />
+            </svg>
+          ) : isFree ? (
+            <>
+              Enroll for Free <ArrowRightIcon size={18} />
+            </>
+          ) : (
+            <>
+              Enroll Now <ArrowRightIcon size={18} />
+            </>
+          )}
+        </button>
 
-      <TrustList />
-    </div>
+        <button
+          onClick={() => router.push('/contact')}
+          className={outlineBtnClass}
+          style={{
+            borderColor: 'var(--color-primary)',
+            color: 'var(--color-primary)',
+            backgroundColor: 'transparent',
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = 'var(--color-surface)')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = 'transparent')
+          }
+        >
+          Book a Free Call First
+        </button>
+
+        <TrustList isFree={isFree} />
+      </div>
+    </>
   )
 }
 
-function TrustList() {
+function TrustList({ isFree }: { isFree: boolean }) {
+  const items = isFree
+    ? TRUST_ITEMS
+    : [
+        'Safe, judgment-free space',
+        'Open to all individuals',
+        'Instalment options available',
+        'Secure payment via Razorpay',
+      ]
+
   return (
     <div className='mt-5 space-y-2'>
-      {TRUST_ITEMS.map((item) => (
+      {items.map((item) => (
         <div
           key={item}
           className='flex items-center gap-2 text-[13px] font-light'

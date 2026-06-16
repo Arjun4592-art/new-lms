@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   doc,
@@ -8,6 +8,9 @@ import {
   addDoc,
   collection,
   serverTimestamp,
+  getDocs,
+  query,
+  where,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 
@@ -31,9 +34,18 @@ interface Props {
   sessionId?: string
 }
 
+interface CourseOption {
+  id: string
+  title: string
+  emoji: string
+}
+
 export default function SessionForm({ initial, sessionId }: Props) {
   const router = useRouter()
   const isEditing = !!sessionId
+
+  const [courses, setCourses] = useState<CourseOption[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(false)
 
   const [form, setForm] = useState({
     title: initial?.title ?? '',
@@ -51,6 +63,29 @@ export default function SessionForm({ initial, sessionId }: Props) {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function fetchCourses() {
+      setCoursesLoading(true)
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'courses'), where('published', '==', true)),
+        )
+        setCourses(
+          snap.docs.map((d) => ({
+            id: d.id,
+            title: d.data().title as string,
+            emoji: d.data().emoji as string,
+          })),
+        )
+      } catch (err) {
+        console.error('Failed to fetch courses:', err)
+      } finally {
+        setCoursesLoading(false)
+      }
+    }
+    fetchCourses()
+  }, [])
 
   function handleChange(
     e: React.ChangeEvent<
@@ -101,287 +136,245 @@ export default function SessionForm({ initial, sessionId }: Props) {
     }
   }
 
+  const inputClass =
+    'w-full px-4 py-[11px] border border-surface-border rounded-[10px] text-[14px] text-primary-dark bg-[#f5f0e8] font-sans outline-none transition-all duration-200 placeholder:text-primary-muted focus:border-primary focus:ring-2 focus:ring-[rgba(122,106,88,0.12)]'
+
+  const labelClass = 'block text-[13px] font-semibold text-primary-mid mb-1.5'
+
+  const cardClass =
+    'bg-[#f5f0e8] border border-surface-border rounded-xl p-6 space-y-5'
+
   return (
-    <>
-      <style>{`
-        .sf-card {
-          background-color: var(--color-bg);
-          border: 1px solid var(--color-surface-border);
-          border-radius: 12px; padding: 24px;
-        }
-        .sf-card-title {
-          font-family: var(--font-serif);
-          font-size: 17px; font-weight: 500;
-          color: var(--color-text); margin-bottom: 18px;
-        }
-        .sf-label {
-          display: block; font-size: 13px; font-weight: 600;
-          color: var(--color-primary-mid); margin-bottom: 6px;
-        }
-        .sf-input {
-          width: 100%; padding: 11px 16px;
-          border: 1px solid var(--color-surface-border);
-          border-radius: 10px; font-size: 14px;
-          color: var(--color-text);
-          background-color: var(--color-bg);
-          font-family: var(--font-sans);
-          outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .sf-input:focus {
-          border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px rgba(122,106,88,0.12);
-        }
-        .sf-input::placeholder { color: var(--color-primary-muted); }
-        .sf-checkbox-label {
-          display: flex; align-items: center; gap: 10px; cursor: pointer;
-        }
-        .sf-checkbox {
-          width: 16px; height: 16px;
-          accent-color: var(--color-primary); cursor: pointer; flex-shrink: 0;
-        }
-        .sf-submit-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 12px 28px; border-radius: 10px;
-          font-size: 14px; font-weight: 600; border: none; cursor: pointer;
-          background-color: var(--color-primary);
-          color: var(--color-bg);
-          font-family: var(--font-sans);
-          transition: background-color 0.2s;
-          box-shadow: 0 4px 14px rgba(122,106,88,0.22);
-        }
-        .sf-submit-btn:hover:not(:disabled) { background-color: var(--color-primary-hover); }
-        .sf-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .sf-cancel-btn {
-          padding: 12px 22px; border-radius: 10px;
-          font-size: 14px; font-weight: 600; cursor: pointer;
-          background: transparent;
-          color: var(--color-primary-mid);
-          border: 1px solid var(--color-surface-border);
-          font-family: var(--font-sans);
-          transition: background-color 0.2s, border-color 0.2s;
-        }
-        .sf-cancel-btn:hover {
-          background-color: var(--color-surface);
-          border-color: var(--color-primary-muted);
-        }
-      `}</style>
+    <form
+      onSubmit={handleSubmit}
+      className='space-y-6 max-w-3xl mx-auto animate-[fadeInUp_0.4s_ease_both]'
+    >
+      {/* Error */}
+      {error && (
+        <div className='px-4 py-3 rounded-xl text-[13px] bg-red-50 border border-red-200 text-red-600 animate-[fadeInDown_0.3s_ease_both]'>
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className='space-y-6 max-w-3xl mx-auto'>
-        {error && (
-          <div
-            className='px-4 py-3 rounded-xl text-[13px]'
-            style={{
-              backgroundColor: '#FEF2F2',
-              border: '1px solid #FECACA',
-              color: '#DC2626',
-            }}
-          >
-            {error}
-          </div>
-        )}
+      {/* Session Details */}
+      <div className={cardClass}>
+        <h2 className='font-serif text-[17px] font-medium text-primary-dark'>
+          Session Details
+        </h2>
 
-        {/* ── Session Details ── */}
-        <div className='sf-card space-y-5'>
-          <h2 className='sf-card-title'>Session Details</h2>
+        <div>
+          <label className={labelClass}>Title *</label>
+          <input
+            type='text'
+            name='title'
+            required
+            value={form.title}
+            onChange={handleChange}
+            placeholder='e.g. Group Zoom Call — Emotional Resilience'
+            className={inputClass}
+          />
+        </div>
 
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <div>
-            <label className='sf-label'>Title *</label>
+            <label className={labelClass}>Date *</label>
             <input
-              type='text'
-              name='title'
+              type='date'
+              name='date'
               required
-              value={form.title}
+              value={form.date}
               onChange={handleChange}
-              placeholder='e.g. Group Zoom Call — Emotional Resilience'
-              className='sf-input'
+              className={inputClass}
             />
           </div>
-
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            <div>
-              <label className='sf-label'>Date *</label>
-              <input
-                type='date'
-                name='date'
-                required
-                value={form.date}
-                onChange={handleChange}
-                className='sf-input'
-              />
-            </div>
-            <div>
-              <label className='sf-label'>Time *</label>
-              <input
-                type='time'
-                name='time'
-                required
-                value={form.time}
-                onChange={handleChange}
-                className='sf-input'
-              />
-            </div>
-          </div>
-
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            <div>
-              <label className='sf-label'>Session Type</label>
-              <select
-                name='type'
-                value={form.type}
-                onChange={handleChange}
-                className='sf-input'
-              >
-                <option>Live</option>
-                <option>1:1</option>
-                <option>Group</option>
-                <option>Workshop</option>
-              </select>
-            </div>
-            <div>
-              <label className='sf-label'>Duration (minutes)</label>
-              <input
-                type='number'
-                name='duration'
-                value={form.duration}
-                onChange={handleChange}
-                min={0}
-                className='sf-input'
-              />
-            </div>
-          </div>
-
           <div>
-            <label className='sf-label'>Visible To</label>
-            <select
-              name='visibleTo'
-              value={form.visibleTo}
+            <label className={labelClass}>Time *</label>
+            <input
+              type='time'
+              name='time'
+              required
+              value={form.time}
               onChange={handleChange}
-              className='sf-input'
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+          <div>
+            <label className={labelClass}>Session Type</label>
+            <select
+              name='type'
+              value={form.type}
+              onChange={handleChange}
+              className={inputClass}
             >
-              <option value='all'>All Enrolled Students</option>
-              <option value='course'>Specific Course Only</option>
+              <option>Live</option>
+              <option>1:1</option>
+              <option>Group</option>
+              <option>Workshop</option>
             </select>
           </div>
+          <div>
+            <label className={labelClass}>Duration (minutes)</label>
+            <input
+              type='number'
+              name='duration'
+              value={form.duration}
+              onChange={handleChange}
+              min={0}
+              className={inputClass}
+            />
+          </div>
+        </div>
 
-          {form.visibleTo === 'course' && (
-            <div>
-              <label className='sf-label'>Course ID</label>
-              <input
-                type='text'
+        <div>
+          <label className={labelClass}>Visible To</label>
+          <select
+            name='visibleTo'
+            value={form.visibleTo}
+            onChange={handleChange}
+            className={inputClass}
+          >
+            <option value='all'>All Enrolled Students</option>
+            <option value='course'>Specific Course Only</option>
+          </select>
+        </div>
+
+        {form.visibleTo === 'course' && (
+          <div className='animate-[fadeInUp_0.3s_ease_both]'>
+            <label className={labelClass}>Select Course</label>
+            {coursesLoading ? (
+              <div className='w-full px-4 py-[11px] border border-surface-border rounded-[10px] bg-surface text-[13px] text-primary-muted animate-pulse'>
+                Loading courses…
+              </div>
+            ) : courses.length === 0 ? (
+              <div className='w-full px-4 py-[11px] border border-surface-border rounded-[10px] bg-surface text-[13px] text-primary-muted'>
+                No published courses found
+              </div>
+            ) : (
+              <select
                 name='courseId'
                 value={form.courseId}
                 onChange={handleChange}
-                placeholder='Enter course ID from Firestore'
-                className='sf-input'
+                required
+                className={inputClass}
+              >
+                <option value=''>— Select a course —</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.emoji} {c.title}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Live Session */}
+      <div className={cardClass}>
+        <h2 className='font-serif text-[17px] font-medium text-primary-dark'>
+          Live Session
+        </h2>
+        <div>
+          <label className={labelClass}>Zoom Link</label>
+          <input
+            type='url'
+            name='zoomLink'
+            value={form.zoomLink}
+            onChange={handleChange}
+            placeholder='https://zoom.us/j/...'
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      {/* Recording */}
+      <div className={cardClass}>
+        <h2 className='font-serif text-[17px] font-medium text-primary-dark'>
+          Recording (after session)
+        </h2>
+
+        <label className='flex items-center gap-3 cursor-pointer'>
+          <input
+            type='checkbox'
+            name='isRecorded'
+            checked={form.isRecorded}
+            onChange={handleChange}
+            className='w-4 h-4 rounded accent-[#7a6a58] cursor-pointer shrink-0'
+          />
+          <span className='text-[14px] font-medium text-primary-mid'>
+            Recording is available
+          </span>
+        </label>
+
+        {form.isRecorded && (
+          <div className='space-y-4 animate-[fadeInUp_0.3s_ease_both]'>
+            <div>
+              <label className={labelClass}>YouTube Video URL (Unlisted)</label>
+              <input
+                type='url'
+                name='recordingUrl'
+                value={form.recordingUrl}
+                onChange={handleChange}
+                placeholder='https://www.youtube.com/watch?v=...'
+                className={inputClass}
               />
             </div>
-          )}
-        </div>
-
-        {/* ── Live Session ── */}
-        <div className='sf-card space-y-5'>
-          <h2 className='sf-card-title'>Live Session</h2>
-          <div>
-            <label className='sf-label'>Zoom Link</label>
-            <input
-              type='url'
-              name='zoomLink'
-              value={form.zoomLink}
-              onChange={handleChange}
-              placeholder='https://zoom.us/j/...'
-              className='sf-input'
-            />
+            <div>
+              <label className={labelClass}>Thumbnail URL (optional)</label>
+              <input
+                type='url'
+                name='thumbnail'
+                value={form.thumbnail}
+                onChange={handleChange}
+                placeholder='https://...'
+                className={inputClass}
+              />
+            </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* ── Recording ── */}
-        <div className='sf-card space-y-5'>
-          <h2 className='sf-card-title'>Recording (after session)</h2>
-
-          <label className='sf-checkbox-label'>
-            <input
-              type='checkbox'
-              name='isRecorded'
-              checked={form.isRecorded}
-              onChange={handleChange}
-              className='sf-checkbox'
-            />
-            <span
-              className='text-[14px] font-medium'
-              style={{ color: 'var(--color-primary-mid)' }}
+      {/* Actions */}
+      <div className='flex items-center gap-4'>
+        <button
+          type='submit'
+          disabled={saving}
+          className='flex items-center gap-2 px-7 py-3 rounded-[10px] text-[14px] font-semibold bg-primary text-[#f5f0e8] hover:bg-primary-hover transition-colors duration-200 shadow-[0_4px_14px_rgba(122,106,88,0.22)] disabled:opacity-60 disabled:cursor-not-allowed'
+        >
+          {saving && (
+            <svg
+              className='animate-spin w-4 h-4'
+              viewBox='0 0 24 24'
+              fill='none'
             >
-              Recording is available
-            </span>
-          </label>
-
-          {form.isRecorded && (
-            <>
-              <div>
-                <label className='sf-label'>YouTube Video URL (Unlisted)</label>
-                <input
-                  type='url'
-                  name='recordingUrl'
-                  value={form.recordingUrl}
-                  onChange={handleChange}
-                  placeholder='https://www.youtube.com/watch?v=...'
-                  className='sf-input'
-                />
-              </div>
-              <div>
-                <label className='sf-label'>Thumbnail URL (optional)</label>
-                <input
-                  type='url'
-                  name='thumbnail'
-                  value={form.thumbnail}
-                  onChange={handleChange}
-                  placeholder='https://...'
-                  className='sf-input'
-                />
-              </div>
-            </>
+              <circle
+                className='opacity-25'
+                cx='12'
+                cy='12'
+                r='10'
+                stroke='currentColor'
+                strokeWidth='4'
+              />
+              <path
+                className='opacity-75'
+                fill='currentColor'
+                d='M4 12a8 8 0 018-8v8H4z'
+              />
+            </svg>
           )}
-        </div>
-
-        {/* ── Submit ── */}
-        <div className='flex items-center gap-4'>
-          <button type='submit' disabled={saving} className='sf-submit-btn'>
-            {saving && (
-              <svg
-                className='animate-spin w-4 h-4'
-                viewBox='0 0 24 24'
-                fill='none'
-              >
-                <circle
-                  className='opacity-25'
-                  cx='12'
-                  cy='12'
-                  r='10'
-                  stroke='currentColor'
-                  strokeWidth='4'
-                />
-                <path
-                  className='opacity-75'
-                  fill='currentColor'
-                  d='M4 12a8 8 0 018-8v8H4z'
-                />
-              </svg>
-            )}
-            {saving
-              ? 'Saving…'
-              : isEditing
-                ? 'Update Session'
-                : 'Create Session'}
-          </button>
-          <button
-            type='button'
-            onClick={() => router.push('/admin/sessions')}
-            className='sf-cancel-btn'
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </>
+          {saving ? 'Saving…' : isEditing ? 'Update Session' : 'Create Session'}
+        </button>
+        <button
+          type='button'
+          onClick={() => router.push('/admin/sessions')}
+          className='px-6 py-3 rounded-[10px] text-[14px] font-semibold text-primary-mid bg-transparent border border-surface-border hover:bg-surface hover:border-primary-muted transition-colors duration-200'
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   )
 }
