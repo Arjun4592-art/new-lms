@@ -199,7 +199,7 @@ export default function HeroSection() {
               data-animate-delay='5'
               className='flex flex-wrap gap-4'
             >
-              <Button href='/courses' size='lg' className='shadow-lg'>
+              <Button href='/contact' size='lg' className='shadow-lg'>
                 Book a Free Exploration Call
                 <ArrowRightIcon size={18} />
               </Button>
@@ -235,7 +235,7 @@ export default function HeroSection() {
                   className='text-[13.5px] font-semibold'
                   style={{ color: 'var(--color-text)' }}
                 >
-                  500+ people transformed
+                  100+ people transformed
                 </p>
                 <div className='flex items-center gap-0.5 mt-0.5'>
                   {[1, 2, 3, 4, 5].map((i) => (

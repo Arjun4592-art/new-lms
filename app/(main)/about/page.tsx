@@ -9,6 +9,7 @@ import {
   SparkleIcon,
   ArrowRightIcon,
 } from '@/components/ui/Icons'
+import Image from 'next/image'
 
 const CERTIFICATIONS = [
   'Puja Punnet Life by Design',
@@ -61,7 +62,6 @@ const JOURNEY_STEPS = [
   },
 ]
 
-// Certificate placeholder images — replace src with your actual certificate images
 const CERTIFICATES = [
   { id: 1, title: 'Puja Punnet Life by Design', src: '' },
   { id: 2, title: 'Coaching Mastery Certification', src: '' },
@@ -101,7 +101,6 @@ export default function AboutPage() {
   return (
     <>
       <style>{`
-        /* ── Base animation ── */
         [data-anim] {
           opacity: 0; transform: translateY(22px);
           transition: opacity 0.65s ease, transform 0.65s ease;
@@ -114,18 +113,16 @@ export default function AboutPage() {
         [data-delay="5"] { transition-delay: 0.5s; }
         [data-delay="6"] { transition-delay: 0.6s; }
 
-        /* ── Slide from left ── */
-        [data-anim-left] {
-          opacity: 0; transform: translateX(-18px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        [data-anim-left].anim-in { opacity: 1; transform: translateX(0); }
+        @keyframes float-about { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes spin-slow { to{transform:rotate(360deg)} }
+        .about-circle-float { animation: float-about 6s ease-in-out infinite; }
+        .about-spin { animation: spin-slow 22s linear infinite; }
 
-        /* ── Hero ── */
-        .about-hero {
-          background-color: var(--color-surface);
-          border-bottom: 1px solid var(--color-surface-border);
-        }
+        .about-hero   { background-color: var(--color-surface); border-bottom: 1px solid var(--color-surface-border); }
+        .about-white  { background-color: var(--color-bg); }
+        .about-tinted { background-color: var(--color-surface); }
+        .about-cta    { background-color: var(--color-primary-dark); }
+
         .about-eyebrow {
           display: inline-block;
           font-size: 11px; font-weight: 600;
@@ -136,22 +133,10 @@ export default function AboutPage() {
           padding: 5px 14px; border-radius: 9999px; margin-bottom: 20px;
         }
 
-        /* ── Sections ── */
-        .about-white  { background-color: var(--color-bg); }
-        .about-tinted { background-color: var(--color-surface); }
-
-        /* ── Story visual ── */
-        @keyframes float-about { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes spin-slow { to{transform:rotate(360deg)} }
-        .about-circle-float { animation: float-about 6s ease-in-out infinite; }
-        .about-spin { animation: spin-slow 22s linear infinite; }
-
-        /* ── Timeline ── */
         .timeline-step { display:flex; gap:20px; align-items:flex-start; }
         .timeline-dot {
           width:40px; height:40px; border-radius:50%; flex-shrink:0;
-          background-color:var(--color-primary);
-          color:var(--color-bg);
+          background-color:var(--color-primary); color:var(--color-bg);
           display:flex; align-items:center; justify-content:center;
           font-size:13px; font-weight:600;
         }
@@ -165,7 +150,6 @@ export default function AboutPage() {
           border-radius:12px; padding:20px 22px; flex:1; margin-bottom:8px;
         }
 
-        /* ── Values ── */
         .value-card {
           background-color:var(--color-surface);
           border:1px solid var(--color-surface-border);
@@ -181,7 +165,6 @@ export default function AboutPage() {
           margin:0 auto 16px;
         }
 
-        /* ── Certificate section ── */
         .cert-photo-card {
           background-color:var(--color-bg);
           border:1px solid var(--color-surface-border);
@@ -199,11 +182,6 @@ export default function AboutPage() {
         .cert-photo-img {
           width:100%; aspect-ratio:4/3; object-fit:cover;
           border-bottom:1px solid var(--color-surface-border);
-        }
-
-        /* ── CTA ── */
-        .about-cta {
-          background-color:var(--color-primary-dark);
         }
       `}</style>
 
@@ -251,52 +229,38 @@ export default function AboutPage() {
           ref={storyRef}
           className='max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center'
         >
-          {/* Visual */}
+          {/* ✅ FIXED: Image visual */}
           <div
             data-anim
             data-delay='1'
             className='flex justify-center order-2 lg:order-1'
           >
-            <div className='relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center'>
+            <div className='relative w-72 h-72 sm:w-80 sm:h-80'>
+              {/* Spinning dashed ring */}
               <div
-                className='about-spin absolute inset-0 rounded-full pointer-events-none'
+                className='about-spin absolute inset-0 rounded-4xl pointer-events-none'
                 style={{
                   border: '1.5px dashed var(--color-primary-accent)',
                   transform: 'scale(1.13)',
                 }}
               />
+              {/* Floating image container */}
               <div
-                className='about-circle-float relative w-full h-full rounded-3xl flex flex-col items-center justify-center gap-2 z-10'
+                className='about-circle-float relative w-full h-full rounded-3xl overflow-hidden z-10'
                 style={{
-                  backgroundColor: 'var(--color-surface)',
                   border: '1.5px solid var(--color-surface-border)',
                 }}
               >
-                <div
-                  className='w-12 h-12 rounded-full flex items-center justify-center mb-1'
-                  style={{
-                    backgroundColor: 'var(--color-primary-light)',
-                    border: '1px solid var(--color-surface-border)',
-                  }}
-                >
-                  <SparkleIcon
-                    size={24}
-                    style={{ color: 'var(--color-primary)' }}
-                  />
-                </div>
-                <p
-                  className='font-serif text-[22px] font-medium'
-                  style={{ color: 'var(--color-text)' }}
-                >
-                  Masuma
-                </p>
-                <p
-                  className='text-[12px] font-light tracking-wide'
-                  style={{ color: 'var(--color-primary)' }}
-                >
-                  Life Transformational Coach
-                </p>
+                <Image
+                  src='/masuma1.jpeg'
+                  alt='Masuma – Life Transformational Coach'
+                  fill
+                  className='object-cover object-top'
+                  sizes='(max-width: 640px) 288px, 320px'
+                  priority
+                />
               </div>
+
               {/* Badge */}
               <div
                 className='absolute -bottom-4 -right-4 rounded-xl p-3.5 z-20'
@@ -383,7 +347,7 @@ export default function AboutPage() {
                     <ShieldIcon
                       size={13}
                       style={{ color: 'var(--color-primary)', flexShrink: 0 }}
-                    />{' '}
+                    />
                     {c}
                   </li>
                 ))}
@@ -572,7 +536,7 @@ export default function AboutPage() {
             about where you are and where you want to go.
           </p>
           <div data-anim data-delay='3'>
-            <Button href='/courses' size='lg' variant='secondary'>
+            <Button href='/contact' size='lg' variant='secondary'>
               Book a Free Exploration Call <ArrowRightIcon size={18} />
             </Button>
           </div>

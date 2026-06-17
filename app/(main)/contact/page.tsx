@@ -452,7 +452,7 @@ export default function ContactPage() {
                 Not sure where to start? Let&apos;s talk for 30 minutes — no
                 pressure, just a conversation about your journey.
               </p>
-              <a href='/courses' className='free-call-btn'>
+              <a href='/contact' className='free-call-btn'>
                 Book Now <ArrowRightIcon size={14} />
               </a>
             </div>

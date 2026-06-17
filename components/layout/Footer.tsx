@@ -60,7 +60,7 @@ export default function Footer() {
             </p>
           </div>
           <Link
-            href='/courses'
+            href='/contact'
             className='shrink-0 px-8 py-3.5 bg-[#FAF8F4] text-[#5C4A38] font-semibold rounded-sm hover:bg-[#E8DFD0] transition-colors no-underline text-[14px] uppercase tracking-widest'
           >
             Book a Free Call
@@ -106,7 +106,6 @@ export default function Footer() {
             ))}
           </div>
         </div>
-
         {/* Pages */}
         <div>
           <h4 className='text-[11px] font-semibold uppercase tracking-widest text-[#7A6A58] mb-4'>
@@ -144,7 +143,6 @@ export default function Footer() {
             ))}
           </ul>
         </div>
-
         {/* Contact */}
         <div>
           <h4 className='text-[11px] font-semibold uppercase tracking-widest text-[#7A6A58] mb-4'>
