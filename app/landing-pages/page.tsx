@@ -298,16 +298,64 @@ export default function MasumaPage() {
         .footer-links a:hover{color:var(--gold)}
         .footer-links span{color:rgba(255,255,255,0.15)}
 
+        /* ── RESPONSIVE (tablets) ── */
+        @media (max-width: 1024px) {
+          .hero{padding:90px 28px 80px}
+          .hero-inner{gap:40px}
+          .pain-grid,.weeks-grid,.testi-grid,.det-grid{gap:14px}
+        }
+
+        /* ── RESPONSIVE (mobile) ── */
         @media(max-width:768px){
-          .hero{padding:80px 24px 72px;min-height:auto}
-          .hero-inner{grid-template-columns:1fr}
-          .hero-inner>div:last-child{order:-1}
-          .coach-card{max-width:340px;margin:0 auto}
+          .hero{padding:70px 20px 60px;min-height:auto}
+          .hero-inner{grid-template-columns:1fr;gap:36px}
+          .hero h1{font-size:clamp(28px,8vw,40px)}
+          .hero-sub{font-size:15px;line-height:1.75}
+          .hero-tagline{font-size:13px}
+          .hero-proof{gap:14px}
+          .proof-item{font-size:12px}
+          .btn-hero{width:100%;justify-content:center;padding:14px 22px;font-size:12.5px;letter-spacing:0.04em}
+          .coach-card{max-width:380px;margin:0 auto}
           .story-grid,.pain-grid,.weeks-grid,.testi-grid,.det-grid{grid-template-columns:1fr}
-          .story-stats{grid-template-columns:repeat(3,1fr)}
-          .form-card{padding:32px 24px}
-          .sec{padding:72px 24px}
+          .story-grid .reveal-left{order:2}
+          .story-grid .reveal-right{order:1}
+          .story-stats{grid-template-columns:repeat(3,1fr);gap:10px}
+          .stat-num{font-size:22px}
+          .stat-label{font-size:10px}
+          .form-card{padding:32px 22px}
+          .sec{padding:56px 20px}
           .faq-ans{padding-left:22px}
+          .eyebrow{font-size:clamp(15px,4.5vw,20px);letter-spacing:0.04em}
+          .sec-title{font-size:clamp(19px,6vw,26px)}
+          .sec-subtitle{font-size:14px;margin-bottom:32px}
+          .story-content{text-align:center}
+          .story-quote{text-align:left}
+          .week-card{padding:24px 20px}
+          .week-icon{width:38px;height:38px;font-size:17px;top:20px;right:20px}
+          .includes-wrap{padding:20px 18px;gap:16px}
+          .pricing-card{padding:28px 22px}
+          .pr-row{flex-wrap:wrap}
+          .footer{padding:40px 20px}
+          .footer-links{flex-wrap:wrap;gap:14px}
+          .btn{width:100%;justify-content:center;padding:14px 20px;font-size:12.5px;letter-spacing:0.04em}
+          .form-btn{font-size:12.5px;letter-spacing:0.04em;padding:16px}
+        }
+
+        /* ── RESPONSIVE (small phones) ── */
+        @media (max-width: 480px) {
+          .hero{padding:60px 16px 50px}
+          .hero-tag{font-size:10px;padding:8px 16px 8px 10px}
+          .hero h1{font-size:clamp(26px,9vw,34px)}
+          .cd-pill{flex-direction:column;gap:6px;padding:14px 18px}
+          .coach-info{left:20px;right:20px;bottom:20px;padding:12px 14px}
+          .pain-card,.week-card,.det-card,.testi-card{padding:18px 16px}
+          .det-card{flex-direction:row}
+          .det-icon{width:44px;height:44px;font-size:20px}
+          .pricing-card{padding:22px 16px}
+          .form-card{padding:26px 16px}
+          .testi-stars{margin-left:0;width:100%;justify-content:flex-start;margin-top:6px}
+          .testi-top{flex-wrap:wrap}
+          .sec{padding:48px 16px}
         }
       `}</style>
 
@@ -358,8 +406,7 @@ export default function MasumaPage() {
               </div>
               <div className='a6'>
                 <button className='btn-hero' onClick={scrollToForm}>
-                  <i className='ti ti-heart' /> I want this for myself{' '}
-                  <i className='ti ti-arrow-right' />
+                  I want this for myself <i className='ti ti-arrow-right' />
                 </button>
                 <p
                   style={{
@@ -629,8 +676,7 @@ export default function MasumaPage() {
             </div>
             <div className='reveal d5'>
               <button className='btn' onClick={scrollToForm}>
-                <i className='ti ti-heart' /> I want this for myself{' '}
-                <i className='ti ti-arrow-right' />
+                I want this for myself <i className='ti ti-arrow-right' />
               </button>
             </div>
           </div>
@@ -813,8 +859,7 @@ export default function MasumaPage() {
                   style={{ fontSize: 15, padding: '18px 52px' }}
                   onClick={scrollToForm}
                 >
-                  <i className='ti ti-heart' /> I want this for myself{' '}
-                  <i className='ti ti-arrow-right' />
+                  I want this for myself <i className='ti ti-arrow-right' />
                 </button>
               </div>
             </div>
@@ -940,8 +985,7 @@ export default function MasumaPage() {
                 }
               />
               <button className='form-btn' onClick={handleSubmit}>
-                <i className='ti ti-brand-whatsapp' /> Reserve My Spot — Only 5
-                Left <i className='ti ti-arrow-right' />
+                Reserve My Spot — Only 5 Left
               </button>
               <div className='form-trust'>
                 <div className='trust-item'>
