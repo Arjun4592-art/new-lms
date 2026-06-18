@@ -8,12 +8,10 @@ export default function MasumaPage() {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' })
   const formRef = useRef<HTMLDivElement>(null)
 
-  // Scroll to form function
   const scrollToForm = () => {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  // WhatsApp submit handler
   const handleSubmit = () => {
     const { name, phone, email } = formData
     if (!name.trim() || !phone.trim()) {
@@ -25,7 +23,6 @@ export default function MasumaPage() {
     window.open(`https://wa.me/918700297752?text=${encodedMsg}`, '_blank')
   }
 
-  // Countdown timer
   useEffect(() => {
     const target = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
     const tick = () => {
@@ -47,7 +44,6 @@ export default function MasumaPage() {
     return () => clearInterval(id)
   }, [])
 
-  // Scroll reveal
   useEffect(() => {
     const io = new IntersectionObserver(
       (entries) =>
@@ -126,6 +122,27 @@ export default function MasumaPage() {
         @keyframes tagPulse{0%,100%{background:var(--gold);box-shadow:0 0 6px 2px rgba(200,168,122,0.5)}50%{background:#d4b88a;box-shadow:0 0 14px 5px rgba(200,168,122,0.3)}}
         @keyframes borderGlow{0%,100%{border-color:rgba(200,168,122,0.3)}50%{border-color:rgba(200,168,122,0.8)}}
         @keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+        @keyframes offerPulse{0%,100%{box-shadow:0 0 0 0 rgba(200,168,122,0.5),0 20px 60px rgba(122,106,88,0.1)}60%{box-shadow:0 0 0 18px rgba(200,168,122,0),0 20px 60px rgba(122,106,88,0.1)}}
+        @keyframes offerFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes offerGlow{0%,100%{border-color:rgba(200,168,122,0.25)}50%{border-color:rgba(200,168,122,0.75)}}
+        @keyframes svgFloat1{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}
+        @keyframes svgFloat2{0%,100%{transform:translateY(0px)}50%{transform:translateY(5px)}}
+        @keyframes svgRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes svgPulse{0%,100%{opacity:0.6;r:4}50%{opacity:1;r:6}}
+        @keyframes tagSlide{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+        @keyframes hlWord{0%,100%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:0.85;transform:translateY(-4px) scale(1.02)}}
+        @keyframes hlShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+        @keyframes hlPop{0%,100%{letter-spacing:0.01em}50%{letter-spacing:0.04em}}
+        @keyframes hlUnderline{0%,100%{width:0%}50%{width:100%}}
+        @keyframes hlBlink{0%,100%{opacity:1}45%,55%{opacity:0.6}}
+
+        /* OFFER HEADLINE */
+        .offer-headline{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:16px;line-height:1}
+        .offer-hl-line1{font-family:var(--serif);font-size:clamp(22px,3.5vw,38px);font-weight:600;color:var(--primary-mid);animation:hlWord 4s ease-in-out infinite;animation-delay:0s}
+        .offer-hl-line2{font-family:var(--serif);font-size:clamp(30px,5vw,58px);font-weight:700;color:var(--primary-dark);animation:hlPop 3s ease-in-out infinite;animation-delay:0.4s;position:relative;display:inline-block}
+        .offer-hl-line2::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);height:3px;background:var(--gold);border-radius:2px;animation:hlUnderline 3s ease-in-out infinite;animation-delay:0.4s}
+        .offer-hl-line3{font-family:var(--serif);font-size:clamp(28px,4.5vw,52px);font-weight:700;background:linear-gradient(90deg,var(--primary-dark) 0%,var(--gold) 40%,#e8c88a 60%,var(--primary-dark) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:hlShimmer 2.8s linear infinite,hlBlink 4s ease-in-out infinite;animation-delay:0s,0.8s;font-style:italic}
 
         .a1{animation:fadeDown 0.7s ease both}
         .a2{animation:fadeUp 0.7s 0.15s ease both}
@@ -217,6 +234,10 @@ export default function MasumaPage() {
         .stat-num{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--primary-dark);margin-bottom:4px}
         .stat-label{font-size:11px;color:var(--primary-muted);letter-spacing:0.08em;text-transform:uppercase}
 
+        /* WEEK CARD ILLUSTRATION */
+        .week-illus{width:100%;height:140px;border-radius:12px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,var(--surface) 0%,var(--primary-light) 100%)}
+        .week-illus svg{width:100%;height:100%}
+
         /* PROGRAM */
         .weeks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:0 auto 24px;max-width:900px}
         .week-card{background:#fff;border:1px solid var(--surface-b);border-radius:16px;padding:28px 26px;text-align:left;position:relative;overflow:hidden;transition:all 0.3s;cursor:default}
@@ -227,7 +248,6 @@ export default function MasumaPage() {
         .week-num i{font-size:14px;color:var(--gold)}
         .week-title{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--text);margin-bottom:10px}
         .week-desc{font-size:14px;color:var(--primary);line-height:1.75}
-        .week-icon{position:absolute;top:24px;right:24px;width:44px;height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--primary-muted)}
         .includes-wrap{background:var(--surface);border:1px solid var(--surface-b);border-radius:16px;padding:24px 32px;display:flex;flex-wrap:wrap;justify-content:center;gap:24px;max-width:900px;margin:0 auto 36px}
         .inc-pill{display:flex;align-items:center;gap:8px;color:var(--primary-mid);font-size:14px;font-weight:500}
         .inc-pill i{font-size:16px;color:var(--primary)}
@@ -256,12 +276,19 @@ export default function MasumaPage() {
 
         /* PRICING */
         .pricing-wrap{max-width:640px;margin:0 auto}
-        .pricing-card{background:#fff;border:1px solid var(--surface-b);border-radius:20px;padding:40px;box-shadow:0 20px 60px rgba(122,106,88,0.1)}
-        .pr-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--surface-b);gap:20px}
+        .pricing-card{background:#fff;border:2px solid rgba(200,168,122,0.25);border-radius:20px;padding:40px;box-shadow:0 20px 60px rgba(122,106,88,0.1);animation:offerPulse 3s ease-in-out infinite,offerFloat 6s ease-in-out infinite,offerGlow 3s ease-in-out infinite}
+        .pr-row{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid var(--surface-b);gap:20px}
         .pr-row:last-of-type{border-bottom:none}
-        .pr-row-left{display:flex;align-items:center;gap:12px}
-        .pr-row-left i{font-size:18px;color:var(--primary);width:28px}
-        .pr-label{color:var(--primary-mid);font-size:14px}
+        .pr-row-left{display:flex;align-items:center;gap:14px}
+        .pr-row-left i{font-size:22px;color:var(--primary);width:30px}
+        .pr-label{color:var(--primary-mid);font-size:16px;font-weight:500}
+        .pr-tag{background:var(--surface);border:1px solid var(--surface-b);border-radius:100px;padding:4px 14px;font-size:12px;font-weight:700;color:var(--primary);letter-spacing:0.08em;white-space:nowrap;flex-shrink:0;animation:tagSlide 3s ease-in-out infinite}
+        .offer-urgency{margin-top:28px;background:linear-gradient(135deg,#1e1208,#2c1a0a);border-radius:12px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+        .offer-spots-label{font-size:12px;color:rgba(250,248,244,0.45);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
+        .offer-spots-num{font-family:var(--serif);font-size:32px;font-weight:700;color:#faf8f4;line-height:1}
+        .offer-spots-num span{color:var(--gold);background:linear-gradient(90deg,var(--gold),#e8c88a,var(--gold));background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2s linear infinite}
+        .offer-bullet{display:flex;align-items:center;gap:8px;font-size:14px;color:rgba(250,248,244,0.65)}
+        .offer-bullet i{color:var(--gold);font-size:15px}
 
         /* FAQ */
         .faq-wrap{max-width:700px;margin:0 auto}
@@ -309,6 +336,11 @@ export default function MasumaPage() {
         @media(max-width:768px){
           .hero{padding:70px 20px 60px;min-height:auto}
           .hero-inner{grid-template-columns:1fr;gap:36px}
+          /* ↓ HERO TEXT CENTER ON MOBILE */
+          .hero-inner > div:first-child{text-align:center}
+          .hero-proof{justify-content:center}
+          .hero-tagline{text-align:center}
+          /* ↑ end hero center */
           .hero h1{font-size:clamp(28px,8vw,40px)}
           .hero-sub{font-size:15px;line-height:1.75}
           .hero-tagline{font-size:13px}
@@ -331,10 +363,11 @@ export default function MasumaPage() {
           .story-content{text-align:center}
           .story-quote{text-align:left}
           .week-card{padding:24px 20px}
-          .week-icon{width:38px;height:38px;font-size:17px;top:20px;right:20px}
+          .week-illus{height:120px}
           .includes-wrap{padding:20px 18px;gap:16px}
           .pricing-card{padding:28px 22px}
           .pr-row{flex-wrap:wrap}
+          .offer-urgency{flex-direction:column;align-items:flex-start;gap:14px}
           .footer{padding:40px 20px}
           .footer-links{flex-wrap:wrap;gap:14px}
           .btn{width:100%;justify-content:center;padding:14px 20px;font-size:12.5px;letter-spacing:0.04em}
@@ -586,7 +619,7 @@ export default function MasumaPage() {
                 </p>
                 <div className='story-stats'>
                   {[
-                    ['500+', 'Women Helped'],
+                    ['100+', 'Individuals Helped'],
                     ['4 Wk', 'Transform'],
                     ['5.0★', 'Rating'],
                   ].map(([num, label]) => (
@@ -616,51 +649,565 @@ export default function MasumaPage() {
               </p>
             </div>
             <div className='weeks-grid'>
-              {[
-                {
-                  icon: 'ti-eye',
-                  num: 'ti-circle-number-1',
-                  week: '01',
-                  title: 'Awareness',
-                  desc: "Pinpoint exactly where your self-worth broke down — and why it's not your fault",
-                  delay: 'd1',
-                },
-                {
-                  icon: 'ti-feather',
-                  num: 'ti-circle-number-2',
-                  week: '02',
-                  title: 'Release',
-                  desc: 'Let go of the conditioning, old stories, and fears that have kept you stuck',
-                  delay: 'd2',
-                },
-                {
-                  icon: 'ti-brain',
-                  num: 'ti-circle-number-3',
-                  week: '03',
-                  title: 'Rewire',
-                  desc: 'Replace limiting beliefs with a new identity — one that actually fits you',
-                  delay: 'd3',
-                },
-                {
-                  icon: 'ti-rocket',
-                  num: 'ti-circle-number-4',
-                  week: '04',
-                  title: 'Rise',
-                  desc: "Step into your power, set boundaries, and show up as the version of you you've been hiding",
-                  delay: 'd4',
-                },
-              ].map((w) => (
-                <div key={w.week} className={`week-card reveal ${w.delay}`}>
-                  <div className='week-icon'>
-                    <i className={`ti ${w.icon}`} />
-                  </div>
-                  <div className='week-num'>
-                    <i className={`ti ${w.num}`} /> Week {w.week}
-                  </div>
-                  <div className='week-title'>{w.title}</div>
-                  <div className='week-desc'>{w.desc}</div>
+              {/* WEEK 01 — AWARENESS */}
+              <div className='week-card reveal d1'>
+                <div className='week-illus'>
+                  <svg
+                    viewBox='0 0 320 140'
+                    xmlns='http://www.w3.org/2000/svg'
+                    preserveAspectRatio='xMidYMid meet'
+                  >
+                    <rect width='320' height='140' fill='#e8dfd0' />
+                    {/* Soft concentric rings — inner eye / awareness */}
+                    <circle
+                      cx='160'
+                      cy='70'
+                      r='55'
+                      fill='none'
+                      stroke='#c8a87a'
+                      strokeWidth='0.8'
+                      opacity='0.4'
+                    />
+                    <circle
+                      cx='160'
+                      cy='70'
+                      r='40'
+                      fill='none'
+                      stroke='#c8a87a'
+                      strokeWidth='0.8'
+                      opacity='0.5'
+                    />
+                    <circle
+                      cx='160'
+                      cy='70'
+                      r='26'
+                      fill='none'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.6'
+                    />
+                    {/* Eye shape */}
+                    <path
+                      d='M120 70 Q160 38 200 70 Q160 102 120 70Z'
+                      fill='#d8cebc'
+                      stroke='#b8a898'
+                      strokeWidth='1'
+                    />
+                    {/* Iris */}
+                    <circle
+                      cx='160'
+                      cy='70'
+                      r='14'
+                      fill='#7a6a58'
+                      opacity='0.85'
+                    />
+                    {/* Pupil */}
+                    <circle cx='160' cy='70' r='7' fill='#2c2218' />
+                    {/* Highlight */}
+                    <circle
+                      cx='164'
+                      cy='66'
+                      r='2.5'
+                      fill='#faf8f4'
+                      opacity='0.8'
+                    />
+                    {/* Floating dots — awareness sparks */}
+                    <circle
+                      cx='100'
+                      cy='40'
+                      r='3'
+                      fill='#c8a87a'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat1 3.2s ease-in-out infinite',
+                      }}
+                    />
+                    <circle
+                      cx='230'
+                      cy='50'
+                      r='2'
+                      fill='#c8a87a'
+                      opacity='0.4'
+                      style={{
+                        animation: 'svgFloat2 2.8s ease-in-out infinite',
+                      }}
+                    />
+                    <circle
+                      cx='80'
+                      cy='90'
+                      r='2'
+                      fill='#c8a87a'
+                      opacity='0.3'
+                      style={{ animation: 'svgFloat1 4s ease-in-out infinite' }}
+                    />
+                    <circle
+                      cx='245'
+                      cy='95'
+                      r='3.5'
+                      fill='#c8a87a'
+                      opacity='0.4'
+                      style={{
+                        animation: 'svgFloat2 3.5s ease-in-out infinite',
+                      }}
+                    />
+                    {/* Lashes */}
+                    <line
+                      x1='160'
+                      y1='44'
+                      x2='160'
+                      y2='36'
+                      stroke='#b8a898'
+                      strokeWidth='1'
+                      opacity='0.5'
+                    />
+                    <line
+                      x1='148'
+                      y1='46'
+                      x2='144'
+                      y2='39'
+                      stroke='#b8a898'
+                      strokeWidth='1'
+                      opacity='0.5'
+                    />
+                    <line
+                      x1='172'
+                      y1='46'
+                      x2='176'
+                      y2='39'
+                      stroke='#b8a898'
+                      strokeWidth='1'
+                      opacity='0.5'
+                    />
+                  </svg>
                 </div>
-              ))}
+                <div className='week-num'>
+                  <i className='ti ti-circle-number-1' /> Week 01
+                </div>
+                <div className='week-title'>Awareness</div>
+                <div className='week-desc'>
+                  Pinpoint exactly where your self-worth broke down — and why
+                  it's not your fault
+                </div>
+              </div>
+
+              {/* WEEK 02 — RELEASE */}
+              <div className='week-card reveal d2'>
+                <div className='week-illus'>
+                  <svg
+                    viewBox='0 0 320 140'
+                    xmlns='http://www.w3.org/2000/svg'
+                    preserveAspectRatio='xMidYMid meet'
+                  >
+                    <rect width='320' height='140' fill='#e8dfd0' />
+                    {/* Woman silhouette releasing */}
+                    <ellipse
+                      cx='160'
+                      cy='95'
+                      rx='22'
+                      ry='28'
+                      fill='#b8a898'
+                      opacity='0.6'
+                    />
+                    <circle
+                      cx='160'
+                      cy='57'
+                      r='13'
+                      fill='#b8a898'
+                      opacity='0.6'
+                    />
+                    {/* Arms outstretched */}
+                    <path
+                      d='M138 78 Q110 68 90 75'
+                      fill='none'
+                      stroke='#b8a898'
+                      strokeWidth='5'
+                      strokeLinecap='round'
+                      opacity='0.6'
+                    />
+                    <path
+                      d='M182 78 Q210 68 230 75'
+                      fill='none'
+                      stroke='#b8a898'
+                      strokeWidth='5'
+                      strokeLinecap='round'
+                      opacity='0.6'
+                    />
+                    {/* Floating leaves / petals being released */}
+                    <path
+                      d='M85 60 Q90 50 100 58 Q90 65 85 60Z'
+                      fill='#c8a87a'
+                      opacity='0.7'
+                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
+                    />
+                    <path
+                      d='M220 45 Q228 36 236 46 Q228 54 220 45Z'
+                      fill='#c8a87a'
+                      opacity='0.55'
+                      style={{
+                        animation: 'svgFloat2 2.5s ease-in-out infinite',
+                      }}
+                    />
+                    <path
+                      d='M60 80 Q66 70 74 78 Q66 86 60 80Z'
+                      fill='#c8a87a'
+                      opacity='0.4'
+                      style={{ animation: 'svgFloat1 4s ease-in-out infinite' }}
+                    />
+                    <path
+                      d='M248 70 Q255 61 262 70 Q255 78 248 70Z'
+                      fill='#c8a87a'
+                      opacity='0.45'
+                      style={{
+                        animation: 'svgFloat2 3.6s ease-in-out infinite',
+                      }}
+                    />
+                    <path
+                      d='M105 30 Q111 20 118 30 Q111 38 105 30Z'
+                      fill='#c8a87a'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat2 2.8s ease-in-out infinite',
+                      }}
+                    />
+                    <path
+                      d='M200 25 Q207 15 214 25 Q207 33 200 25Z'
+                      fill='#c8a87a'
+                      opacity='0.4'
+                      style={{
+                        animation: 'svgFloat1 3.4s ease-in-out infinite',
+                      }}
+                    />
+                    {/* Ground line */}
+                    <line
+                      x1='100'
+                      y1='123'
+                      x2='220'
+                      y2='123'
+                      stroke='#d8cebc'
+                      strokeWidth='1.5'
+                    />
+                  </svg>
+                </div>
+
+                <div className='week-num'>
+                  <i className='ti ti-circle-number-2' /> Week 02
+                </div>
+                <div className='week-title'>Release</div>
+                <div className='week-desc'>
+                  Let go of the conditioning, old stories, and fears that have
+                  kept you stuck
+                </div>
+              </div>
+
+              {/* WEEK 03 — REWIRE */}
+              <div className='week-card reveal d3'>
+                <div className='week-illus'>
+                  <svg
+                    viewBox='0 0 320 140'
+                    xmlns='http://www.w3.org/2000/svg'
+                    preserveAspectRatio='xMidYMid meet'
+                  >
+                    <rect width='320' height='140' fill='#e8dfd0' />
+                    {/* Brain outline simplified */}
+                    <path
+                      d='M140 95 Q118 95 112 80 Q106 65 118 56 Q116 42 130 40 Q136 30 150 34 Q158 26 170 34 Q184 30 188 42 Q200 44 202 58 Q212 68 206 80 Q200 95 180 95 Z'
+                      fill='none'
+                      stroke='#b8a898'
+                      strokeWidth='1.5'
+                      opacity='0.7'
+                    />
+                    {/* Neural connections — animated */}
+                    <line
+                      x1='140'
+                      y1='60'
+                      x2='165'
+                      y2='50'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.5'
+                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
+                    />
+                    <line
+                      x1='165'
+                      y1='50'
+                      x2='185'
+                      y2='62'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat2 2.8s ease-in-out infinite',
+                      }}
+                    />
+                    <line
+                      x1='150'
+                      y1='75'
+                      x2='170'
+                      y2='68'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat1 3.5s ease-in-out infinite',
+                      }}
+                    />
+                    <line
+                      x1='130'
+                      y1='72'
+                      x2='150'
+                      y2='75'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.5'
+                      style={{ animation: 'svgFloat2 4s ease-in-out infinite' }}
+                    />
+                    <line
+                      x1='170'
+                      y1='68'
+                      x2='190'
+                      y2='76'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat1 2.6s ease-in-out infinite',
+                      }}
+                    />
+                    <line
+                      x1='155'
+                      y1='85'
+                      x2='170'
+                      y2='68'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.4'
+                      style={{
+                        animation: 'svgFloat2 3.2s ease-in-out infinite',
+                      }}
+                    />
+                    {/* Nodes */}
+                    {[
+                      [140, 60],
+                      [165, 50],
+                      [185, 62],
+                      [150, 75],
+                      [170, 68],
+                      [130, 72],
+                      [190, 76],
+                      [155, 85],
+                    ].map(([x, y], i) => (
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r='4'
+                        fill='#7a6a58'
+                        opacity='0.8'
+                        style={{
+                          animation: `svgFloat${i % 2 === 0 ? 1 : 2} ${2.5 + i * 0.3}s ease-in-out infinite`,
+                        }}
+                      />
+                    ))}
+                    {/* Spark / new connection forming */}
+                    <circle
+                      cx='160'
+                      cy='68'
+                      r='8'
+                      fill='none'
+                      stroke='#c8a87a'
+                      strokeWidth='1'
+                      opacity='0.4'
+                      style={{ animation: 'svgRotate 6s linear infinite' }}
+                    />
+                    <circle
+                      cx='160'
+                      cy='68'
+                      r='3'
+                      fill='#c8a87a'
+                      opacity='0.9'
+                    />
+                    {/* Side sparkles */}
+                    <circle
+                      cx='90'
+                      cy='50'
+                      r='2.5'
+                      fill='#c8a87a'
+                      opacity='0.3'
+                      style={{ animation: 'svgFloat2 3s ease-in-out infinite' }}
+                    />
+                    <circle
+                      cx='240'
+                      cy='65'
+                      r='2'
+                      fill='#c8a87a'
+                      opacity='0.35'
+                      style={{
+                        animation: 'svgFloat1 3.8s ease-in-out infinite',
+                      }}
+                    />
+                    <circle
+                      cx='80'
+                      cy='90'
+                      r='3'
+                      fill='#c8a87a'
+                      opacity='0.25'
+                      style={{
+                        animation: 'svgFloat2 2.9s ease-in-out infinite',
+                      }}
+                    />
+                  </svg>
+                </div>
+                <div className='week-num'>
+                  <i className='ti ti-circle-number-3' /> Week 03
+                </div>
+                <div className='week-title'>Rewire</div>
+                <div className='week-desc'>
+                  Replace limiting beliefs with a new identity — one that
+                  actually fits you
+                </div>
+              </div>
+
+              {/* WEEK 04 — RISE */}
+              <div className='week-card reveal d4'>
+                <div className='week-illus'>
+                  <svg
+                    viewBox='0 0 320 140'
+                    xmlns='http://www.w3.org/2000/svg'
+                    preserveAspectRatio='xMidYMid meet'
+                  >
+                    <rect width='320' height='140' fill='#e8dfd0' />
+                    {/* Sun / radiance rays */}
+                    {[
+                      0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330,
+                    ].map((deg, i) => {
+                      const rad = (deg * Math.PI) / 180
+                      const x1 = 160 + Math.cos(rad) * 28
+                      const y1 = 72 + Math.sin(rad) * 28
+                      const x2 = 160 + Math.cos(rad) * 46
+                      const y2 = 72 + Math.sin(rad) * 46
+                      return (
+                        <line
+                          key={i}
+                          x1={x1}
+                          y1={y1}
+                          x2={x2}
+                          y2={y2}
+                          stroke='#c8a87a'
+                          strokeWidth={i % 2 === 0 ? 1.5 : 0.8}
+                          opacity={i % 2 === 0 ? 0.6 : 0.35}
+                          style={{
+                            animation: `svgFloat${i % 2 === 0 ? 1 : 2} ${2.5 + i * 0.2}s ease-in-out infinite`,
+                          }}
+                        />
+                      )
+                    })}
+                    {/* Sun core */}
+                    <circle
+                      cx='160'
+                      cy='72'
+                      r='20'
+                      fill='#c8a87a'
+                      opacity='0.18'
+                    />
+                    <circle
+                      cx='160'
+                      cy='72'
+                      r='14'
+                      fill='#c8a87a'
+                      opacity='0.35'
+                    />
+                    <circle
+                      cx='160'
+                      cy='72'
+                      r='8'
+                      fill='#c8a87a'
+                      opacity='0.75'
+                    />
+                    {/* Woman silhouette — arms raised in triumph */}
+                    <ellipse
+                      cx='160'
+                      cy='115'
+                      rx='14'
+                      ry='18'
+                      fill='#7a6a58'
+                      opacity='0.55'
+                    />
+                    <circle
+                      cx='160'
+                      cy='91'
+                      r='9'
+                      fill='#7a6a58'
+                      opacity='0.55'
+                    />
+                    <path
+                      d='M146 103 Q128 88 118 78'
+                      fill='none'
+                      stroke='#7a6a58'
+                      strokeWidth='4'
+                      strokeLinecap='round'
+                      opacity='0.55'
+                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
+                    />
+                    <path
+                      d='M174 103 Q192 88 202 78'
+                      fill='none'
+                      stroke='#7a6a58'
+                      strokeWidth='4'
+                      strokeLinecap='round'
+                      opacity='0.55'
+                      style={{ animation: 'svgFloat2 3s ease-in-out infinite' }}
+                    />
+                    {/* Sparkles around her */}
+                    <circle
+                      cx='110'
+                      cy='72'
+                      r='3'
+                      fill='#c8a87a'
+                      opacity='0.5'
+                      style={{
+                        animation: 'svgFloat2 2.5s ease-in-out infinite',
+                      }}
+                    />
+                    <circle
+                      cx='210'
+                      cy='68'
+                      r='2.5'
+                      fill='#c8a87a'
+                      opacity='0.5'
+                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
+                    />
+                    <circle
+                      cx='95'
+                      cy='95'
+                      r='2'
+                      fill='#c8a87a'
+                      opacity='0.35'
+                      style={{
+                        animation: 'svgFloat2 3.5s ease-in-out infinite',
+                      }}
+                    />
+                    <circle
+                      cx='225'
+                      cy='95'
+                      r='2.5'
+                      fill='#c8a87a'
+                      opacity='0.4'
+                      style={{
+                        animation: 'svgFloat1 2.8s ease-in-out infinite',
+                      }}
+                    />
+                  </svg>
+                </div>
+
+                <div className='week-num'>
+                  <i className='ti ti-circle-number-4' /> Week 04
+                </div>
+                <div className='week-title'>Rise</div>
+                <div className='week-desc'>
+                  Step into your power, set boundaries, and show up as the
+                  version of you you've been hiding
+                </div>
+              </div>
             </div>
             <div className='includes-wrap reveal d4'>
               {[
@@ -829,20 +1376,43 @@ export default function MasumaPage() {
               <span className='eyebrow new'>
                 <i className='ti ti-gift' /> The <span>Offer</span>
               </span>
-              <h2 className='sec-title'>
-                Everything you get <em>inside.</em>
+              <h2 className='offer-headline'>
+                <span className='offer-hl-line1'>One decision.</span>
+                <span className='offer-hl-line2'>Four weeks.</span>
+                <span className='offer-hl-line3'>Everything changes.</span>
               </h2>
+              <p className='sec-subtitle'>
+                This isn't a course you buy and forget. This is a 1:1 container
+                — built for you, around you.
+              </p>
             </div>
             <div className='pricing-wrap'>
               <div className='pricing-card reveal d1'>
                 {[
-                  { icon: 'ti-video', label: '1:1 Coaching Program' },
-                  { icon: 'ti-search', label: 'Exploration Session' },
-                  { icon: 'ti-chart-bar', label: 'Weekly Tracker' },
-                  { icon: 'ti-headphones', label: 'Healing Audio + Workbook' },
+                  {
+                    icon: 'ti-video',
+                    label: '4 × Live 1:1 Coaching Sessions',
+                    tag: 'Core',
+                  },
+                  {
+                    icon: 'ti-search',
+                    label: 'Deep-Dive Exploration Session',
+                    tag: 'Kickoff',
+                  },
+                  {
+                    icon: 'ti-chart-bar',
+                    label: 'Weekly Progress Tracker',
+                    tag: 'Clarity',
+                  },
+                  {
+                    icon: 'ti-headphones',
+                    label: 'Healing Audio + Guided Workbook',
+                    tag: 'Daily',
+                  },
                   {
                     icon: 'ti-brand-whatsapp',
-                    label: 'WhatsApp Support (ongoing)',
+                    label: 'WhatsApp Support (between sessions)',
+                    tag: 'Always On',
                   },
                 ].map((row) => (
                   <div key={row.label} className='pr-row'>
@@ -850,17 +1420,55 @@ export default function MasumaPage() {
                       <i className={`ti ${row.icon}`} />
                       <span className='pr-label'>{row.label}</span>
                     </div>
+                    <span className='pr-tag'>{row.tag}</span>
                   </div>
                 ))}
+
+                {/* Urgency strip */}
+                <div className='offer-urgency'>
+                  <div>
+                    <div className='offer-spots-label'>
+                      Spots remaining this month
+                    </div>
+                    <div className='offer-spots-num'>
+                      Only <span>5</span> left
+                    </div>
+                  </div>
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    {[
+                      'No group calls',
+                      'No pre-recorded fluff',
+                      '100% tailored to you',
+                    ].map((pt) => (
+                      <div key={pt} className='offer-bullet'>
+                        <i className='ti ti-check' />
+                        {pt}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
               <div className='reveal d2' style={{ marginTop: 28 }}>
                 <button
                   className='btn'
                   style={{ fontSize: 15, padding: '18px 52px' }}
                   onClick={scrollToForm}
                 >
-                  I want this for myself <i className='ti ti-arrow-right' />
+                  Claim My Spot <i className='ti ti-arrow-right' />
                 </button>
+                <p
+                  style={{
+                    marginTop: 12,
+                    fontSize: 12,
+                    color: 'var(--primary-muted)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  No payment now · Just a conversation
+                </p>
               </div>
             </div>
           </div>
