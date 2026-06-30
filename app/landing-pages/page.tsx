@@ -235,8 +235,8 @@ export default function MasumaPage() {
         .stat-label{font-size:11px;color:var(--primary-muted);letter-spacing:0.08em;text-transform:uppercase}
 
         /* WEEK CARD ILLUSTRATION */
-        .week-illus{width:100%;height:140px;border-radius:12px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,var(--surface) 0%,var(--primary-light) 100%)}
-        .week-illus svg{width:100%;height:100%}
+        .week-illus{width:100%;height:260px;border-radius:12px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,var(--surface) 0%,var(--primary-light) 100%);position:relative}
+        .week-illus img{width:100%;height:100%;object-fit:contain;display:block}
 
         /* PROGRAM */
         .weeks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:0 auto 24px;max-width:900px}
@@ -363,7 +363,7 @@ export default function MasumaPage() {
           .story-content{text-align:center}
           .story-quote{text-align:left}
           .week-card{padding:24px 20px}
-          .week-illus{height:120px}
+          .week-illus{height:220px}
           .includes-wrap{padding:20px 18px;gap:16px}
           .pricing-card{padding:28px 22px}
           .pr-row{flex-wrap:wrap}
@@ -652,133 +652,10 @@ export default function MasumaPage() {
               {/* WEEK 01 — AWARENESS */}
               <div className='week-card reveal d1'>
                 <div className='week-illus'>
-                  <svg
-                    viewBox='0 0 320 140'
-                    xmlns='http://www.w3.org/2000/svg'
-                    preserveAspectRatio='xMidYMid meet'
-                  >
-                    <rect width='320' height='140' fill='#e8dfd0' />
-                    {/* Soft concentric rings — inner eye / awareness */}
-                    <circle
-                      cx='160'
-                      cy='70'
-                      r='55'
-                      fill='none'
-                      stroke='#c8a87a'
-                      strokeWidth='0.8'
-                      opacity='0.4'
-                    />
-                    <circle
-                      cx='160'
-                      cy='70'
-                      r='40'
-                      fill='none'
-                      stroke='#c8a87a'
-                      strokeWidth='0.8'
-                      opacity='0.5'
-                    />
-                    <circle
-                      cx='160'
-                      cy='70'
-                      r='26'
-                      fill='none'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.6'
-                    />
-                    {/* Eye shape */}
-                    <path
-                      d='M120 70 Q160 38 200 70 Q160 102 120 70Z'
-                      fill='#d8cebc'
-                      stroke='#b8a898'
-                      strokeWidth='1'
-                    />
-                    {/* Iris */}
-                    <circle
-                      cx='160'
-                      cy='70'
-                      r='14'
-                      fill='#7a6a58'
-                      opacity='0.85'
-                    />
-                    {/* Pupil */}
-                    <circle cx='160' cy='70' r='7' fill='#2c2218' />
-                    {/* Highlight */}
-                    <circle
-                      cx='164'
-                      cy='66'
-                      r='2.5'
-                      fill='#faf8f4'
-                      opacity='0.8'
-                    />
-                    {/* Floating dots — awareness sparks */}
-                    <circle
-                      cx='100'
-                      cy='40'
-                      r='3'
-                      fill='#c8a87a'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat1 3.2s ease-in-out infinite',
-                      }}
-                    />
-                    <circle
-                      cx='230'
-                      cy='50'
-                      r='2'
-                      fill='#c8a87a'
-                      opacity='0.4'
-                      style={{
-                        animation: 'svgFloat2 2.8s ease-in-out infinite',
-                      }}
-                    />
-                    <circle
-                      cx='80'
-                      cy='90'
-                      r='2'
-                      fill='#c8a87a'
-                      opacity='0.3'
-                      style={{ animation: 'svgFloat1 4s ease-in-out infinite' }}
-                    />
-                    <circle
-                      cx='245'
-                      cy='95'
-                      r='3.5'
-                      fill='#c8a87a'
-                      opacity='0.4'
-                      style={{
-                        animation: 'svgFloat2 3.5s ease-in-out infinite',
-                      }}
-                    />
-                    {/* Lashes */}
-                    <line
-                      x1='160'
-                      y1='44'
-                      x2='160'
-                      y2='36'
-                      stroke='#b8a898'
-                      strokeWidth='1'
-                      opacity='0.5'
-                    />
-                    <line
-                      x1='148'
-                      y1='46'
-                      x2='144'
-                      y2='39'
-                      stroke='#b8a898'
-                      strokeWidth='1'
-                      opacity='0.5'
-                    />
-                    <line
-                      x1='172'
-                      y1='46'
-                      x2='176'
-                      y2='39'
-                      stroke='#b8a898'
-                      strokeWidth='1'
-                      opacity='0.5'
-                    />
-                  </svg>
+                  <img
+                    src='/image1.png'
+                    alt='A woman sitting quietly in soft light, reflecting inward — representing self-awareness'
+                  />
                 </div>
                 <div className='week-num'>
                   <i className='ti ti-circle-number-1' /> Week 01
@@ -793,102 +670,11 @@ export default function MasumaPage() {
               {/* WEEK 02 — RELEASE */}
               <div className='week-card reveal d2'>
                 <div className='week-illus'>
-                  <svg
-                    viewBox='0 0 320 140'
-                    xmlns='http://www.w3.org/2000/svg'
-                    preserveAspectRatio='xMidYMid meet'
-                  >
-                    <rect width='320' height='140' fill='#e8dfd0' />
-                    {/* Woman silhouette releasing */}
-                    <ellipse
-                      cx='160'
-                      cy='95'
-                      rx='22'
-                      ry='28'
-                      fill='#b8a898'
-                      opacity='0.6'
-                    />
-                    <circle
-                      cx='160'
-                      cy='57'
-                      r='13'
-                      fill='#b8a898'
-                      opacity='0.6'
-                    />
-                    {/* Arms outstretched */}
-                    <path
-                      d='M138 78 Q110 68 90 75'
-                      fill='none'
-                      stroke='#b8a898'
-                      strokeWidth='5'
-                      strokeLinecap='round'
-                      opacity='0.6'
-                    />
-                    <path
-                      d='M182 78 Q210 68 230 75'
-                      fill='none'
-                      stroke='#b8a898'
-                      strokeWidth='5'
-                      strokeLinecap='round'
-                      opacity='0.6'
-                    />
-                    {/* Floating leaves / petals being released */}
-                    <path
-                      d='M85 60 Q90 50 100 58 Q90 65 85 60Z'
-                      fill='#c8a87a'
-                      opacity='0.7'
-                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
-                    />
-                    <path
-                      d='M220 45 Q228 36 236 46 Q228 54 220 45Z'
-                      fill='#c8a87a'
-                      opacity='0.55'
-                      style={{
-                        animation: 'svgFloat2 2.5s ease-in-out infinite',
-                      }}
-                    />
-                    <path
-                      d='M60 80 Q66 70 74 78 Q66 86 60 80Z'
-                      fill='#c8a87a'
-                      opacity='0.4'
-                      style={{ animation: 'svgFloat1 4s ease-in-out infinite' }}
-                    />
-                    <path
-                      d='M248 70 Q255 61 262 70 Q255 78 248 70Z'
-                      fill='#c8a87a'
-                      opacity='0.45'
-                      style={{
-                        animation: 'svgFloat2 3.6s ease-in-out infinite',
-                      }}
-                    />
-                    <path
-                      d='M105 30 Q111 20 118 30 Q111 38 105 30Z'
-                      fill='#c8a87a'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat2 2.8s ease-in-out infinite',
-                      }}
-                    />
-                    <path
-                      d='M200 25 Q207 15 214 25 Q207 33 200 25Z'
-                      fill='#c8a87a'
-                      opacity='0.4'
-                      style={{
-                        animation: 'svgFloat1 3.4s ease-in-out infinite',
-                      }}
-                    />
-                    {/* Ground line */}
-                    <line
-                      x1='100'
-                      y1='123'
-                      x2='220'
-                      y2='123'
-                      stroke='#d8cebc'
-                      strokeWidth='1.5'
-                    />
-                  </svg>
+                  <img
+                    src='/image2.png'
+                    alt='A woman with arms open outdoors, letting go — representing release of old patterns'
+                  />
                 </div>
-
                 <div className='week-num'>
                   <i className='ti ti-circle-number-2' /> Week 02
                 </div>
@@ -902,160 +688,10 @@ export default function MasumaPage() {
               {/* WEEK 03 — REWIRE */}
               <div className='week-card reveal d3'>
                 <div className='week-illus'>
-                  <svg
-                    viewBox='0 0 320 140'
-                    xmlns='http://www.w3.org/2000/svg'
-                    preserveAspectRatio='xMidYMid meet'
-                  >
-                    <rect width='320' height='140' fill='#e8dfd0' />
-                    {/* Brain outline simplified */}
-                    <path
-                      d='M140 95 Q118 95 112 80 Q106 65 118 56 Q116 42 130 40 Q136 30 150 34 Q158 26 170 34 Q184 30 188 42 Q200 44 202 58 Q212 68 206 80 Q200 95 180 95 Z'
-                      fill='none'
-                      stroke='#b8a898'
-                      strokeWidth='1.5'
-                      opacity='0.7'
-                    />
-                    {/* Neural connections — animated */}
-                    <line
-                      x1='140'
-                      y1='60'
-                      x2='165'
-                      y2='50'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.5'
-                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
-                    />
-                    <line
-                      x1='165'
-                      y1='50'
-                      x2='185'
-                      y2='62'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat2 2.8s ease-in-out infinite',
-                      }}
-                    />
-                    <line
-                      x1='150'
-                      y1='75'
-                      x2='170'
-                      y2='68'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat1 3.5s ease-in-out infinite',
-                      }}
-                    />
-                    <line
-                      x1='130'
-                      y1='72'
-                      x2='150'
-                      y2='75'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.5'
-                      style={{ animation: 'svgFloat2 4s ease-in-out infinite' }}
-                    />
-                    <line
-                      x1='170'
-                      y1='68'
-                      x2='190'
-                      y2='76'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat1 2.6s ease-in-out infinite',
-                      }}
-                    />
-                    <line
-                      x1='155'
-                      y1='85'
-                      x2='170'
-                      y2='68'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.4'
-                      style={{
-                        animation: 'svgFloat2 3.2s ease-in-out infinite',
-                      }}
-                    />
-                    {/* Nodes */}
-                    {[
-                      [140, 60],
-                      [165, 50],
-                      [185, 62],
-                      [150, 75],
-                      [170, 68],
-                      [130, 72],
-                      [190, 76],
-                      [155, 85],
-                    ].map(([x, y], i) => (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r='4'
-                        fill='#7a6a58'
-                        opacity='0.8'
-                        style={{
-                          animation: `svgFloat${i % 2 === 0 ? 1 : 2} ${2.5 + i * 0.3}s ease-in-out infinite`,
-                        }}
-                      />
-                    ))}
-                    {/* Spark / new connection forming */}
-                    <circle
-                      cx='160'
-                      cy='68'
-                      r='8'
-                      fill='none'
-                      stroke='#c8a87a'
-                      strokeWidth='1'
-                      opacity='0.4'
-                      style={{ animation: 'svgRotate 6s linear infinite' }}
-                    />
-                    <circle
-                      cx='160'
-                      cy='68'
-                      r='3'
-                      fill='#c8a87a'
-                      opacity='0.9'
-                    />
-                    {/* Side sparkles */}
-                    <circle
-                      cx='90'
-                      cy='50'
-                      r='2.5'
-                      fill='#c8a87a'
-                      opacity='0.3'
-                      style={{ animation: 'svgFloat2 3s ease-in-out infinite' }}
-                    />
-                    <circle
-                      cx='240'
-                      cy='65'
-                      r='2'
-                      fill='#c8a87a'
-                      opacity='0.35'
-                      style={{
-                        animation: 'svgFloat1 3.8s ease-in-out infinite',
-                      }}
-                    />
-                    <circle
-                      cx='80'
-                      cy='90'
-                      r='3'
-                      fill='#c8a87a'
-                      opacity='0.25'
-                      style={{
-                        animation: 'svgFloat2 2.9s ease-in-out infinite',
-                      }}
-                    />
-                  </svg>
+                  <img
+                    src='/image3.png'
+                    alt='A woman journaling peacefully in the morning — representing rewiring new beliefs'
+                  />
                 </div>
                 <div className='week-num'>
                   <i className='ti ti-circle-number-3' /> Week 03
@@ -1070,135 +706,11 @@ export default function MasumaPage() {
               {/* WEEK 04 — RISE */}
               <div className='week-card reveal d4'>
                 <div className='week-illus'>
-                  <svg
-                    viewBox='0 0 320 140'
-                    xmlns='http://www.w3.org/2000/svg'
-                    preserveAspectRatio='xMidYMid meet'
-                  >
-                    <rect width='320' height='140' fill='#e8dfd0' />
-                    {/* Sun / radiance rays */}
-                    {[
-                      0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330,
-                    ].map((deg, i) => {
-                      const rad = (deg * Math.PI) / 180
-                      const x1 = 160 + Math.cos(rad) * 28
-                      const y1 = 72 + Math.sin(rad) * 28
-                      const x2 = 160 + Math.cos(rad) * 46
-                      const y2 = 72 + Math.sin(rad) * 46
-                      return (
-                        <line
-                          key={i}
-                          x1={x1}
-                          y1={y1}
-                          x2={x2}
-                          y2={y2}
-                          stroke='#c8a87a'
-                          strokeWidth={i % 2 === 0 ? 1.5 : 0.8}
-                          opacity={i % 2 === 0 ? 0.6 : 0.35}
-                          style={{
-                            animation: `svgFloat${i % 2 === 0 ? 1 : 2} ${2.5 + i * 0.2}s ease-in-out infinite`,
-                          }}
-                        />
-                      )
-                    })}
-                    {/* Sun core */}
-                    <circle
-                      cx='160'
-                      cy='72'
-                      r='20'
-                      fill='#c8a87a'
-                      opacity='0.18'
-                    />
-                    <circle
-                      cx='160'
-                      cy='72'
-                      r='14'
-                      fill='#c8a87a'
-                      opacity='0.35'
-                    />
-                    <circle
-                      cx='160'
-                      cy='72'
-                      r='8'
-                      fill='#c8a87a'
-                      opacity='0.75'
-                    />
-                    {/* Woman silhouette — arms raised in triumph */}
-                    <ellipse
-                      cx='160'
-                      cy='115'
-                      rx='14'
-                      ry='18'
-                      fill='#7a6a58'
-                      opacity='0.55'
-                    />
-                    <circle
-                      cx='160'
-                      cy='91'
-                      r='9'
-                      fill='#7a6a58'
-                      opacity='0.55'
-                    />
-                    <path
-                      d='M146 103 Q128 88 118 78'
-                      fill='none'
-                      stroke='#7a6a58'
-                      strokeWidth='4'
-                      strokeLinecap='round'
-                      opacity='0.55'
-                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
-                    />
-                    <path
-                      d='M174 103 Q192 88 202 78'
-                      fill='none'
-                      stroke='#7a6a58'
-                      strokeWidth='4'
-                      strokeLinecap='round'
-                      opacity='0.55'
-                      style={{ animation: 'svgFloat2 3s ease-in-out infinite' }}
-                    />
-                    {/* Sparkles around her */}
-                    <circle
-                      cx='110'
-                      cy='72'
-                      r='3'
-                      fill='#c8a87a'
-                      opacity='0.5'
-                      style={{
-                        animation: 'svgFloat2 2.5s ease-in-out infinite',
-                      }}
-                    />
-                    <circle
-                      cx='210'
-                      cy='68'
-                      r='2.5'
-                      fill='#c8a87a'
-                      opacity='0.5'
-                      style={{ animation: 'svgFloat1 3s ease-in-out infinite' }}
-                    />
-                    <circle
-                      cx='95'
-                      cy='95'
-                      r='2'
-                      fill='#c8a87a'
-                      opacity='0.35'
-                      style={{
-                        animation: 'svgFloat2 3.5s ease-in-out infinite',
-                      }}
-                    />
-                    <circle
-                      cx='225'
-                      cy='95'
-                      r='2.5'
-                      fill='#c8a87a'
-                      opacity='0.4'
-                      style={{
-                        animation: 'svgFloat1 2.8s ease-in-out infinite',
-                      }}
-                    />
-                  </svg>
+                  <img
+                    src='/image4.png'
+                    alt='A woman standing with arms outstretched in joyful freedom — representing rising into her power'
+                  />
                 </div>
-
                 <div className='week-num'>
                   <i className='ti ti-circle-number-4' /> Week 04
                 </div>

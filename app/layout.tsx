@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { DM_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
-import GlobalLoader from '@/components/GlobalLoader'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -46,10 +45,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${playfair.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <GlobalLoader />
-          {children}
-          </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   )
